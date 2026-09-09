@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Padel Invitation & Check-in
 
-## Getting Started
+Website undangan + pendaftaran event padel dengan e-ticket QR dan check-in scan di venue.
+**Tanpa login untuk peserta.** Data tersimpan di Postgres dan dicerminkan ke Google Sheets.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Ringkasan
+
+| Aspek               | Keputusan                                                            |
+| ------------------- | -------------------------------------------------------------------- |
+| Framework           | Next.js 15 (App Router, TypeScript)                                  |
+| Hosting             | Vercel Hobby (gratis)                                                |
+| Database            | Supabase Postgres (gratis) — _source of truth_                       |
+| Spreadsheet         | Google Sheets via Service Account — _mirror, read-only bagi panitia_ |
+| Autentikasi peserta | Tidak ada. Pakai _capability URL_ (token acak di URL)                |
+| Tanggal acara       | **26 September 2026** — satu hari, tanpa pembagian sesi              |
+| Autentikasi petugas | Shared secret di URL fragment, disimpan di `localStorage`            |
+| QR                  | PNG di-generate server-side, isinya URL e-ticket                     |
+
+Alasan lengkap tiap keputusan ada di [`docs/adr/`](docs/adr/).
+
+---
+
+## Alur singkat
+
+```
+Peserta buka undangan  →  isi form  →  dapat e-ticket + QR
+                                            │
+                                            ├─ Simpan QR ke HP (offline-proof)
+                                            └─ Kirim link tiket ke WhatsApp (ganti-HP-proof)
+
+Hari-H: petugas buka /scan  →  scan QR peserta  →  hijau / kuning / merah
+                                            │
+                                            └─ Postgres di-update, Sheets ikut ter-update
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Peta dokumen
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Baca berurutan kalau kamu baru gabung tim.
 
-## Learn More
+| #   | Dokumen                                              | Isi                                                                 |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------- |
+| 00  | [`AGENTS.md`](AGENTS.md)                             | Instruksi untuk AI coding agent (Cursor, Copilot, Claude Code, dll) |
+| 01  | [`docs/01-PRD.md`](docs/01-PRD.md)                   | Product requirements: masalah, user, scope, acceptance criteria     |
+| 02  | [`docs/02-ARCHITECTURE.md`](docs/02-ARCHITECTURE.md) | Desain sistem, tech stack, data flow, struktur folder               |
+| 03  | [`docs/03-DATA-MODEL.md`](docs/03-DATA-MODEL.md)     | ERD, DDL Postgres, skema Google Sheets                              |
+| 04  | [`docs/04-API-SPEC.md`](docs/04-API-SPEC.md)         | Kontrak endpoint, request/response, error code                      |
+| 05  | [`docs/05-UX-FLOWS.md`](docs/05-UX-FLOWS.md)         | Layar, state, copywriting, arah visual                              |
+| 06  | [`docs/06-SECURITY.md`](docs/06-SECURITY.md)         | Threat model dan kontrol keamanan                                   |
+| 07  | [`docs/07-SETUP.md`](docs/07-SETUP.md)               | Setup lokal, Supabase, Google Cloud, deploy Vercel                  |
+| 08  | [`docs/08-TESTING.md`](docs/08-TESTING.md)           | Strategi test + checklist QA manual                                 |
+| 09  | [`docs/09-RUNBOOK.md`](docs/09-RUNBOOK.md)           | Operasional hari-H dan penanganan insiden                           |
+| 10  | [`docs/10-BACKLOG.md`](docs/10-BACKLOG.md)           | Milestone dan breakdown task                                        |
+| —   | [`CONTRIBUTING.md`](CONTRIBUTING.md)                 | Alur kerja tim: branch, commit, PR, review                          |
+| —   | [`docs/adr/`](docs/adr/)                             | Architecture Decision Records                                       |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Quick start
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> Belum ada kode. Ikuti [`docs/07-SETUP.md`](docs/07-SETUP.md) untuk bootstrap pertama kali.
 
-## Deploy on Vercel
+```bash
+pnpm install
+cp .env.example .env.local   # isi kredensial, lihat docs/07-SETUP.md
+pnpm db:migrate
+pnpm db:seed                 # bikin 1 event contoh (26 Sep 2026)
+pnpm dev                     # http://localhost:3000
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Status
+
+`PRE-DEVELOPMENT` — dokumentasi selesai, implementasi belum dimulai.
+Progres per milestone dilacak di [`docs/10-BACKLOG.md`](docs/10-BACKLOG.md).
