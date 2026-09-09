@@ -50,6 +50,7 @@ next-env.d.ts
 .DS_Store
 
 # Documentation & AI agent files
+invitation-padel/
 docs/
 docs
 agents.md
