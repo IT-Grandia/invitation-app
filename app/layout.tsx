@@ -1,24 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
-import { connection } from "next/server";
-import { resolveTheme } from "@/lib/theme";
 import "./globals.css";
 
-// Display face for the hero and section headings. Geometric and friendly —
-// this is an invitation to a community match, not a tournament bracket.
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-// Body face. Designed for Indonesian text and stays legible at small sizes on
-// the mid-range Android screens that make up most of our traffic.
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-  display: "swap",
-});
+// No web font is loaded at all. DESIGN.md specifies system-ui, and the digits
+// that must not jitter — countdown, ticket number, rundown times — get their
+// fixed width from `tabular-nums`, which both Roboto on Android and SF Pro on
+// iOS support. A loaded monospace face cost 39.5 KB to buy something the
+// system fonts already provide.
 
 // Falls back to localhost so the build never breaks when the variable is unset;
 // the real value comes from NEXT_PUBLIC_SITE_URL and must point at the final
@@ -49,25 +36,12 @@ export const viewport: Viewport = {
   // Zoom stays available: docs/05-UX-FLOWS.md section 6 requires the page to
   // still work at 200%.
   maximumScale: 5,
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
-    { media: "(prefers-color-scheme: light)", color: "#fff8f1" },
-  ],
+  themeColor: "#dfe8dd",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // Opts this render out of prerendering. Without it Next would bake the theme
-  // in at build time and every visitor would get whatever palette was current
-  // when the deploy ran. Nothing is lost: every participant-facing page in this
-  // app is already dynamic (docs/02-ARCHITECTURE.md section 7.3).
-  await connection();
-
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="id"
-      data-theme={resolveTheme()}
-      className={`${outfit.variable} ${jakarta.variable} h-full antialiased`}
-    >
+    <html lang="id" className="h-full antialiased">
       <body className="flex min-h-full flex-col bg-canvas text-ink">{children}</body>
     </html>
   );

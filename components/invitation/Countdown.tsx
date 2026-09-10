@@ -74,7 +74,7 @@ export function Countdown({ targetIso, serverNowIso, startsAtLabel }: CountdownP
             key={unit.label}
             className="min-w-16 rounded-card border border-line bg-surface px-3 py-2"
           >
-            <div className="font-display text-countdown font-bold tabular-nums">
+            <div className="font-mono text-countdown font-bold tabular-nums">
               {String(unit.value).padStart(2, "0")}
             </div>
             <div className="text-[0.65rem] tracking-widest text-ink-muted uppercase">
