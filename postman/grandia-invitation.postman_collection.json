@@ -1,0 +1,265 @@
+{
+  "info": {
+    "_postman_id": "grandia-invitation-api-collection",
+    "name": "Grandia Invitation API",
+    "description": "Koleksi endpoint API untuk proyek Grandia Invitation (Padel Event)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "staffKey",
+      "value": "ganti_dengan_STAFF_KEY_dari_env",
+      "type": "string"
+    },
+    {
+      "key": "adminKey",
+      "value": "ganti_dengan_ADMIN_KEY_dari_env",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "sample_token_peserta",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check (DB & Server)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Cek kesiapan server Next.js dan koneksi database Supabase Postgres."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public / Peserta",
+      "item": [
+        {
+          "name": "POST Register Peserta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Budi Santoso\",\n  \"phone\": \"08123456789\",\n  \"email\": \"budi@example.com\",\n  \"notes\": \"Baru pertama ikut\",\n  \"consent\": true,\n  \"turnstileToken\": \"dummy-token-or-dev\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "register"]
+            },
+            "description": "Mendaftarkan peserta baru dan menerbitkan tiket."
+          },
+          "response": []
+        },
+        {
+          "name": "GET QR Code Tiket (PNG)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/qr/{{token}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "qr", "{{token}}"]
+            },
+            "description": "Mengembalikan visual QR Code dalam format PNG."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Clear Session Cookie",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/session/clear",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "session", "clear"]
+            },
+            "description": "Menghapus cookie tiket padel_ticket dari browser/klien."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Staff / Scanner Check-in",
+      "item": [
+        {
+          "name": "POST Preview Check-in (Step 1)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffKey}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkin/preview",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkin", "preview"]
+            },
+            "description": "Langkah 1: Melihat identitas peserta tanpa mengubah status check-in."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Confirm Check-in (Step 2)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffKey}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{token}}\",\n  \"staffLabel\": \"Gate A - Rina\",\n  \"clientScannedAt\": \"2026-09-26T01:03:22.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/checkin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "checkin"]
+            },
+            "description": "Langkah 2: Mencatat kehadiran secara permanen (atomic update)."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Scanner Manifest",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{staffKey}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/scan/manifest",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "scan", "manifest"]
+            },
+            "description": "Mengambil seluruh daftar token dan nama peserta untuk sinkronisasi scanner offline."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET Admin Stats",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminKey}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "stats"]
+            },
+            "description": "Statistik pendaftar, check-in, dan sinkronisasi sheet."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Admin Registrations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminKey}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/registrations?page=1&limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "registrations"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Daftar peserta untuk dashboard admin."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

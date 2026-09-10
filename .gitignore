@@ -23,7 +23,7 @@ test-results/
 .env
 .env.local
 .env.*.local
-.env*
+# .env*
 
 # Secrets & Credentials
 *.pem
