@@ -1,5 +1,6 @@
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, asc, eq, isNull } from 'drizzle-orm'
 
+import type { ManifestEntry } from '../../scanner-search'
 import { extractToken, ticketNumber } from '../../token'
 import { db } from '../index'
 import { checkInLogs, registrations } from '../schema'
@@ -185,4 +186,27 @@ export async function commitCheckIn(input: {
   })
 
   return { status: result, registration: existing ? summarise(existing) : null }
+}
+
+/**
+ * Every ticket that can still be admitted, for manual search and for validating
+ * scans while offline. Cancelled and waitlisted registrations are left out, so a
+ * scanner working from this list refuses them as well.
+ */
+export async function getManifest(eventId: string): Promise<ManifestEntry[]> {
+  const rows = await db
+    .select({
+      token: registrations.token,
+      fullName: registrations.fullName,
+      checkedInAt: registrations.checkedInAt,
+    })
+    .from(registrations)
+    .where(and(eq(registrations.eventId, eventId), eq(registrations.status, 'confirmed')))
+    .orderBy(asc(registrations.fullName))
+
+  return rows.map((row) => ({
+    t: row.token,
+    n: row.fullName,
+    c: row.checkedInAt?.toISOString() ?? null,
+  }))
 }
