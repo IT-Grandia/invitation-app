@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { PadelCourt, PadelPlayer } from "@/components/ui/PadelMarks";
 
 const EXIT_MS = 420;
 
@@ -63,12 +64,20 @@ export function CoverGate({
           data-phase={phase}
           className="hero-surface fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden px-6 text-center transition-all duration-[420ms] ease-out data-[phase=closing]:-translate-y-6 data-[phase=closing]:opacity-0"
         >
-          <div
-            className="court-lines animate-sweep absolute inset-0"
-            aria-hidden="true"
-          />
+          {/* A padel court seen from above, drawn to real proportions. Stands
+              in for the venue photo the committee has not supplied yet. */}
+          <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+            {/* Sized so the whole rectangle stays on screen: a court cropped
+                past its own edges reads as stray diagonal lines, not a court. */}
+            <PadelCourt className="animate-sweep absolute top-1/2 left-1/2 w-[118%] -translate-x-1/2 -translate-y-1/2 -rotate-[6deg] text-ink/15" />
+          </div>
 
           <div className="relative flex flex-col items-center">
+            <PadelPlayer
+              className="animate-rise mb-7 w-36 text-primary"
+              style={{ animationDelay: "0ms" }}
+            />
+
             <p
               className="animate-rise text-xs font-semibold tracking-[0.25em] text-ink-muted uppercase"
               style={{ animationDelay: "80ms" }}

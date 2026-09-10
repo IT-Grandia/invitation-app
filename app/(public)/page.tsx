@@ -8,7 +8,6 @@ import { Faq } from "@/components/invitation/Faq";
 import { Greeting } from "@/components/invitation/Greeting";
 import { Rundown } from "@/components/invitation/Rundown";
 import { Venue } from "@/components/invitation/Venue";
-import { isThemeId } from "@/lib/theme";
 
 /**
  * TEMPORARY placeholder event content.
@@ -108,13 +107,7 @@ const TICKET_COOKIE = "padel_ticket";
  */
 const REGISTER_HREF = "/daftar";
 
-export default async function InvitationPage({ searchParams }: PageProps<"/">) {
-  // A review aid, not a user-facing feature: ?theme=court-night or
-  // ?theme=sunday-rally previews either palette without waiting for the clock.
-  // <html> keeps the time-based theme; this only overrides the page subtree.
-  const { theme } = await searchParams;
-  const themeOverride = isThemeId(theme) ? theme : undefined;
-
+export default async function InvitationPage() {
   // Whether the visitor already holds a ticket decides two things: the cover is
   // skipped, and the CTA points at their ticket instead of the form. The sticky
   // banner itself lands in step B8.
@@ -129,7 +122,7 @@ export default async function InvitationPage({ searchParams }: PageProps<"/">) {
   const serverNowIso = new Date().toISOString();
 
   return (
-    <div data-theme={themeOverride} className="flex flex-1 flex-col bg-canvas text-ink">
+    <div className="flex flex-1 flex-col bg-canvas text-ink">
       <CoverGate
         enabled={!ticketToken}
         eventName={PLACEHOLDER_EVENT.name}
