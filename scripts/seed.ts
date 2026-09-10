@@ -18,13 +18,15 @@ if (!url) {
 }
 
 const TOKEN_LENGTH = 24
-const TOKEN_PREFIX = 'SEEDTOKEN'
+const TOKEN_PREFIX = 'SEED'
 
 // Predictable tokens let the ticket page and the scanner be developed against
-// stable URLs that survive a database reset. Padded to the same length as the
-// tokens the application generates so nothing depends on seed data being shorter.
+// stable URLs that survive a database reset. The distinguishing letter sits
+// within the first eight characters so seeded tickets do not all render the same
+// ticket number. Padded to the length the application generates, so nothing can
+// come to depend on seed tokens being shorter than real ones.
 const seedToken = (suffix: string) =>
-  TOKEN_PREFIX + '0'.repeat(TOKEN_LENGTH - TOKEN_PREFIX.length - suffix.length) + suffix
+  TOKEN_PREFIX + suffix + '0'.repeat(TOKEN_LENGTH - TOKEN_PREFIX.length - suffix.length)
 
 async function main() {
   const client = postgres(url!, { prepare: false })
