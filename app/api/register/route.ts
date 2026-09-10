@@ -7,11 +7,10 @@ import { getPublishedEvent } from '@/lib/db/queries/event'
 import { registerParticipant } from '@/lib/db/queries/registrations'
 import { events, type Event } from '@/lib/db/schema'
 import { normalizePhone } from '@/lib/phone'
+import { buildTicketCookieHeader } from '@/lib/ticket-cookie'
 import { registerApiSchema } from '@/lib/validation/registration'
 
 export const dynamic = 'force-dynamic'
-
-const COOKIE_MAX_AGE = 4838400 // 56 days
 
 function hashClientIp(ip: string): string {
   const salt = process.env.IP_SALT ?? 'grandia-padel-salt'
@@ -112,7 +111,7 @@ export async function POST(request: Request) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
     const ticketUrl = `${siteUrl}/t/${outcome.registration.token}`
 
-    const cookieHeader = `padel_ticket=${outcome.registration.token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${COOKIE_MAX_AGE}`
+    const cookieHeader = buildTicketCookieHeader(outcome.registration.token)
 
     const responseBody = {
       token: outcome.registration.token,
