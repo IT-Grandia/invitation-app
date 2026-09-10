@@ -7,7 +7,9 @@ import { getPublishedEvent } from '@/lib/db/queries/event'
 import { registerParticipant } from '@/lib/db/queries/registrations'
 import { events, type Event } from '@/lib/db/schema'
 import { normalizePhone } from '@/lib/phone'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { buildTicketCookieHeader } from '@/lib/ticket-cookie'
+import { verifyTurnstileToken } from '@/lib/turnstile'
 import { registerApiSchema } from '@/lib/validation/registration'
 
 export const dynamic = 'force-dynamic'
@@ -83,7 +85,29 @@ export async function POST(request: Request) {
     '127.0.0.1'
   const ipHash = hashClientIp(clientIp)
 
-  // 6. Perform registration in atomic transaction
+  // 6. Check rate limit (5 attempts per 10 minutes per IP hash)
+  const rateLimitResult = checkRateLimit(ipHash, 5, 10 * 60 * 1000)
+  if (!rateLimitResult.success) {
+    return apiError(
+      'RATE_LIMITED',
+      'Terlalu banyak percobaan pendaftaran dari perangkat ini. Silakan coba beberapa saat lagi.',
+      undefined,
+      {
+        'Retry-After': String(rateLimitResult.retryAfterSeconds),
+      },
+    )
+  }
+
+  // 7. Verify Cloudflare Turnstile token on server
+  const turnstileResult = await verifyTurnstileToken(data.turnstileToken, clientIp)
+  if (!turnstileResult.success) {
+    return apiError(
+      'TURNSTILE_FAILED',
+      'Verifikasi keamanan gagal. Silakan coba lagi.',
+    )
+  }
+
+  // 8. Perform registration in atomic transaction
   try {
     const outcome = await registerParticipant({
       eventId: event.id,

@@ -1,10 +1,11 @@
 import { eq, sql } from 'drizzle-orm'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POST as registerHandler } from '@/app/api/register/route'
 import { db } from '@/lib/db'
 import { cancelRegistration, findRegistrationByToken } from '@/lib/db/queries/registrations'
 import { events, registrations } from '@/lib/db/schema'
+import { resetRateLimit } from '@/lib/rate-limit'
 
 let eventId: string
 const runId = Math.floor(Math.random() * 89999 + 10000)
@@ -38,7 +39,11 @@ async function createTestEvent(overrides: Partial<typeof events.$inferInsert> = 
   return event
 }
 
-function createRequest(body: unknown, targetEventId?: string): Request {
+function createRequest(
+  body: unknown,
+  targetEventId?: string,
+  clientIp = '192.168.1.100',
+): Request {
   const url = targetEventId
     ? `http://localhost:3000/api/register?eventId=${targetEventId}`
     : 'http://localhost:3000/api/register'
@@ -47,18 +52,21 @@ function createRequest(body: unknown, targetEventId?: string): Request {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Forwarded-For': '192.168.1.100',
+      'X-Forwarded-For': clientIp,
     },
     body: JSON.stringify(body),
   })
 }
 
 beforeEach(async () => {
+  resetRateLimit()
   const event = await createTestEvent()
   eventId = event.id
 })
 
 afterEach(async () => {
+  vi.restoreAllMocks()
+  resetRateLimit()
   for (const token of createdTokens) {
     await db.delete(registrations).where(eq(registrations.token, token))
   }
@@ -225,6 +233,7 @@ describe('POST /api/register Integration Tests', () => {
             turnstileToken: `token-${i + 1}`,
           },
           eventId,
+          `192.168.10.${i + 1}`,
         ),
       )
     })
@@ -266,6 +275,7 @@ describe('POST /api/register Integration Tests', () => {
             turnstileToken: `token-${i + 1}`,
           },
           eventId,
+          `192.168.20.${i + 1}`,
         ),
       )
     })
@@ -317,5 +327,79 @@ describe('POST /api/register Integration Tests', () => {
     const body = await res.json()
     expect(body.error.code).toBe('VALIDATION_ERROR')
     expect(body.error.details).toBeDefined()
+  })
+
+  it('enforces rate limit of 5 requests per 10 minutes per IP hash and responds with 429 RATE_LIMITED', async () => {
+    const testIp = '203.0.113.42'
+
+    // First 5 attempts from this IP should pass the rate limit check
+    for (let i = 0; i < 5; i++) {
+      const phone = nextPhone()
+      const payload = {
+        fullName: `Peserta ${i + 1}`,
+        phone,
+        consent: true,
+        turnstileToken: `token-${i}`,
+      }
+      const res = await registerHandler(createRequest(payload, eventId, testIp))
+      expect(res.status).toBe(201)
+      const data = await res.json()
+      createdTokens.push(data.token)
+    }
+
+    // 6th attempt from the SAME IP should be blocked by rate limit
+    const payload6 = {
+      fullName: 'Peserta Keenam',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'token-6',
+    }
+    const blockedRes = await registerHandler(createRequest(payload6, eventId, testIp))
+    expect(blockedRes.status).toBe(429)
+
+    const blockedBody = await blockedRes.json()
+    expect(blockedBody.error.code).toBe('RATE_LIMITED')
+    expect(blockedRes.headers.get('retry-after')).toBeDefined()
+    expect(Number(blockedRes.headers.get('retry-after'))).toBeGreaterThan(0)
+
+    // A request from a DIFFERENT IP should not be blocked
+    const differentIpRes = await registerHandler(
+      createRequest(payload6, eventId, '203.0.113.99'),
+    )
+    expect(differentIpRes.status).toBe(201)
+    const diffData = await differentIpRes.json()
+    createdTokens.push(diffData.token)
+  })
+
+  it('rejects registration with 400 TURNSTILE_FAILED when Turnstile verification fails', async () => {
+    const originalSecret = process.env.TURNSTILE_SECRET_KEY
+    process.env.TURNSTILE_SECRET_KEY = 'mock-secret-key'
+
+    try {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ success: false, 'error-codes': ['invalid-input-response'] }),
+          {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          },
+        ),
+      )
+
+      const payload = {
+        fullName: 'Bot User',
+        phone: nextPhone(),
+        consent: true,
+        turnstileToken: 'fake-token',
+      }
+
+      const res = await registerHandler(createRequest(payload, eventId))
+      expect(res.status).toBe(400)
+
+      const body = await res.json()
+      expect(body.error.code).toBe('TURNSTILE_FAILED')
+    } finally {
+      process.env.TURNSTILE_SECRET_KEY = originalSecret
+    }
   })
 })
