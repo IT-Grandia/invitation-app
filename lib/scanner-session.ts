@@ -53,3 +53,35 @@ export function clearStoredKey(): void {
     // Nothing to recover from; the key is invalid either way.
   }
 }
+
+const LABEL_KEY = 'padel_staff_label'
+
+/**
+ * Recorded with every check-in so a disputed entry can be traced back to a gate.
+ * Kept per device, since each phone is held by one officer for the whole day.
+ */
+export function loadStaffLabel(): string | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    return window.localStorage.getItem(LABEL_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function storeStaffLabel(label: string): void {
+  try {
+    const trimmed = label.trim()
+
+    if (trimmed) {
+      window.localStorage.setItem(LABEL_KEY, trimmed)
+    } else {
+      window.localStorage.removeItem(LABEL_KEY)
+    }
+  } catch {
+    // The label only enriches the audit trail; losing it blocks nothing.
+  }
+}
