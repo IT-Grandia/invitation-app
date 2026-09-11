@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 
 // No web font is loaded at all. DESIGN.md specifies system-ui, and the digits
@@ -39,7 +40,11 @@ export const viewport: Viewport = {
   themeColor: "#dfe8dd",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: ReactNode;
+}>) {
   return (
     <html lang="id" className="h-full antialiased">
       <body className="flex min-h-full flex-col bg-canvas text-ink">{children}</body>
