@@ -2,6 +2,7 @@ import { apiError } from '@/lib/api-response'
 import { isAdmin } from '@/lib/auth'
 import { getEventStats, getPublishedEvent, remainingCapacity } from '@/lib/db/queries/event'
 import { getAdminEvent, getLastCheckIn, getSheetSyncStatus } from '@/lib/db/queries/registrations'
+import { extractSpreadsheetId } from '@/lib/sheets'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,6 +32,11 @@ export async function GET(request: Request) {
     getLastCheckIn(event.id),
   ])
 
+  const rawSheetId = process.env.GOOGLE_SHEET_ID
+  const sheetUrl = rawSheetId
+    ? `https://docs.google.com/spreadsheets/d/${extractSpreadsheetId(rawSheetId)}/edit`
+    : null
+
   return Response.json(
     {
       event: {
@@ -50,6 +56,7 @@ export async function GET(request: Request) {
       sheetSync: {
         pending: syncStatus.pending,
         lastSyncedAt: syncStatus.lastSyncedAt,
+        sheetUrl,
       },
       lastCheckIn,
     },

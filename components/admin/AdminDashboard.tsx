@@ -200,6 +200,7 @@ export function AdminDashboard() {
             event={stats.event}
             adminKey={adminKey}
             pendingSyncCount={stats.sheetSync.pending}
+            sheetUrl={stats.sheetSync.sheetUrl}
             onStatusChanged={() => {
               void verifyAndLoad(adminKey)
             }}

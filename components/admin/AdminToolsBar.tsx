@@ -11,6 +11,7 @@ type Props = {
   event: AdminEventSummary
   adminKey: string
   pendingSyncCount: number
+  sheetUrl?: string | null
   onStatusChanged: () => void
   onSyncComplete: () => void
 }
@@ -19,6 +20,7 @@ export function AdminToolsBar({
   event,
   adminKey,
   pendingSyncCount,
+  sheetUrl,
   onStatusChanged,
   onSyncComplete,
 }: Props) {
@@ -208,6 +210,7 @@ export function AdminToolsBar({
           {/* Google Sheets External Link if configured */}
           <a
             href={
+              sheetUrl ||
               process.env.NEXT_PUBLIC_SHEET_URL ||
               'https://docs.google.com/spreadsheets'
             }
