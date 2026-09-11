@@ -2,7 +2,12 @@ import { eq, gte, sql } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { db } from '@/lib/db'
-import { commitCheckIn, getManifest, previewCheckIn } from '@/lib/db/queries/checkin'
+import {
+  commitCheckIn,
+  commitCheckInBatch,
+  getManifest,
+  previewCheckIn,
+} from '@/lib/db/queries/checkin'
 import { checkInLogs, events, registrations } from '@/lib/db/schema'
 import type { Registration } from '@/lib/db/schema'
 import { generateToken } from '@/lib/token'
@@ -253,5 +258,91 @@ describe('getManifest', () => {
     } finally {
       await db.delete(events).where(eq(events.id, other.id))
     }
+  })
+})
+
+describe('commitCheckInBatch', () => {
+  const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000)
+
+  it('lets the earlier of two scans win, whatever order they arrive in', async () => {
+    const row = await createRegistration()
+    const earlier = minutesAgo(10)
+    const later = minutesAgo(5)
+
+    const { results, summary } = await commitCheckInBatch({
+      eventId,
+      items: [
+        { rawToken: row.token, clientScannedAt: later, staffLabel: 'Gate B' },
+        { rawToken: row.token, clientScannedAt: earlier, staffLabel: 'Gate A' },
+      ],
+    })
+
+    expect(results.map((result) => result.status)).toEqual(['ok', 'already_used'])
+    expect(summary).toMatchObject({ ok: 1, alreadyUsed: 1 })
+
+    const [stored] = await db.select().from(registrations).where(eq(registrations.id, row.id))
+    expect(stored.checkedInBy).toBe('Gate A')
+    // A plausible device time is kept, so the record shows the real arrival.
+    expect(stored.checkedInAt?.toISOString()).toBe(earlier.toISOString())
+  })
+
+  it('reports each item on its own and carries on past a refused ticket', async () => {
+    const first = await createRegistration()
+    const cancelled = await createRegistration({ status: 'cancelled' })
+    const second = await createRegistration()
+    const start = minutesAgo(1).getTime()
+
+    const { results, summary } = await commitCheckInBatch({
+      eventId,
+      items: [
+        { rawToken: first.token, clientScannedAt: new Date(start) },
+        { rawToken: generateToken(), clientScannedAt: new Date(start + 1000) },
+        { rawToken: cancelled.token, clientScannedAt: new Date(start + 2000) },
+        { rawToken: second.token, clientScannedAt: new Date(start + 3000) },
+      ],
+    })
+
+    expect(results.map((result) => result.status)).toEqual(['ok', 'not_found', 'cancelled', 'ok'])
+    expect(summary).toEqual({
+      ok: 2,
+      alreadyUsed: 0,
+      notFound: 1,
+      cancelled: 1,
+      wrongEvent: 0,
+      error: 0,
+    })
+  })
+
+  it('marks every synced attempt as offline in the audit log', async () => {
+    const row = await createRegistration()
+    const scannedAt = minutesAgo(2)
+
+    await commitCheckInBatch({
+      eventId,
+      staffLabel: 'Gate A',
+      items: [{ rawToken: row.token, clientScannedAt: scannedAt }],
+    })
+
+    const [log] = await logsFor(row.token)
+    expect(log.syncedOffline).toBe(true)
+    expect(log.clientScannedAt?.toISOString()).toBe(scannedAt.toISOString())
+    expect(log.staffLabel).toBe('Gate A')
+  })
+
+  it.each([
+    ['a phone clock running ahead', 3 * 60 * 1000],
+    ['a scan older than twelve hours', -13 * 60 * 60 * 1000],
+  ])('falls back to the server clock for %s', async (_label, offsetMs) => {
+    const row = await createRegistration()
+    const now = new Date()
+
+    await commitCheckInBatch({
+      eventId,
+      now,
+      items: [{ rawToken: row.token, clientScannedAt: new Date(now.getTime() + offsetMs) }],
+    })
+
+    const [stored] = await db.select().from(registrations).where(eq(registrations.id, row.id))
+    expect(stored.checkedInAt?.toISOString()).toBe(now.toISOString())
   })
 })

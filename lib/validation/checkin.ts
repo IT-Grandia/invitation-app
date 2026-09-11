@@ -14,5 +14,26 @@ export const checkInRequestSchema = z.object({
   clientScannedAt: z.iso.datetime().optional(),
 })
 
+export const BATCH_MAX_ITEMS = 200
+
+const staffLabel = z.string().trim().max(80)
+
+export const batchCheckInRequestSchema = z.object({
+  staffLabel: staffLabel.optional(),
+  items: z
+    .array(
+      z.object({
+        token: scannedToken,
+        clientScannedAt: z.iso.datetime(),
+        // An officer can rename their gate while offline. The label in force when
+        // each scan was confirmed is the one that belongs in the audit log.
+        staffLabel: staffLabel.optional(),
+      }),
+    )
+    .min(1)
+    .max(BATCH_MAX_ITEMS),
+})
+
 export type PreviewRequest = z.infer<typeof previewRequestSchema>
 export type CheckInRequest = z.infer<typeof checkInRequestSchema>
+export type BatchCheckInRequest = z.infer<typeof batchCheckInRequestSchema>
