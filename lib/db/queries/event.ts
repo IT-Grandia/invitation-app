@@ -1,28 +1,48 @@
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 
+import { parseEventDetails, parseRundown } from '../../validation/event-content'
+import type { EventDetail, RundownEntry } from '../../validation/event-content'
 import { db } from '../index'
 import { events, registrations } from '../schema'
 import type { Event } from '../schema'
 
+export type EventWithContent = Omit<Event, 'details' | 'rundown'> & {
+  details: EventDetail[]
+  rundown: RundownEntry[]
+}
+
+function withContent(event: Event): EventWithContent {
+  return {
+    ...event,
+    details: parseEventDetails(event.details),
+    rundown: parseRundown(event.rundown),
+  }
+}
+
 /**
  * The application serves a single event at a time. Until a slug appears in the
- * routes, the earliest published event is the one on show.
+ * routes, the earliest event that is published or closed is the one on show.
+ *
+ * Closing an event stops registration only, which the registration route checks
+ * for itself; the invitation and the scanner stay up. Once a later event is
+ * published, earlier ones must be archived rather than left closed, or they would
+ * still be the one shown.
  */
-export async function getPublishedEvent(): Promise<Event | null> {
+export async function getPublishedEvent(): Promise<EventWithContent | null> {
   const [event] = await db
     .select()
     .from(events)
-    .where(eq(events.status, 'published'))
+    .where(inArray(events.status, ['published', 'closed']))
     .orderBy(asc(events.startsAt))
     .limit(1)
 
-  return event ?? null
+  return event ? withContent(event) : null
 }
 
-export async function getEventBySlug(slug: string): Promise<Event | null> {
+export async function getEventBySlug(slug: string): Promise<EventWithContent | null> {
   const [event] = await db.select().from(events).where(eq(events.slug, slug)).limit(1)
 
-  return event ?? null
+  return event ? withContent(event) : null
 }
 
 export type EventStats = {
