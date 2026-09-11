@@ -17,6 +17,7 @@ export type AdminTotals = {
 export type AdminSheetSync = {
   pending: number
   lastSyncedAt: string | null
+  sheetUrl?: string | null
 }
 
 export type AdminLastCheckIn = {
