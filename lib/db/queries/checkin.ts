@@ -128,6 +128,7 @@ export async function commitCheckIn(input: {
   eventId: string
   staffLabel?: string | null
   clientScannedAt?: Date | null
+  recordedAt?: Date | null
   deviceInfo?: string | null
   syncedOffline?: boolean
 }): Promise<CheckInResult> {
@@ -149,7 +150,7 @@ export async function commitCheckIn(input: {
 
   const [updated] = await db
     .update(registrations)
-    .set({ checkedInAt: now, checkedInBy: input.staffLabel ?? null, updatedAt: now })
+    .set({ checkedInAt: input.recordedAt ?? now, checkedInBy: input.staffLabel ?? null, updatedAt: now })
     .where(
       and(
         eq(registrations.token, token),
@@ -209,4 +210,112 @@ export async function getManifest(eventId: string): Promise<ManifestEntry[]> {
     n: row.fullName,
     c: row.checkedInAt?.toISOString() ?? null,
   }))
+}
+
+export type BatchItem = {
+  rawToken: string
+  clientScannedAt: Date
+  staffLabel?: string | null
+}
+
+export type BatchResult = {
+  token: string
+  status: CheckInOutcome | 'error'
+  fullName: string | null
+  checkedInAt: string | null
+  checkedInBy: string | null
+}
+
+export type BatchSummary = {
+  ok: number
+  alreadyUsed: number
+  notFound: number
+  cancelled: number
+  wrongEvent: number
+  error: number
+}
+
+const SUMMARY_KEY: Record<CheckInOutcome, keyof BatchSummary> = {
+  ok: 'ok',
+  already_used: 'alreadyUsed',
+  not_found: 'notFound',
+  cancelled: 'cancelled',
+  wrong_event: 'wrongEvent',
+}
+
+// Longer than any stretch without signal a one-day event can produce, so an
+// older timestamp says more about the phone's clock than about the scan.
+const OFFLINE_WINDOW_MS = 12 * 60 * 60 * 1000
+
+/**
+ * Uses the time the device scanned the ticket when that time is plausible, so a
+ * queue synced long after the signal returned still shows when people actually
+ * arrived. A clock running ahead, or one far in the past, falls back to the
+ * server's; the raw device time stays in the audit log either way.
+ */
+export function resolveRecordedAt(clientScannedAt: Date, now: Date = new Date()): Date {
+  const offset = clientScannedAt.getTime() - now.getTime()
+
+  return offset > 0 || offset < -OFFLINE_WINDOW_MS ? now : clientScannedAt
+}
+
+/**
+ * Applies check-ins confirmed while a scanner had no connection. Items run one at
+ * a time in the order they were scanned, so when a ticket appears twice in a
+ * batch the earlier scan is the one that counts. A failure on one item is
+ * reported against that item and never stops the rest.
+ */
+export async function commitCheckInBatch(input: {
+  eventId: string
+  items: BatchItem[]
+  staffLabel?: string | null
+  now?: Date
+}): Promise<{ results: BatchResult[]; summary: BatchSummary }> {
+  const ordered = [...input.items].sort(
+    (a, b) => a.clientScannedAt.getTime() - b.clientScannedAt.getTime(),
+  )
+
+  const summary: BatchSummary = {
+    ok: 0,
+    alreadyUsed: 0,
+    notFound: 0,
+    cancelled: 0,
+    wrongEvent: 0,
+    error: 0,
+  }
+  const results: BatchResult[] = []
+
+  for (const item of ordered) {
+    try {
+      const result = await commitCheckIn({
+        rawToken: item.rawToken,
+        eventId: input.eventId,
+        staffLabel: item.staffLabel ?? input.staffLabel,
+        clientScannedAt: item.clientScannedAt,
+        recordedAt: resolveRecordedAt(item.clientScannedAt, input.now),
+        syncedOffline: true,
+      })
+
+      summary[SUMMARY_KEY[result.status]] += 1
+      results.push({
+        token: item.rawToken,
+        status: result.status,
+        fullName: result.registration?.fullName ?? null,
+        checkedInAt: result.registration?.checkedInAt ?? null,
+        checkedInBy: result.registration?.checkedInBy ?? null,
+      })
+    } catch (error) {
+      console.error('batch check-in item failed', error)
+      summary.error += 1
+      results.push({
+        token: item.rawToken,
+        status: 'error',
+        fullName: null,
+        checkedInAt: null,
+        checkedInBy: null,
+      })
+    }
+  }
+
+  return { results, summary }
 }
