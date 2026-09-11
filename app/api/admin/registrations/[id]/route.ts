@@ -8,6 +8,7 @@ import {
   adminRestoreRegistration,
   adminUndoCheckIn,
 } from '@/lib/db/queries/registrations'
+import { sheets } from '@/lib/sheets'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,6 +58,19 @@ export async function PATCH(request: Request, { params }: RouteParams) {
   switch (action) {
     case 'manual_checkin':
       result = await adminManualCheckIn(id, staffLabel ? `ADMIN: ${staffLabel}` : 'ADMIN: Manual')
+      if (result.status === 'ok' && sheets.isSheetsConfigured()) {
+        const item = result.item
+        await sheets.recordCheckInToSheet({
+          ticketNumber: item.ticketNumber,
+          fullName: item.fullName,
+          checkedInAt: item.checkedInAt ? new Date(item.checkedInAt) : new Date(),
+          checkedInBy: staffLabel ? `ADMIN: ${staffLabel}` : 'ADMIN: Manual',
+          result: 'ok',
+          mode: 'online',
+        }).catch((err) => {
+          console.warn('[Sheets Admin Check-in] Gagal mencatat check-in ke Sheets:', err)
+        })
+      }
       break
     case 'undo_checkin':
       result = await adminUndoCheckIn(id)

@@ -2,6 +2,8 @@ import { apiError, unauthorized } from '@/lib/api-response'
 import { isStaff } from '@/lib/auth'
 import { commitCheckInBatch } from '@/lib/db/queries/checkin'
 import { getPublishedEvent } from '@/lib/db/queries/event'
+import { sheets } from '@/lib/sheets'
+import { extractToken, ticketNumber } from '@/lib/token'
 import { batchCheckInRequestSchema } from '@/lib/validation/checkin'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +39,29 @@ export async function POST(request: Request) {
       staffLabel: item.staffLabel,
     })),
   })
+
+  // Best-effort Google Sheets mirror for batch items (Task A15)
+  if (sheets.isSheetsConfigured() && outcome.results.length > 0) {
+    try {
+      const doc = await sheets.getSpreadsheetDoc()
+      for (const item of outcome.results) {
+        const bareToken = extractToken(item.token) ?? item.token.trim()
+        await sheets.recordCheckInToSheet(
+          {
+            ticketNumber: ticketNumber(bareToken),
+            fullName: item.fullName,
+            checkedInAt: item.checkedInAt ? new Date(item.checkedInAt) : new Date(),
+            checkedInBy: item.checkedInBy ?? parsed.data.staffLabel,
+            result: item.status,
+            mode: 'offline',
+          },
+          doc,
+        )
+      }
+    } catch (err) {
+      console.warn('[Sheets Batch Check-in] Gagal mencatat batch check-in ke Sheets:', err)
+    }
+  }
 
   // Always 200 once the request itself is valid. Each item carries its own
   // outcome, and one refused ticket must not make the scanner resend the rest.
