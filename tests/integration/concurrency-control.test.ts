@@ -1,9 +1,11 @@
-import { eq, sql } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { afterAll, expect, it } from 'vitest'
 
 import { db } from '@/lib/db'
 import { events, registrations } from '@/lib/db/schema'
 import { generateToken } from '@/lib/token'
+
+import { raceOnLockedRow } from './row-lock'
 
 let eventId: string
 
@@ -16,13 +18,12 @@ afterAll(async () => {
 /**
  * A negative control for the atomicity test in checkin.test.ts.
  *
- * That test is only meaningful if concurrent requests genuinely overlap. This one
- * runs the naive read-then-write it is meant to rule out and asserts that the
- * naive version does let several attempts through. If this ever starts passing
- * only one attempt, the harness has stopped racing and the atomicity test has
- * quietly become worthless.
+ * Runs the naive read-then-write that test is meant to rule out, through the same
+ * harness, and asserts that every attempt gets through. If this ever fails, the
+ * harness has stopped making attempts overlap and the atomicity test would pass
+ * for a broken implementation.
  */
-it('a read-then-write check-in lets more than one attempt through', async () => {
+it('a read-then-write check-in lets every attempt through', async () => {
   const [event] = await db
     .insert(events)
     .values({
@@ -63,12 +64,7 @@ it('a read-then-write check-in lets more than one attempt through', async () => 
     return 'ok'
   }
 
-  // Connections open lazily, so without this the first attempt finishes before
-  // the last one has finished its handshake and no race ever occurs.
-  await Promise.all(Array.from({ length: 10 }, () => db.execute(sql`select 1`)))
+  const results = await raceOnLockedRow(row.id, Array.from({ length: 10 }, () => naiveCheckIn))
 
-  const results = await Promise.all(Array.from({ length: 10 }, naiveCheckIn))
-  const winners = results.filter((result) => result === 'ok').length
-
-  expect(winners).toBeGreaterThan(1)
+  expect(results.filter((result) => result === 'ok')).toHaveLength(10)
 })
