@@ -1,4 +1,4 @@
-import { eq, gte, sql } from 'drizzle-orm'
+import { eq, gte } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { db } from '@/lib/db'
@@ -11,6 +11,8 @@ import {
 import { checkInLogs, events, registrations } from '@/lib/db/schema'
 import type { Registration } from '@/lib/db/schema'
 import { generateToken } from '@/lib/token'
+
+import { raceOnLockedRow } from './row-lock'
 
 let eventId: string
 let startedAt: Date
@@ -58,21 +60,10 @@ async function logsFor(rawToken: string) {
   return db.select().from(checkInLogs).where(eq(checkInLogs.rawToken, rawToken))
 }
 
-/**
- * postgres.js opens connections lazily. Without this the first of a batch of
- * concurrent requests completes before the last has finished its handshake, so
- * nothing actually races and a broken implementation would still pass.
- * concurrency-control.test.ts guards that this warm-up keeps working.
- */
-async function warmPool(size = 10) {
-  await Promise.all(Array.from({ length: size }, () => db.execute(sql`select 1`)))
-}
-
 beforeEach(async () => {
   startedAt = new Date()
   const event = await createEvent()
   eventId = event.id
-  await warmPool()
 })
 
 afterEach(async () => {
@@ -85,12 +76,11 @@ afterEach(async () => {
 describe('commitCheckIn', () => {
   it('lets exactly one of ten concurrent attempts through', async () => {
     const row = await createRegistration()
+    const attempt = () => commitCheckIn({ rawToken: row.token, eventId, staffLabel: 'Gate A' })
 
-    const results = await Promise.all(
-      Array.from({ length: 10 }, () =>
-        commitCheckIn({ rawToken: row.token, eventId, staffLabel: 'Gate A' }),
-      ),
-    )
+    // concurrency-control.test.ts runs a non-atomic check-in through this same
+    // harness to confirm it would be caught.
+    const results = await raceOnLockedRow(row.id, Array.from({ length: 10 }, () => attempt))
 
     expect(results.filter((result) => result.status === 'ok')).toHaveLength(1)
     expect(results.filter((result) => result.status === 'already_used')).toHaveLength(9)
