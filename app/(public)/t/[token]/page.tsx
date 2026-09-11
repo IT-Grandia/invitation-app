@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { QrCard } from "@/components/ticket/QrCard";
 import { StatusBadge } from "@/components/ticket/StatusBadge";
+import { TicketActions } from "@/components/ticket/TicketActions";
 import { TicketDetails } from "@/components/ticket/TicketDetails";
 import { getPublishedEvent } from "@/lib/db/queries/event";
 import { findRegistrationByToken } from "@/lib/db/queries/registrations";
-import { isWellFormedToken } from "@/lib/qr";
+import { isWellFormedToken, ticketUrl } from "@/lib/qr";
 import { qrPresentation, resolveTicketStatus } from "@/lib/ticket-status";
 import { ticketNumber } from "@/lib/token";
 
@@ -80,6 +81,16 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
       />
 
       <TicketDetails event={event} />
+
+      {presentation !== "hidden" && (
+        <TicketActions
+          token={registration.token}
+          ticketNumber={number}
+          ticketUrl={ticketUrl(registration.token)}
+          eventName={event.name}
+          qrIsLive={presentation === "live"}
+        />
+      )}
 
       {presentation === "live" && (
         <p className="rounded-card border border-line bg-surface-2 px-4 py-3 text-center text-sm text-pretty">
