@@ -1,7 +1,7 @@
 import { apiError } from '@/lib/api-response'
 import { isAdmin } from '@/lib/auth'
 import { getEventStats, getPublishedEvent, remainingCapacity } from '@/lib/db/queries/event'
-import { getAdminEvent, getSheetSyncStatus } from '@/lib/db/queries/registrations'
+import { getAdminEvent, getLastCheckIn, getSheetSyncStatus } from '@/lib/db/queries/registrations'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,9 +25,10 @@ export async function GET(request: Request) {
     })
   }
 
-  const [stats, syncStatus] = await Promise.all([
+  const [stats, syncStatus, lastCheckIn] = await Promise.all([
     getEventStats(event.id),
     getSheetSyncStatus(event.id),
+    getLastCheckIn(event.id),
   ])
 
   return Response.json(
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
         pending: syncStatus.pending,
         lastSyncedAt: syncStatus.lastSyncedAt,
       },
+      lastCheckIn,
     },
     {
       headers: {

@@ -19,8 +19,15 @@ export type AdminSheetSync = {
   lastSyncedAt: string | null
 }
 
+export type AdminLastCheckIn = {
+  checkedInAt: string
+  checkedInBy: string | null
+}
+
 export type AdminStatsResponse = {
   event: AdminEventSummary
   totals: AdminTotals
   sheetSync: AdminSheetSync
+  lastCheckIn: AdminLastCheckIn | null
 }
+

@@ -14,6 +14,7 @@ import {
   withAdminKey,
 } from './admin-session'
 import { AdminKeyGate } from './AdminKeyGate'
+import { AdminStatsCards } from './AdminStatsCards'
 import type { AdminStatsResponse } from './types'
 
 type GateState = 'checking' | 'locked' | 'ready'
@@ -191,55 +192,8 @@ export function AdminDashboard() {
 
       {/* Main Container */}
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
-        {/* Placeholder slot for Task A11 (Statistik & Kehadiran) */}
-        <section
-          aria-labelledby="section-stats-heading"
-          className="rounded-card border border-line bg-surface p-5 shadow-sm"
-        >
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 id="section-stats-heading" className="font-display text-base font-bold text-ink">
-                Statistik & Ringkasan Acara
-              </h2>
-              <p className="text-xs text-ink-muted">
-                Data kehadiran langsung dari database pendaftaran
-              </p>
-            </div>
-            {stats?.sheetSync.lastSyncedAt && (
-              <span className="text-xs text-ink-muted">
-                Sync Sheets terakhir: {formatWib(stats.sheetSync.lastSyncedAt)}
-              </span>
-            )}
-          </div>
-
-          {/* Quick Metrics Preview */}
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-md border border-line/60 bg-canvas/30 p-3">
-              <span className="text-xs font-medium text-ink-muted">Terdaftar</span>
-              <p className="font-numeric text-2xl font-bold text-ink">
-                {stats?.totals.registered ?? 0}
-              </p>
-            </div>
-            <div className="rounded-md border border-line/60 bg-canvas/30 p-3">
-              <span className="text-xs font-medium text-ink-muted">Sudah Hadir</span>
-              <p className="font-numeric text-2xl font-bold text-primary">
-                {stats?.totals.checkedIn ?? 0}
-              </p>
-            </div>
-            <div className="rounded-md border border-line/60 bg-canvas/30 p-3">
-              <span className="text-xs font-medium text-ink-muted">Belum Hadir</span>
-              <p className="font-numeric text-2xl font-bold text-ink">
-                {stats?.totals.notCheckedIn ?? 0}
-              </p>
-            </div>
-            <div className="rounded-md border border-line/60 bg-canvas/30 p-3">
-              <span className="text-xs font-medium text-ink-muted">Sisa Kuota</span>
-              <p className="font-numeric text-2xl font-bold text-ink">
-                {stats?.totals.remaining !== null ? stats?.totals.remaining : 'Tak terbatas'}
-              </p>
-            </div>
-          </div>
-        </section>
+        {/* Task A11: Kartu Statistik & Kehadiran */}
+        {stats && <AdminStatsCards stats={stats} />}
 
         {/* Placeholder slot for Task A12 - A14 (Tabel Peserta & Aksi) */}
         <section

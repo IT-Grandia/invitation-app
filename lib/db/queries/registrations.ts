@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, isNull, ne, sql } from 'drizzle-orm'
 
 import { db } from '../index'
 import { events, registrations } from '../schema'
@@ -276,6 +276,42 @@ export async function getAdminEvent(): Promise<Event | null> {
 
   return event ?? null
 }
+
+export type LastCheckInInfo = {
+  checkedInAt: string
+  checkedInBy: string | null
+}
+
+/**
+ * Retrieves the most recent confirmed check-in for the given event,
+ * along with the staff label if available.
+ */
+export async function getLastCheckIn(eventId: string): Promise<LastCheckInInfo | null> {
+  const [row] = await db
+    .select({
+      checkedInAt: registrations.checkedInAt,
+      checkedInBy: registrations.checkedInBy,
+    })
+    .from(registrations)
+    .where(
+      and(
+        eq(registrations.eventId, eventId),
+        isNotNull(registrations.checkedInAt),
+      ),
+    )
+    .orderBy(desc(registrations.checkedInAt))
+    .limit(1)
+
+  if (!row || !row.checkedInAt) {
+    return null
+  }
+
+  return {
+    checkedInAt: new Date(row.checkedInAt).toISOString(),
+    checkedInBy: row.checkedInBy,
+  }
+}
+
 
 
 

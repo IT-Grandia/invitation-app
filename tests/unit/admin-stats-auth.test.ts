@@ -57,6 +57,7 @@ describe('GET /api/admin/stats Auth & Route Handling', () => {
       expect(json).toHaveProperty('sheetSync')
       expect(json.totals).toHaveProperty('registered')
       expect(json.totals).toHaveProperty('checkedIn')
+      expect(json).toHaveProperty('lastCheckIn')
     }
   })
 })
