@@ -1,4 +1,4 @@
-import { and, eq, ne, sql } from 'drizzle-orm'
+import { and, asc, eq, isNull, ne, sql } from 'drizzle-orm'
 
 import { db } from '../index'
 import { events, registrations } from '../schema'
@@ -199,3 +199,44 @@ export async function cancelRegistration(id: string): Promise<Registration | nul
 
   return row ?? null
 }
+
+/**
+ * Updates a registration with its mirrored Google Sheets row number
+ * and marks the sync timestamp.
+ */
+export async function markRegistrationSheetSynced(
+  id: string,
+  sheetRow: number,
+): Promise<Registration | null> {
+  const [row] = await db
+    .update(registrations)
+    .set({
+      sheetRow,
+      sheetSyncedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(registrations.id, id))
+    .returning()
+
+  return row ?? null
+}
+
+/**
+ * Retrieves registrations that haven't been synced to Google Sheets yet,
+ * ordered by registration time. (03-DATA-MODEL.md §5.4)
+ */
+export async function getUnsyncedRegistrations(limit = 100): Promise<Registration[]> {
+  return db
+    .select()
+    .from(registrations)
+    .where(
+      and(
+        isNull(registrations.sheetSyncedAt),
+        ne(registrations.status, 'cancelled'),
+      ),
+    )
+    .orderBy(asc(registrations.createdAt))
+    .limit(limit)
+}
+
+

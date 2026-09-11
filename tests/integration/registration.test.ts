@@ -3,9 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POST as registerHandler } from '@/app/api/register/route'
 import { db } from '@/lib/db'
-import { cancelRegistration, findRegistrationByToken } from '@/lib/db/queries/registrations'
+import {
+  cancelRegistration,
+  findRegistrationByToken,
+  getUnsyncedRegistrations,
+  markRegistrationSheetSynced,
+} from '@/lib/db/queries/registrations'
 import { events, registrations } from '@/lib/db/schema'
 import { resetRateLimit } from '@/lib/rate-limit'
+import { sheets } from '@/lib/sheets'
 
 let eventId: string
 const runId = Math.floor(Math.random() * 89999 + 10000)
@@ -60,6 +66,7 @@ function createRequest(
 
 beforeEach(async () => {
   resetRateLimit()
+  vi.spyOn(sheets, 'appendRegistration').mockResolvedValue({ sheetRow: 2 })
   const event = await createTestEvent()
   eventId = event.id
 })
@@ -401,5 +408,125 @@ describe('POST /api/register Integration Tests', () => {
     } finally {
       process.env.TURNSTILE_SECRET_KEY = originalSecret
     }
+  })
+
+  it('updates registration with sheet_row and sheet_synced_at via markRegistrationSheetSynced query', async () => {
+    const payload = {
+      fullName: 'Peserta Test Query',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'token-query',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    const initial = await findRegistrationByToken(data.token)
+    expect(initial).not.toBeNull()
+
+    const updated = await markRegistrationSheetSynced(initial!.id, 77)
+    expect(updated).not.toBeNull()
+    expect(updated?.sheetRow).toBe(77)
+    expect(updated?.sheetSyncedAt).toBeInstanceOf(Date)
+  })
+
+  it('appends row to Google Sheets and stores sheet_row and sheet_synced_at in DB upon registration', async () => {
+    const appendSpy = vi.spyOn(sheets, 'appendRegistration').mockResolvedValue({ sheetRow: 88 })
+
+    const payload = {
+      fullName: 'Peserta Sinkron Sheets',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'valid-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    expect(appendSpy).toHaveBeenCalledTimes(1)
+    expect(appendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fullName: 'Peserta Sinkron Sheets',
+        token: data.token,
+      }),
+    )
+
+    const stored = await findRegistrationByToken(data.token)
+    expect(stored).not.toBeNull()
+    expect(stored?.sheetRow).toBe(88)
+    expect(stored?.sheetSyncedAt).not.toBeNull()
+
+    appendSpy.mockRestore()
+  })
+
+  it('tetap berhasil mendaftar saat Sheets API error (quota exceeded, timeout, dll.)', async () => {
+    const appendSpy = vi
+      .spyOn(sheets, 'appendRegistration')
+      .mockRejectedValue(new Error('quota exceeded'))
+
+    const payload = {
+      fullName: 'Peserta Tahan Error Sheets',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'valid-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    expect(data.token).toBeDefined()
+    expect(data.ticketUrl).toBeDefined()
+
+    // Database record is intact and marked as unsynced
+    const stored = await findRegistrationByToken(data.token)
+    expect(stored).not.toBeNull()
+    expect(stored?.status).toBe('confirmed')
+    expect(stored?.sheetSyncedAt).toBeNull()
+    expect(stored?.sheetRow).toBeNull()
+
+    // Appears in getUnsyncedRegistrations query
+    const unsynced = await getUnsyncedRegistrations(100)
+    expect(unsynced.some((r) => r.token === data.token)).toBe(true)
+
+    appendSpy.mockRestore()
+  })
+
+  it('mengambil baris belum tersinkron dan mengecualikan pendaftaran batal', async () => {
+    const appendSpy = vi
+      .spyOn(sheets, 'appendRegistration')
+      .mockRejectedValue(new Error('sheets offline'))
+
+    const phone = nextPhone()
+    const payload = {
+      fullName: 'Peserta Akan Batal',
+      phone,
+      consent: true,
+      turnstileToken: 'valid-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    const reg = await findRegistrationByToken(data.token)
+    expect(reg).not.toBeNull()
+
+    // Cancel this registration
+    await cancelRegistration(reg!.id)
+
+    // Should not appear in getUnsyncedRegistrations because status is cancelled
+    const unsynced = await getUnsyncedRegistrations(100)
+    expect(unsynced.some((r) => r.id === reg!.id)).toBe(false)
+
+    appendSpy.mockRestore()
   })
 })

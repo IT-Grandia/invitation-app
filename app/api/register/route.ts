@@ -4,10 +4,11 @@ import { eq } from 'drizzle-orm'
 import { apiError } from '@/lib/api-response'
 import { db } from '@/lib/db'
 import { getPublishedEvent } from '@/lib/db/queries/event'
-import { registerParticipant } from '@/lib/db/queries/registrations'
+import { markRegistrationSheetSynced, registerParticipant } from '@/lib/db/queries/registrations'
 import { events, type Event } from '@/lib/db/schema'
 import { normalizePhone } from '@/lib/phone'
 import { checkRateLimit } from '@/lib/rate-limit'
+import { sheets } from '@/lib/sheets'
 import { buildTicketCookieHeader } from '@/lib/ticket-cookie'
 import { verifyTurnstileToken } from '@/lib/turnstile'
 import { registerApiSchema } from '@/lib/validation/registration'
@@ -131,7 +132,18 @@ export async function POST(request: Request) {
       return apiError('REGISTRATION_CLOSED', outcome.message)
     }
 
-    // 7. Successful registration: build response and Set-Cookie
+    // 9. Best-effort Google Sheets mirror (A7/A8: Kegagalan Sheets tidak menggagalkan pendaftaran)
+    try {
+      const { sheetRow } = await sheets.appendRegistration(outcome.registration)
+      await markRegistrationSheetSynced(outcome.registration.id, sheetRow)
+    } catch (error) {
+      console.warn(
+        `[Sheets Mirror] Gagal menambahkan baris untuk pendaftaran ${outcome.registration.id}:`,
+        error,
+      )
+    }
+
+    // 10. Successful registration: build response and Set-Cookie
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
     const ticketUrl = `${siteUrl}/t/${outcome.registration.token}`
 
