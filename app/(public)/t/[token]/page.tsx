@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ForgetDeviceButton } from "@/components/ticket/ForgetDeviceButton";
 import { QrCard } from "@/components/ticket/QrCard";
 import { StatusBadge } from "@/components/ticket/StatusBadge";
 import { TicketActions } from "@/components/ticket/TicketActions";
@@ -102,6 +103,10 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
           Simpan tiket ini. Kamu butuh QR-nya saat masuk.
         </p>
       )}
+
+      <div className="mt-4 border-t border-line pt-6">
+        <ForgetDeviceButton />
+      </div>
     </main>
   );
 }
