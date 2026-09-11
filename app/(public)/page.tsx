@@ -5,7 +5,11 @@ import { EventCta, type CtaState } from "@/components/invitation/EventCta";
 import { EventDetails } from "@/components/invitation/EventDetails";
 import { Greeting } from "@/components/invitation/Greeting";
 import { Rundown } from "@/components/invitation/Rundown";
+import { StoredTicketBanner } from "@/components/invitation/StoredTicketBanner";
+import { TicketBanner } from "@/components/invitation/TicketBanner";
 import { Venue } from "@/components/invitation/Venue";
+import { isWellFormedToken } from "@/lib/qr";
+import { TICKET_COOKIE_NAME } from "@/lib/ticket-cookie";
 
 /**
  * TEMPORARY placeholder event content.
@@ -64,8 +68,6 @@ const PLACEHOLDER_EVENT = {
 
 } as const;
 
-const TICKET_COOKIE = "padel_ticket";
-
 /**
  * Where the call to action points.
  *
@@ -77,10 +79,12 @@ const TICKET_COOKIE = "padel_ticket";
 const REGISTER_HREF = "/daftar";
 
 export default async function InvitationPage() {
-  // Whether the visitor already holds a ticket decides two things: the cover is
-  // skipped, and the CTA points at their ticket instead of the form. The sticky
-  // banner itself lands in step B8.
-  const ticketToken = (await cookies()).get(TICKET_COOKIE)?.value;
+  // Whether the visitor already holds a ticket decides three things: the cover
+  // is skipped, the banner renders on the server (no content flash), and the
+  // CTA points at their ticket instead of the form. The cookie is set by Dev A's
+  // /api/register; anything that fails the token shape is treated as absent.
+  const cookieToken = (await cookies()).get(TICKET_COOKIE_NAME)?.value;
+  const ticketToken = cookieToken && isWellFormedToken(cookieToken) ? cookieToken : undefined;
 
   const ctaState: CtaState = ticketToken
     ? { kind: "has_ticket", ticketHref: `/t/${ticketToken}` }
@@ -94,6 +98,10 @@ export default async function InvitationPage() {
         dateLabel={PLACEHOLDER_EVENT.dateLabel}
         venueName={PLACEHOLDER_EVENT.venueName}
       >
+        {/* Cookie found: banner is in the server HTML. Otherwise the client
+            checks localStorage after hydration — docs/05-UX-FLOWS.md section 3. */}
+        {ticketToken ? <TicketBanner ticketHref={`/t/${ticketToken}`} /> : <StoredTicketBanner />}
+
         <main className="flex flex-1 flex-col">
           <Greeting dateLabel={PLACEHOLDER_EVENT.dateLabel} />
 
