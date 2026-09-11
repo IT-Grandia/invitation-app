@@ -26,6 +26,7 @@ export type PreviewResult = {
 export type CheckInResult = {
   status: CheckInOutcome
   registration: RegistrationSummary | null
+  sheetRow?: number | null
 }
 
 type LogEntry = {
@@ -169,7 +170,7 @@ export async function commitCheckIn(input: {
       result: 'ok',
     })
 
-    return { status: 'ok', registration: summarise(updated) }
+    return { status: 'ok', registration: summarise(updated), sheetRow: updated.sheetRow }
   }
 
   const existing = await findByToken(token)
@@ -186,7 +187,11 @@ export async function commitCheckIn(input: {
     result,
   })
 
-  return { status: result, registration: existing ? summarise(existing) : null }
+  return {
+    status: result,
+    registration: existing ? summarise(existing) : null,
+    sheetRow: existing?.sheetRow,
+  }
 }
 
 /**

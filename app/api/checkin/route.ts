@@ -3,6 +3,8 @@ import { isStaff } from '@/lib/auth'
 import { formatWibTime } from '@/lib/datetime'
 import { commitCheckIn } from '@/lib/db/queries/checkin'
 import { getEventStats, getPublishedEvent } from '@/lib/db/queries/event'
+import { sheets } from '@/lib/sheets'
+import { extractToken, ticketNumber } from '@/lib/token'
 import { checkInRequestSchema } from '@/lib/validation/checkin'
 
 export const dynamic = 'force-dynamic'
@@ -37,6 +39,26 @@ export async function POST(request: Request) {
   })
 
   const registration = result.registration
+
+  // Best-effort Google Sheets mirror (Task A15 / 04-API-SPEC.md §5 Efek Samping #3)
+  if (sheets.isSheetsConfigured()) {
+    const bareToken = extractToken(token) ?? token.trim()
+    const displayTicketNumber = registration?.ticketNumber ?? ticketNumber(bareToken)
+
+    try {
+      await sheets.recordCheckInToSheet({
+        ticketNumber: displayTicketNumber,
+        fullName: registration?.fullName,
+        sheetRow: result.sheetRow,
+        checkedInAt: registration?.checkedInAt ? new Date(registration.checkedInAt) : new Date(),
+        checkedInBy: staffLabel,
+        result: result.status,
+        mode: 'online',
+      })
+    } catch (err) {
+      console.warn('[Sheets Check-in] Gagal mencatat check-in ke Sheets:', err)
+    }
+  }
 
   switch (result.status) {
     case 'ok': {
