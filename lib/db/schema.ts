@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -31,6 +32,10 @@ export const events = pgTable(
     capacity: integer('capacity'),
     status: text('status').notNull().default('draft'),
     contactWhatsapp: text('contact_whatsapp'),
+    // Filled in by hand, so only the outer array is enforced here. Entries are
+    // checked when read, in lib/validation/event-content.ts.
+    details: jsonb('details').notNull().default([]),
+    rundown: jsonb('rundown').notNull().default([]),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -41,6 +46,8 @@ export const events = pgTable(
     ),
     check('events_capacity_positive', sql`${table.capacity} is null or ${table.capacity} > 0`),
     check('events_time_order', sql`${table.endsAt} > ${table.startsAt}`),
+    check('events_details_array', sql`jsonb_typeof(${table.details}) = 'array'`),
+    check('events_rundown_array', sql`jsonb_typeof(${table.rundown}) = 'array'`),
   ],
 )
 
