@@ -11,12 +11,21 @@ type Props = {
   manifest: Manifest | null
   loading: boolean
   error: string | null
+  offlineSince: string | null
   onRetry: () => void
   onSelect: (token: string) => void
   onBack: () => void
 }
 
-export function ManualSearch({ manifest, loading, error, onRetry, onSelect, onBack }: Props) {
+export function ManualSearch({
+  manifest,
+  loading,
+  error,
+  offlineSince,
+  onRetry,
+  onSelect,
+  onBack,
+}: Props) {
   const [query, setQuery] = useState('')
 
   const results = useMemo(
@@ -53,6 +62,13 @@ export function ManualSearch({ manifest, loading, error, onRetry, onSelect, onBa
           className="min-h-tap rounded-card border border-line-input bg-surface px-4 text-ink"
         />
       </label>
+
+      {offlineSince && manifest && (
+        <p className="rounded-card border border-warning bg-surface px-4 py-2 text-sm text-ink">
+          Mode offline · daftar per {formatWibTime(offlineSince)}. Check-in yang dikonfirmasi
+          disimpan di HP ini.
+        </p>
+      )}
 
       {loading && !manifest && <p className="text-ink-muted">Memuat daftar peserta…</p>}
 

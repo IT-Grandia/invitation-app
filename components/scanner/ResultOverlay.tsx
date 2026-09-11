@@ -8,15 +8,18 @@ import type { Preview, PreviewStatus, Stats } from './types'
 
 export type OverlayState =
   | { kind: 'lookup' }
-  | { kind: 'preview'; preview: Preview }
+  | { kind: 'preview'; preview: Preview; offlineSince?: string }
   | { kind: 'committing'; preview: Preview }
-  | { kind: 'done'; fullName: string; stats: Stats }
+  | { kind: 'done'; fullName: string; stats: Stats; queued?: boolean }
   | { kind: 'failure'; message: string }
+  | { kind: 'logout'; pending: number }
 
 type Props = {
   state: OverlayState
   onConfirm: () => void
   onDismiss: () => void
+  onLogout: () => void
+  onSyncNow: () => void
 }
 
 type Refusal = Exclude<PreviewStatus, 'ready' | 'already_used'>
@@ -41,6 +44,9 @@ const REFUSAL_ADVICE: Record<Refusal, string> = {
   wrong_event: 'Minta peserta menunjukkan tiket untuk acara ini.',
 }
 
+const OFFLINE_NOT_FOUND =
+  'Tidak ada di daftar yang tersimpan di HP. Kalau peserta yakin terdaftar, tunggu sinyal lalu scan ulang, atau hubungi koordinator.'
+
 const NAME = 'font-display text-5xl leading-tight break-words'
 const TICKET = 'mt-2 font-mono text-lg tracking-widest'
 const PRIMARY =
@@ -57,6 +63,14 @@ function Icon({ children }: { children: ReactNode }) {
     <span aria-hidden="true" className="text-7xl leading-none font-bold">
       {children}
     </span>
+  )
+}
+
+function OfflineNote({ since }: { since: string }) {
+  return (
+    <p className="rounded-pill border border-canvas px-4 py-1 text-sm font-semibold">
+      Mode offline · data per {formatWibTime(since)}
+    </p>
   )
 }
 
@@ -91,9 +105,10 @@ function Shell({
  * Colour is never the only signal: every state also carries its own icon and
  * headline, so the result reads the same in harsh sunlight or to an officer who
  * cannot tell the tones apart. Focus lands on the least consequential action,
- * because confirming a check-in cannot be undone from this page.
+ * because neither a confirmed check-in nor a logout that discards unsent
+ * check-ins can be undone from this page.
  */
-export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
+export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow }: Props) {
   if (state.kind === 'lookup') {
     return (
       <div
@@ -111,11 +126,15 @@ export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
         role="status"
         className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-success p-6 text-center text-canvas"
       >
-        <Icon>✓✓</Icon>
-        <p className="font-display text-4xl tracking-wide uppercase">Tercatat</p>
+        <Icon>{state.queued ? '✓' : '✓✓'}</Icon>
+        <p className="font-display text-4xl tracking-wide uppercase">
+          {state.queued ? 'Tersimpan' : 'Tercatat'}
+        </p>
         <p className="text-3xl font-semibold break-words">{state.fullName}</p>
-        <p className="text-lg">
-          Hadir: {state.stats.checkedIn} / {state.stats.total}
+        <p className="max-w-sm text-lg">
+          {state.queued
+            ? 'Tersimpan di HP ini, dikirim otomatis saat sinyal kembali.'
+            : `Hadir: ${state.stats.checkedIn} / ${state.stats.total}`}
         </p>
         <button type="button" onClick={onDismiss} className={SECONDARY}>
           Lanjut Scan
@@ -141,13 +160,63 @@ export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
     )
   }
 
+  if (state.kind === 'logout') {
+    if (state.pending > 0) {
+      return (
+        <Shell tone="bg-danger" onEscape={onDismiss}>
+          <Icon>!</Icon>
+          <p id="overlay-title" className="font-display text-4xl leading-tight">
+            {state.pending} check-in belum terkirim
+          </p>
+          <p id="overlay-detail" className="max-w-sm text-lg">
+            Kalau keluar sekarang, data itu ikut terhapus dan peserta tersebut tidak akan pernah
+            tercatat.
+          </p>
+          <div className="flex w-full flex-col items-center gap-3">
+            <button type="button" onClick={onSyncNow} autoFocus className={PRIMARY}>
+              Kirim Dulu
+            </button>
+            <button type="button" onClick={onLogout} className={SECONDARY}>
+              Tetap Keluar dan Hapus
+            </button>
+            <button type="button" onClick={onDismiss} className={SECONDARY}>
+              Batal
+            </button>
+          </div>
+        </Shell>
+      )
+    }
+
+    return (
+      <Shell tone="bg-warning" onEscape={onDismiss}>
+        <p id="overlay-title" className="font-display text-4xl leading-tight">
+          Keluar dari scanner?
+        </p>
+        <p id="overlay-detail" className="max-w-sm text-lg">
+          Kode petugas dan daftar peserta akan dihapus dari HP ini. Untuk masuk lagi, buka link dari
+          koordinator.
+        </p>
+        <div className="flex w-full flex-col items-center gap-3">
+          <button type="button" onClick={onDismiss} autoFocus className={PRIMARY}>
+            Batal
+          </button>
+          <button type="button" onClick={onLogout} className={SECONDARY}>
+            Keluar
+          </button>
+        </div>
+      </Shell>
+    )
+  }
+
   const { preview } = state
   const committing = state.kind === 'committing'
+  const offlineSince = state.kind === 'preview' ? state.offlineSince : undefined
   const person = preview.registration
 
   if (preview.status === 'ready' && person) {
     return (
       <Shell tone={TONE.ready} onEscape={committing ? undefined : onDismiss}>
+        {offlineSince && <OfflineNote since={offlineSince} />}
         <Icon>✓</Icon>
         <div>
           <p id="overlay-title" className={NAME}>
@@ -156,7 +225,8 @@ export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
           <p className={TICKET}>{person.ticketNumber}</p>
         </div>
         <p id="overlay-detail" className="max-w-sm text-lg">
-          Belum check-in. Cocokkan nama dengan orang di depanmu.
+          {offlineSince ? 'Belum check-in menurut data di HP.' : 'Belum check-in.'} Cocokkan nama
+          dengan orang di depanmu.
         </p>
         <div className="flex w-full flex-col items-center gap-3">
           <button
@@ -185,6 +255,7 @@ export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
   if (preview.status === 'already_used' && person) {
     return (
       <Shell tone={TONE.already_used} onEscape={onDismiss}>
+        {offlineSince && <OfflineNote since={offlineSince} />}
         <Icon>!</Icon>
         <div>
           <p id="overlay-title" className={NAME}>
@@ -211,13 +282,14 @@ export function ResultOverlay({ state, onConfirm, onDismiss }: Props) {
 
   return (
     <Shell tone={TONE[refusal]} onEscape={onDismiss}>
+      {offlineSince && <OfflineNote since={offlineSince} />}
       <Icon>✕</Icon>
       <p id="overlay-title" className="font-display text-4xl leading-tight">
         {REFUSAL_TITLE[refusal]}
       </p>
       {person && <p className="text-2xl font-semibold break-words">{person.fullName}</p>}
       <p id="overlay-detail" className="max-w-sm text-lg">
-        {REFUSAL_ADVICE[refusal]}
+        {offlineSince && refusal === 'not_found' ? OFFLINE_NOT_FOUND : REFUSAL_ADVICE[refusal]}
       </p>
       <button type="button" onClick={onDismiss} autoFocus className={SECONDARY}>
         Kembali
