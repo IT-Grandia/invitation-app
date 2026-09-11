@@ -16,6 +16,7 @@ import {
 import { AdminKeyGate } from './AdminKeyGate'
 import { AdminRegistrationsTable } from './AdminRegistrationsTable'
 import { AdminStatsCards } from './AdminStatsCards'
+import { AdminToolsBar } from './AdminToolsBar'
 import type { AdminStatsResponse } from './types'
 
 type GateState = 'checking' | 'locked' | 'ready'
@@ -193,6 +194,21 @@ export function AdminDashboard() {
 
       {/* Main Container */}
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6">
+        {/* Task A14: Toolbar Aksi Panitia */}
+        {stats && adminKey && (
+          <AdminToolsBar
+            event={stats.event}
+            adminKey={adminKey}
+            pendingSyncCount={stats.sheetSync.pending}
+            onStatusChanged={() => {
+              void verifyAndLoad(adminKey)
+            }}
+            onSyncComplete={() => {
+              void verifyAndLoad(adminKey)
+            }}
+          />
+        )}
+
         {/* Task A11: Kartu Statistik & Kehadiran */}
         {stats && <AdminStatsCards stats={stats} />}
 

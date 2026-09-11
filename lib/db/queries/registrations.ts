@@ -657,6 +657,38 @@ export async function adminRestoreRegistration(id: string): Promise<AdminActionR
   })
 }
 
+/**
+ * Updates the status of an event (e.g. 'published' to open, 'closed' to stop registration).
+ */
+export async function setEventRegistrationStatus(
+  eventId: string,
+  status: 'published' | 'closed',
+): Promise<Event | null> {
+  const [updated] = await db
+    .update(events)
+    .set({
+      status,
+      updatedAt: new Date(),
+    })
+    .where(eq(events.id, eventId))
+    .returning()
+
+  return updated ?? null
+}
+
+/**
+ * Retrieves all registrations for an event formatted for CSV export.
+ * Ordered chronologically by registration time.
+ */
+export async function getAllRegistrationsForExport(eventId: string): Promise<Registration[]> {
+  return db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId))
+    .orderBy(asc(registrations.createdAt))
+}
+
+
 
 
 
