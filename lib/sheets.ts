@@ -29,7 +29,7 @@ export type SheetRegistrationInput = {
   phone: string
   email?: string | null
   notes?: string | null
-  status: 'confirmed' | 'waitlist' | 'cancelled'
+  status: 'confirmed' | 'waitlist' | 'cancelled' | string
   createdAt: Date | string
   checkedInAt?: Date | string | null
   checkedInBy?: string | null

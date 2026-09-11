@@ -3,9 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { POST as registerHandler } from '@/app/api/register/route'
 import { db } from '@/lib/db'
-import { cancelRegistration, findRegistrationByToken } from '@/lib/db/queries/registrations'
+import { cancelRegistration, findRegistrationByToken, markRegistrationSheetSynced } from '@/lib/db/queries/registrations'
 import { events, registrations } from '@/lib/db/schema'
 import { resetRateLimit } from '@/lib/rate-limit'
+import { sheets } from '@/lib/sheets'
 
 let eventId: string
 const runId = Math.floor(Math.random() * 89999 + 10000)
@@ -401,5 +402,59 @@ describe('POST /api/register Integration Tests', () => {
     } finally {
       process.env.TURNSTILE_SECRET_KEY = originalSecret
     }
+  })
+
+  it('updates registration with sheet_row and sheet_synced_at via markRegistrationSheetSynced query', async () => {
+    const payload = {
+      fullName: 'Peserta Test Query',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'token-query',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    const initial = await findRegistrationByToken(data.token)
+    expect(initial).not.toBeNull()
+
+    const updated = await markRegistrationSheetSynced(initial!.id, 77)
+    expect(updated).not.toBeNull()
+    expect(updated?.sheetRow).toBe(77)
+    expect(updated?.sheetSyncedAt).toBeInstanceOf(Date)
+  })
+
+  it('appends row to Google Sheets and stores sheet_row and sheet_synced_at in DB upon registration', async () => {
+    const appendSpy = vi.spyOn(sheets, 'appendRegistration').mockResolvedValue({ sheetRow: 88 })
+
+    const payload = {
+      fullName: 'Peserta Sinkron Sheets',
+      phone: nextPhone(),
+      consent: true,
+      turnstileToken: 'valid-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    createdTokens.push(data.token)
+
+    expect(appendSpy).toHaveBeenCalledTimes(1)
+    expect(appendSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fullName: 'Peserta Sinkron Sheets',
+        token: data.token,
+      }),
+    )
+
+    const stored = await findRegistrationByToken(data.token)
+    expect(stored).not.toBeNull()
+    expect(stored?.sheetRow).toBe(88)
+    expect(stored?.sheetSyncedAt).not.toBeNull()
+
+    appendSpy.mockRestore()
   })
 })

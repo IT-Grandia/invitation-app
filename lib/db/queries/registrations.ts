@@ -199,3 +199,25 @@ export async function cancelRegistration(id: string): Promise<Registration | nul
 
   return row ?? null
 }
+
+/**
+ * Updates a registration with its mirrored Google Sheets row number
+ * and marks the sync timestamp.
+ */
+export async function markRegistrationSheetSynced(
+  id: string,
+  sheetRow: number,
+): Promise<Registration | null> {
+  const [row] = await db
+    .update(registrations)
+    .set({
+      sheetRow,
+      sheetSyncedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(registrations.id, id))
+    .returning()
+
+  return row ?? null
+}
+
