@@ -2,7 +2,7 @@ import { eq, gte, sql } from 'drizzle-orm'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { db } from '@/lib/db'
-import { commitCheckIn, previewCheckIn } from '@/lib/db/queries/checkin'
+import { commitCheckIn, getManifest, previewCheckIn } from '@/lib/db/queries/checkin'
 import { checkInLogs, events, registrations } from '@/lib/db/schema'
 import type { Registration } from '@/lib/db/schema'
 import { generateToken } from '@/lib/token'
@@ -211,5 +211,47 @@ describe('previewCheckIn', () => {
     expect(result.status).toBe(expected)
     expect(result.canCheckIn).toBe(false)
     expect(result.registration).toBeNull()
+  })
+})
+
+describe('getManifest', () => {
+  it('lists only admissible registrations, ordered by name', async () => {
+    await createRegistration({ fullName: 'Citra Dewi' })
+    await createRegistration({ fullName: 'Agus Salim' })
+    await createRegistration({ fullName: 'Batal Peserta', status: 'cancelled' })
+    await createRegistration({ fullName: 'Tunggu Peserta', status: 'waitlist' })
+
+    const manifest = await getManifest(eventId)
+
+    expect(manifest.map((entry) => entry.n)).toEqual(['Agus Salim', 'Citra Dewi'])
+  })
+
+  it('carries the check-in time once a ticket has been used', async () => {
+    const row = await createRegistration()
+
+    expect((await getManifest(eventId))[0].c).toBeNull()
+
+    await commitCheckIn({ rawToken: row.token, eventId, staffLabel: 'Gate A' })
+
+    const [entry] = await getManifest(eventId)
+    expect(entry.t).toBe(row.token)
+    expect(entry.c).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
+
+  it('leaves out registrations for other events', async () => {
+    const other = await createEvent('Other Event')
+
+    try {
+      await db.insert(registrations).values({
+        eventId: other.id,
+        token: generateToken(),
+        fullName: 'Peserta Lain',
+        phone: '628999900002',
+      })
+
+      expect(await getManifest(eventId)).toEqual([])
+    } finally {
+      await db.delete(events).where(eq(events.id, other.id))
+    }
   })
 })
