@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 // No web font is loaded at all. DESIGN.md specifies system-ui, and the digits
-// that must not jitter — countdown, ticket number, rundown times — get their
+// that must not jitter — ticket number, rundown times — get their
 // fixed width from `tabular-nums`, which both Roboto on Android and SF Pro on
 // iOS support. A loaded monospace face cost 39.5 KB to buy something the
 // system fonts already provide.

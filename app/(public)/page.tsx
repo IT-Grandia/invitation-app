@@ -1,10 +1,8 @@
 import { cookies } from "next/headers";
 import { ContactFooter } from "@/components/invitation/ContactFooter";
-import { Countdown } from "@/components/invitation/Countdown";
 import { CoverGate } from "@/components/invitation/CoverGate";
 import { EventCta, type CtaState } from "@/components/invitation/EventCta";
 import { EventDetails } from "@/components/invitation/EventDetails";
-import { Faq } from "@/components/invitation/Faq";
 import { Greeting } from "@/components/invitation/Greeting";
 import { Rundown } from "@/components/invitation/Rundown";
 import { Venue } from "@/components/invitation/Venue";
@@ -23,9 +21,7 @@ import { Venue } from "@/components/invitation/Venue";
  */
 const PLACEHOLDER_EVENT = {
   name: "Padel Day 2026",
-  startsAt: "2026-09-26T01:00:00.000Z", // 08:00 WIB
   dateLabel: "Sabtu, 26 September 2026",
-  startsAtLabel: "Sabtu, 26 September 2026 pukul 08.00 WIB",
 
   venueName: "Padel Arena Jakarta",
   venueAddress: "Alamat lengkap menyusul dari panitia",
@@ -66,33 +62,6 @@ const PLACEHOLDER_EVENT = {
     { time: "17.00", activity: "Selesai" },
   ],
 
-  faq: [
-    {
-      question: "Aku belum pernah main padel, boleh ikut?",
-      answer:
-        "Boleh banget. Acaranya memang dibuat santai, dan bakal ada yang bantu jelaskan aturan mainnya di awal.",
-    },
-    {
-      question: "Harus bawa raket sendiri?",
-      answer:
-        "Nggak harus. Ada raket pinjaman di lokasi. Kalau kamu punya sendiri, bawa saja biar lebih nyaman.",
-    },
-    {
-      question: "Bisa daftar sekalian buat teman?",
-      answer:
-        "Satu pendaftaran untuk satu orang, karena tiap orang dapat QR sendiri buat masuk. Minta temanmu daftar pakai link yang sama ya.",
-    },
-    {
-      question: "Kalau hujan gimana?",
-      answer:
-        "Panitia akan kabari lewat WhatsApp ke nomor yang kamu daftarkan. Makanya pastikan nomornya benar waktu mengisi form.",
-    },
-    {
-      question: "Tiketku hilang, gimana?",
-      answer:
-        "Coba buka lagi website ini dari HP yang sama, biasanya tiketmu langsung muncul. Kalau tetap tidak ketemu, hubungi panitia lewat tombol di bawah.",
-    },
-  ],
 } as const;
 
 const TICKET_COOKIE = "padel_ticket";
@@ -117,10 +86,6 @@ export default async function InvitationPage() {
     ? { kind: "has_ticket", ticketHref: `/t/${ticketToken}` }
     : { kind: "open", remaining: PLACEHOLDER_EVENT.remainingSeats };
 
-  // Captured once, before render, so the countdown's first paint is identical
-  // on the server and in the browser.
-  const serverNowIso = new Date().toISOString();
-
   return (
     <div className="flex flex-1 flex-col bg-canvas text-ink">
       <CoverGate
@@ -131,14 +96,6 @@ export default async function InvitationPage() {
       >
         <main className="flex flex-1 flex-col">
           <Greeting dateLabel={PLACEHOLDER_EVENT.dateLabel} />
-
-          <div className="mt-9 px-6">
-            <Countdown
-              targetIso={PLACEHOLDER_EVENT.startsAt}
-              serverNowIso={serverNowIso}
-              startsAtLabel={PLACEHOLDER_EVENT.startsAtLabel}
-            />
-          </div>
 
           <div className="mt-8">
             <EventCta state={ctaState} registerHref={REGISTER_HREF} />
@@ -151,7 +108,6 @@ export default async function InvitationPage() {
             address={PLACEHOLDER_EVENT.venueAddress}
             mapUrl={PLACEHOLDER_EVENT.venueMapUrl}
           />
-          <Faq entries={PLACEHOLDER_EVENT.faq} />
         </main>
 
         <ContactFooter

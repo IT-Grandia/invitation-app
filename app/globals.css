@@ -92,7 +92,7 @@
   --font-sans:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: var(--font-sans);
-  /* Digits that must not jitter: countdown, ticket number, rundown times.
+  /* Digits that must not jitter: ticket number, rundown times.
      System monospace only — no web font. The fixed width actually comes from
      `tabular-nums` on the element, which Roboto and SF Pro both support, so a
      loaded face would have bought nothing for 39.5 KB. Courier New stays last
@@ -104,8 +104,6 @@
   --text-hero: clamp(2.25rem, 11vw, 4rem);
   --text-hero--line-height: 1.04;
   --text-hero--letter-spacing: -0.02em;
-  --text-countdown: clamp(1.75rem, 8vw, 2.75rem);
-  --text-countdown--line-height: 1;
 
   /* Minimum touch target from docs/05-UX-FLOWS.md section 6: use min-h-tap
      and min-w-tap on anything tappable. */
