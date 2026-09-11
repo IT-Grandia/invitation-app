@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { ContactFooter } from "@/components/invitation/ContactFooter";
 import { CoverGate } from "@/components/invitation/CoverGate";
 import { EventCta, type CtaState } from "@/components/invitation/EventCta";
@@ -8,65 +10,16 @@ import { Rundown } from "@/components/invitation/Rundown";
 import { StoredTicketBanner } from "@/components/invitation/StoredTicketBanner";
 import { TicketBanner } from "@/components/invitation/TicketBanner";
 import { Venue } from "@/components/invitation/Venue";
+import { formatWibDateLong } from "@/lib/datetime";
+import { getEventStats, getPublishedEvent } from "@/lib/db/queries/event";
+import { EVENT_DETAILS, EVENT_RUNDOWN } from "@/lib/event-content";
+import { resolveRegistrationState } from "@/lib/event-state";
 import { isWellFormedToken } from "@/lib/qr";
 import { TICKET_COOKIE_NAME } from "@/lib/ticket-cookie";
 
-/**
- * TEMPORARY placeholder event content.
- *
- * Every field here belongs in the database, not in code — docs/03-DATA-MODEL.md
- * section 2.1 is explicit that the committee must be able to change the name,
- * venue, times and rundown without a redeploy, and docs/01-PRD.md section 10.1
- * still lists all of them as unanswered. Kept in one object so the swap to
- * getPublishedEvent() costs a single line once Dev C merges M0.
- *
- * The wording below is a stand-in written from the defaults recorded in the
- * PRD. The committee has to review it before registration opens.
- */
-const PLACEHOLDER_EVENT = {
-  name: "Padel Day 2026",
-  dateLabel: "Sabtu, 26 September 2026",
-
-  venueName: "Padel Arena Jakarta",
-  venueAddress: "Alamat lengkap menyusul dari panitia",
-  venueMapUrl: "https://www.google.com/maps/search/?api=1&query=Padel+Arena+Jakarta",
-
-  /** Null means the committee has not shared a number yet. */
-  contactWhatsapp: null as string | null,
-
-  /** Null means unlimited — docs/03-DATA-MODEL.md: no quota, no seat counter. */
-  remainingSeats: null as number | null,
-
-  details: [
-    {
-      label: "Format",
-      value: "Main santai dengan rotasi pasangan. Bukan turnamen, tidak ada babak gugur.",
-    },
-    {
-      label: "Level",
-      value: "Terbuka untuk semua. Belum pernah main padel sama sekali juga boleh ikut.",
-    },
-    {
-      label: "Bawa apa",
-      value: "Sepatu non-marking, botol minum, dan handuk kecil. Raket ada pinjaman kalau kamu belum punya.",
-    },
-    {
-      label: "Dress code",
-      value: "Baju olahraga bebas. Yang penting nyaman buat gerak.",
-    },
-  ],
-
-  rundown: [
-    { time: "08.00", activity: "Registrasi ulang dan scan tiket" },
-    { time: "08.30", activity: "Pemanasan bersama" },
-    { time: "09.00", activity: "Sesi main dimulai" },
-    { time: "12.00", activity: "Istirahat dan makan siang" },
-    { time: "13.00", activity: "Sesi main lanjut" },
-    { time: "16.30", activity: "Foto bersama" },
-    { time: "17.00", activity: "Selesai" },
-  ],
-
-} as const;
+// generateMetadata and the page both need the event; React's cache dedupes
+// the query within one request so the database is asked once.
+const loadEvent = cache(getPublishedEvent);
 
 /**
  * Where the call to action points.
@@ -78,51 +31,78 @@ const PLACEHOLDER_EVENT = {
  */
 const REGISTER_HREF = "/daftar";
 
+export async function generateMetadata(): Promise<Metadata> {
+  const event = await loadEvent();
+  if (!event) return {};
+
+  const description = event.description ?? `Undangan dan pendaftaran ${event.name}.`;
+
+  return {
+    title: { absolute: event.name },
+    description,
+    openGraph: { title: event.name, description },
+  };
+}
+
 export default async function InvitationPage() {
+  const event = await loadEvent();
+
+  // No published event means the committee has not opened anything yet — or
+  // has archived it. Either way there is nothing to invite anyone to.
+  if (!event) {
+    return <NoEvent />;
+  }
+
+  const [stats, cookieStore] = await Promise.all([getEventStats(event.id), cookies()]);
+
   // Whether the visitor already holds a ticket decides three things: the cover
   // is skipped, the banner renders on the server (no content flash), and the
   // CTA points at their ticket instead of the form. The cookie is set by Dev A's
   // /api/register; anything that fails the token shape is treated as absent.
-  const cookieToken = (await cookies()).get(TICKET_COOKIE_NAME)?.value;
+  const cookieToken = cookieStore.get(TICKET_COOKIE_NAME)?.value;
   const ticketToken = cookieToken && isWellFormedToken(cookieToken) ? cookieToken : undefined;
 
   const ctaState: CtaState = ticketToken
     ? { kind: "has_ticket", ticketHref: `/t/${ticketToken}` }
-    : { kind: "open", remaining: PLACEHOLDER_EVENT.remainingSeats };
+    : resolveRegistrationState(event, stats.registered);
+
+  const dateLabel = formatWibDateLong(event.startsAt);
 
   return (
     <div className="flex flex-1 flex-col bg-canvas text-ink">
       <CoverGate
         enabled={!ticketToken}
-        eventName={PLACEHOLDER_EVENT.name}
-        dateLabel={PLACEHOLDER_EVENT.dateLabel}
-        venueName={PLACEHOLDER_EVENT.venueName}
+        eventName={event.name}
+        dateLabel={dateLabel}
+        venueName={event.venueName}
       >
         {/* Cookie found: banner is in the server HTML. Otherwise the client
             checks localStorage after hydration — docs/05-UX-FLOWS.md section 3. */}
         {ticketToken ? <TicketBanner ticketHref={`/t/${ticketToken}`} /> : <StoredTicketBanner />}
 
         <main className="flex flex-1 flex-col">
-          <Greeting dateLabel={PLACEHOLDER_EVENT.dateLabel} />
+          <Greeting dateLabel={dateLabel} />
 
           <div className="mt-8">
             <EventCta state={ctaState} registerHref={REGISTER_HREF} />
           </div>
 
-          <EventDetails items={PLACEHOLDER_EVENT.details} />
-          <Rundown entries={PLACEHOLDER_EVENT.rundown} />
-          <Venue
-            name={PLACEHOLDER_EVENT.venueName}
-            address={PLACEHOLDER_EVENT.venueAddress}
-            mapUrl={PLACEHOLDER_EVENT.venueMapUrl}
-          />
+          <EventDetails items={EVENT_DETAILS} />
+          <Rundown entries={EVENT_RUNDOWN} />
+          <Venue name={event.venueName} address={event.venueAddress} mapUrl={event.venueMapUrl} />
         </main>
 
-        <ContactFooter
-          whatsapp={PLACEHOLDER_EVENT.contactWhatsapp}
-          eventName={PLACEHOLDER_EVENT.name}
-        />
+        <ContactFooter whatsapp={event.contactWhatsapp} eventName={event.name} />
       </CoverGate>
     </div>
+  );
+}
+
+function NoEvent() {
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+      <h1 className="text-2xl font-bold">Belum ada acara yang dibuka</h1>
+      <p className="text-ink-muted text-pretty">Cek lagi nanti ya. Undangannya akan muncul di sini.</p>
+    </main>
   );
 }

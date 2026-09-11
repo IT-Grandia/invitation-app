@@ -19,7 +19,10 @@ export function Venue({ name, address, mapUrl }: VenueProps) {
     <Section id="lokasi" title="Lokasi">
       <div className="rounded-card border border-line bg-surface p-5">
         <p className="font-display text-xl font-bold">{name}</p>
-        {address && <p className="mt-1 text-ink-muted text-pretty">{address}</p>}
+        {/* The seed fills both with "TBA"; only show an address that adds something. */}
+        {address && address !== name && (
+          <p className="mt-1 text-ink-muted text-pretty">{address}</p>
+        )}
 
         {mapUrl && (
           <a

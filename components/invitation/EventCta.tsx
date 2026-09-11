@@ -1,20 +1,16 @@
 import Link from "next/link";
+import { formatWibDate } from "@/lib/datetime";
+import type { RegistrationState } from "@/lib/event-state";
 
 /**
  * The seven call-to-action states from docs/05-UX-FLOWS.md section 4.1.
  *
- * Kept as one prop rather than derived here: whether registration is open
- * depends on event columns Dev C exposes through getPublishedEvent(), and the
- * server re-checks the quota on submit anyway. Anything this component shows is
- * display only — docs/06-SECURITY.md A9.
+ * Six come from lib/event-state (event row + head count); the seventh, holding
+ * a ticket already, is decided by the page from the cookie. Anything shown here
+ * is display only — the server re-checks the quota on submit,
+ * docs/06-SECURITY.md A9.
  */
-export type CtaState =
-  | { kind: "has_ticket"; ticketHref: string }
-  | { kind: "open"; remaining: number | null }
-  | { kind: "not_open_yet"; opensAtLabel: string }
-  | { kind: "closed" }
-  | { kind: "full" }
-  | { kind: "past" };
+export type CtaState = RegistrationState | { kind: "has_ticket"; ticketHref: string };
 
 /** Below this many seats left, the count switches to an urgent red line. */
 const SCARCITY_THRESHOLD = 5;
@@ -51,7 +47,7 @@ function renderState(state: CtaState, registerHref: string) {
       return (
         <>
           <DisabledButton>Belum Dibuka</DisabledButton>
-          <p className="text-sm text-ink-muted">Pendaftaran dibuka {state.opensAtLabel}.</p>
+          <p className="text-sm text-ink-muted">Pendaftaran dibuka {formatWibDate(state.opensAt)}.</p>
         </>
       );
 
