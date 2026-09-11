@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: padel
+          POSTGRES_PASSWORD: padel_dev
+          POSTGRES_DB: padel_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: "postgresql://padel:padel_dev@localhost:5432/padel_dev"
+      DIRECT_URL: "postgresql://padel:padel_dev@localhost:5432/padel_dev"
+      NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+      STAFF_KEY: "ci-test-staff-key"
+      ADMIN_KEY: "ci-test-admin-key"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Apply database migrations
+        run: pnpm db:migrate
+
+      - name: Run unit and integration tests
+        run: pnpm test
+
+      - name: Build production application
+        run: pnpm build
