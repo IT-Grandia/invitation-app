@@ -12,7 +12,6 @@ import { TicketBanner } from "@/components/invitation/TicketBanner";
 import { Venue } from "@/components/invitation/Venue";
 import { formatWibDateLong } from "@/lib/datetime";
 import { getEventStats, getPublishedEvent } from "@/lib/db/queries/event";
-import { EVENT_DETAILS, EVENT_RUNDOWN } from "@/lib/event-content";
 import { resolveRegistrationState } from "@/lib/event-state";
 import { isWellFormedToken } from "@/lib/qr";
 import { TICKET_COOKIE_NAME } from "@/lib/ticket-cookie";
@@ -87,8 +86,8 @@ export default async function InvitationPage() {
             <EventCta state={ctaState} registerHref={REGISTER_HREF} />
           </div>
 
-          <EventDetails items={EVENT_DETAILS} />
-          <Rundown entries={EVENT_RUNDOWN} />
+          <EventDetails items={event.details} />
+          <Rundown entries={event.rundown} />
           <Venue name={event.venueName} address={event.venueAddress} mapUrl={event.venueMapUrl} />
         </main>
 
