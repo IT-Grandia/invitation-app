@@ -52,6 +52,34 @@ async function main() {
         capacity: null,
         status: 'published',
         contactWhatsapp: '628123456789',
+        details: [
+          {
+            label: 'Format',
+            value: 'Main santai dengan rotasi pasangan. Bukan turnamen, tidak ada babak gugur.',
+          },
+          {
+            label: 'Level',
+            value: 'Terbuka untuk semua. Belum pernah main padel sama sekali juga boleh ikut.',
+          },
+          {
+            label: 'Bawa apa',
+            value:
+              'Sepatu non-marking, botol minum, dan handuk kecil. Raket ada pinjaman kalau kamu belum punya.',
+          },
+          {
+            label: 'Dress code',
+            value: 'Baju olahraga bebas. Yang penting nyaman buat gerak.',
+          },
+        ],
+        rundown: [
+          { time: '08.00', activity: 'Registrasi ulang dan scan tiket' },
+          { time: '08.30', activity: 'Pemanasan bersama' },
+          { time: '09.00', activity: 'Sesi main dimulai' },
+          { time: '12.00', activity: 'Istirahat dan makan siang' },
+          { time: '13.00', activity: 'Sesi main lanjut' },
+          { time: '16.30', activity: 'Foto bersama' },
+          { time: '17.00', activity: 'Selesai' },
+        ],
       })
       .returning()
 
