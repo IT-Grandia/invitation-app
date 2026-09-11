@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   appendRegistration,
+  extractSpreadsheetId,
   formatRegistrationForSheet,
   getSpreadsheetDoc,
   isSheetsConfigured,
@@ -105,6 +106,25 @@ describe('normalizePrivateKey', () => {
     )
     expect(normalized.includes('\\n')).toBe(false)
     expect(normalized.split('\n')).toHaveLength(3)
+  })
+})
+
+describe('extractSpreadsheetId', () => {
+  it('returns plain spreadsheet ID as-is when trimmed', () => {
+    expect(extractSpreadsheetId('1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI')).toBe(
+      '1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI',
+    )
+    expect(extractSpreadsheetId('  1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI  ')).toBe(
+      '1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI',
+    )
+  })
+
+  it('extracts ID correctly from full Google Sheets URLs', () => {
+    const fullUrl =
+      'https://docs.google.com/spreadsheets/d/1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI/edit?hl=id#gid=0'
+    expect(extractSpreadsheetId(fullUrl)).toBe(
+      '1bpV_9m4dKIdh8dmXN5mwtdVTzLcBPngEITBEryprixI',
+    )
   })
 })
 

@@ -57,6 +57,14 @@ export function normalizePrivateKey(rawKey: string): string {
 }
 
 /**
+ * Extracts clean Google Spreadsheet ID from either a raw ID string or a full Google Sheets URL.
+ */
+export function extractSpreadsheetId(idOrUrl: string): string {
+  const match = idOrUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/)
+  return match ? match[1] : idOrUrl.trim()
+}
+
+/**
  * Returns true if all required Google Sheets credentials are provided in env.
  */
 export function isSheetsConfigured(): boolean {
@@ -97,13 +105,15 @@ export function formatRegistrationForSheet(
 export async function getSpreadsheetDoc(): Promise<GoogleSpreadsheet> {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
   const privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY
-  const sheetId = process.env.GOOGLE_SHEET_ID
+  const sheetIdRaw = process.env.GOOGLE_SHEET_ID
 
-  if (!email || !privateKeyRaw || !sheetId) {
+  if (!email || !privateKeyRaw || !sheetIdRaw) {
     throw new Error(
       'Google Sheets credentials not configured. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, and GOOGLE_SHEET_ID.',
     )
   }
+
+  const sheetId = extractSpreadsheetId(sheetIdRaw)
 
   const auth = new JWT({
     email,
@@ -145,5 +155,6 @@ export const sheets = {
   getSpreadsheetDoc,
   isSheetsConfigured,
   normalizePrivateKey,
+  extractSpreadsheetId,
   mapStatusToIndonesian,
 }

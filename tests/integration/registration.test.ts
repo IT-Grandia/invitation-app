@@ -66,6 +66,7 @@ function createRequest(
 
 beforeEach(async () => {
   resetRateLimit()
+  vi.spyOn(sheets, 'appendRegistration').mockResolvedValue({ sheetRow: 2 })
   const event = await createTestEvent()
   eventId = event.id
 })
