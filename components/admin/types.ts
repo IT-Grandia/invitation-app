@@ -31,3 +31,21 @@ export type AdminStatsResponse = {
   lastCheckIn: AdminLastCheckIn | null
 }
 
+export type AdminRegistrationItem = {
+  id: string
+  ticketNumber: string
+  fullName: string
+  phone: string
+  status: 'confirmed' | 'waitlist' | 'cancelled' | string
+  checkedInAt: string | null
+  createdAt: string
+}
+
+export type AdminRegistrationsResponse = {
+  items: AdminRegistrationItem[]
+  page: number
+  limit: number
+  total: number
+}
+
+

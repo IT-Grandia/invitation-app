@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNotNull, isNull, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
 
 import { db } from '../index'
 import { events, registrations } from '../schema'
@@ -311,6 +311,131 @@ export async function getLastCheckIn(eventId: string): Promise<LastCheckInInfo |
     checkedInBy: row.checkedInBy,
   }
 }
+
+export type GetAdminRegistrationsOptions = {
+  eventId: string
+  q?: string
+  status?: string
+  checkedIn?: string
+  sort?: string
+  page?: number
+  limit?: number
+}
+
+export type AdminRegistrationRow = {
+  id: string
+  ticketNumber: string
+  fullName: string
+  phone: string
+  status: string
+  checkedInAt: string | null
+  createdAt: string
+}
+
+export type AdminRegistrationsResult = {
+  items: AdminRegistrationRow[]
+  page: number
+  limit: number
+  total: number
+}
+
+/**
+ * Retrieves paginated participant registrations for the admin panel with search,
+ * status filtering, and sorting. Excludes the participant token for security.
+ * (04-API-SPEC.md §8)
+ */
+export async function getAdminRegistrations(
+  options: GetAdminRegistrationsOptions,
+): Promise<AdminRegistrationsResult> {
+  const page = Math.max(1, options.page ?? 1)
+  const limit = Math.min(100, Math.max(1, options.limit ?? 50))
+  const offset = (page - 1) * limit
+
+  const conditions = [eq(registrations.eventId, options.eventId)]
+
+  if (options.status && options.status !== 'all') {
+    conditions.push(eq(registrations.status, options.status))
+  }
+
+  if (options.checkedIn === 'true') {
+    conditions.push(isNotNull(registrations.checkedInAt))
+  } else if (options.checkedIn === 'false') {
+    conditions.push(isNull(registrations.checkedInAt))
+  }
+
+  if (options.q && options.q.trim()) {
+    const cleanQ = options.q.trim()
+    const searchPattern = `%${cleanQ}%`
+    conditions.push(
+      or(
+        sql`${registrations.fullName} ilike ${searchPattern}`,
+        sql`${registrations.phone} like ${searchPattern}`,
+        sql`upper(substring(${registrations.token} from 1 for 8)) like upper(${searchPattern})`,
+      )!,
+    )
+  }
+
+  let orderByClause
+  switch (options.sort) {
+    case 'created_asc':
+      orderByClause = asc(registrations.createdAt)
+      break
+    case 'name_asc':
+      orderByClause = asc(registrations.fullName)
+      break
+    case 'name_desc':
+      orderByClause = desc(registrations.fullName)
+      break
+    case 'checkin_desc':
+      orderByClause = desc(registrations.checkedInAt)
+      break
+    case 'created_desc':
+    default:
+      orderByClause = desc(registrations.createdAt)
+      break
+  }
+
+  const [totalRow] = await db
+    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .from(registrations)
+    .where(and(...conditions))
+
+  const total = totalRow?.count ?? 0
+
+  const rows = await db
+    .select({
+      id: registrations.id,
+      token: registrations.token,
+      fullName: registrations.fullName,
+      phone: registrations.phone,
+      status: registrations.status,
+      checkedInAt: registrations.checkedInAt,
+      createdAt: registrations.createdAt,
+    })
+    .from(registrations)
+    .where(and(...conditions))
+    .orderBy(orderByClause)
+    .limit(limit)
+    .offset(offset)
+
+  const items: AdminRegistrationRow[] = rows.map((row) => ({
+    id: row.id,
+    ticketNumber: ticketNumber(row.token),
+    fullName: row.fullName,
+    phone: row.phone,
+    status: row.status,
+    checkedInAt: row.checkedInAt ? new Date(row.checkedInAt).toISOString() : null,
+    createdAt: new Date(row.createdAt).toISOString(),
+  }))
+
+  return {
+    items,
+    page,
+    limit,
+    total,
+  }
+}
+
 
 
 

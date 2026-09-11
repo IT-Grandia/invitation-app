@@ -14,6 +14,7 @@ import {
   withAdminKey,
 } from './admin-session'
 import { AdminKeyGate } from './AdminKeyGate'
+import { AdminRegistrationsTable } from './AdminRegistrationsTable'
 import { AdminStatsCards } from './AdminStatsCards'
 import type { AdminStatsResponse } from './types'
 
@@ -195,25 +196,8 @@ export function AdminDashboard() {
         {/* Task A11: Kartu Statistik & Kehadiran */}
         {stats && <AdminStatsCards stats={stats} />}
 
-        {/* Placeholder slot for Task A12 - A14 (Tabel Peserta & Aksi) */}
-        <section
-          aria-labelledby="section-table-heading"
-          className="rounded-card border border-line bg-surface p-5 shadow-sm"
-        >
-          <div className="flex flex-col gap-1">
-            <h2 id="section-table-heading" className="font-display text-base font-bold text-ink">
-              Daftar Peserta & Pengelolaan
-            </h2>
-            <p className="text-xs text-ink-muted">
-              Fitur pencarian, filter status, aksi pendaftar, dan export CSV (Task A12 – A14).
-            </p>
-          </div>
-
-          <div className="mt-6 flex flex-col items-center justify-center rounded-card border border-dashed border-line p-8 text-center text-ink-muted">
-            <p className="text-sm font-medium">Tabel pendaftar akan dimuat di sini.</p>
-            <p className="mt-1 text-xs">Siap dilanjutkan pada Task A12 – A14.</p>
-          </div>
-        </section>
+        {/* Task A12: Tabel Pendaftar */}
+        {adminKey && <AdminRegistrationsTable adminKey={adminKey} />}
       </main>
     </div>
   )
