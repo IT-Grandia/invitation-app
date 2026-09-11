@@ -4,6 +4,7 @@ import { QrCard } from "@/components/ticket/QrCard";
 import { StatusBadge } from "@/components/ticket/StatusBadge";
 import { TicketActions } from "@/components/ticket/TicketActions";
 import { TicketDetails } from "@/components/ticket/TicketDetails";
+import { formatWibDateLong, formatWibTime } from "@/lib/datetime";
 import { getPublishedEvent } from "@/lib/db/queries/event";
 import { findRegistrationByToken } from "@/lib/db/queries/registrations";
 import { isWellFormedToken, ticketUrl } from "@/lib/qr";
@@ -87,7 +88,10 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
           token={registration.token}
           ticketNumber={number}
           ticketUrl={ticketUrl(registration.token)}
+          fullName={registration.fullName}
           eventName={event.name}
+          whenWhere={`${formatWibDateLong(event.startsAt)} · ${formatWibTime(event.startsAt)} WIB · ${event.venueName}`}
+          venueMapUrl={event.venueMapUrl}
           qrIsLive={presentation === "live"}
         />
       )}
