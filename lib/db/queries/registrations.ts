@@ -2,7 +2,7 @@ import { and, asc, eq, isNull, ne, sql } from 'drizzle-orm'
 
 import { db } from '../index'
 import { events, registrations } from '../schema'
-import type { Registration } from '../schema'
+import type { Event, Registration } from '../schema'
 import { generateToken, ticketNumber } from '../../token'
 
 export type RegisterParticipantInput = {
@@ -238,5 +238,44 @@ export async function getUnsyncedRegistrations(limit = 100): Promise<Registratio
     .orderBy(asc(registrations.createdAt))
     .limit(limit)
 }
+
+export type SheetSyncStatus = {
+  pending: number
+  lastSyncedAt: string | null
+}
+
+/**
+ * Returns the count of registrations waiting to be synced to Sheets and the timestamp of the last sync.
+ */
+export async function getSheetSyncStatus(eventId: string): Promise<SheetSyncStatus> {
+  const [row] = await db
+    .select({
+      pending: sql<number>`count(*) filter (where ${registrations.sheetSyncedAt} is null and ${registrations.status} <> 'cancelled')`.mapWith(Number),
+      lastSyncedAt: sql<Date | null>`max(${registrations.sheetSyncedAt})`,
+    })
+    .from(registrations)
+    .where(eq(registrations.eventId, eventId))
+
+  return {
+    pending: row?.pending ?? 0,
+    lastSyncedAt: row?.lastSyncedAt ? new Date(row.lastSyncedAt).toISOString() : null,
+  }
+}
+
+/**
+ * Retrieves the event to display in the admin panel.
+ * Prioritises published events, and falls back to closed or draft events.
+ */
+export async function getAdminEvent(): Promise<Event | null> {
+  const [event] = await db
+    .select()
+    .from(events)
+    .where(sql`${events.status} in ('published', 'closed')`)
+    .orderBy(asc(events.startsAt))
+    .limit(1)
+
+  return event ?? null
+}
+
 
 
