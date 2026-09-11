@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNotNull, isNull, ne, or, sql } from 'drizzle-orm'
 
 import { db } from '../index'
-import { events, registrations } from '../schema'
+import { checkInLogs, events, registrations } from '../schema'
 import type { Event, Registration } from '../schema'
 import { generateToken, ticketNumber } from '../../token'
 
@@ -435,6 +435,228 @@ export async function getAdminRegistrations(
     total,
   }
 }
+
+export type AdminActionResult =
+  | { status: 'ok'; item: AdminRegistrationRow }
+  | { status: 'not_found'; message: string }
+  | { status: 'already_checked_in'; message: string }
+  | { status: 'not_checked_in'; message: string }
+  | { status: 'registration_cancelled'; message: string }
+  | { status: 'event_full'; message: string }
+  | { status: 'phone_already_registered'; message: string }
+
+function toAdminRow(row: Registration): AdminRegistrationRow {
+  return {
+    id: row.id,
+    ticketNumber: ticketNumber(row.token),
+    fullName: row.fullName,
+    phone: row.phone,
+    status: row.status,
+    checkedInAt: row.checkedInAt ? new Date(row.checkedInAt).toISOString() : null,
+    createdAt: new Date(row.createdAt).toISOString(),
+  }
+}
+
+/**
+ * Manually marks an attendee as checked in from the admin panel and writes
+ * an audit entry into check_in_logs with staff_label "ADMIN: <label>".
+ */
+export async function adminManualCheckIn(
+  id: string,
+  staffLabel = 'ADMIN: Manual',
+): Promise<AdminActionResult> {
+  const [existing] = await db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.id, id))
+    .limit(1)
+
+  if (!existing) {
+    return { status: 'not_found', message: 'Pendaftaran tidak ditemukan.' }
+  }
+
+  if (existing.status === 'cancelled') {
+    return { status: 'registration_cancelled', message: 'Pendaftaran ini sudah dibatalkan.' }
+  }
+
+  if (existing.checkedInAt) {
+    return { status: 'already_checked_in', message: 'Peserta ini sudah pernah check-in.' }
+  }
+
+  const now = new Date()
+  const [updated] = await db
+    .update(registrations)
+    .set({
+      checkedInAt: now,
+      checkedInBy: staffLabel,
+      updatedAt: now,
+    })
+    .where(
+      and(
+        eq(registrations.id, id),
+        isNull(registrations.checkedInAt),
+        eq(registrations.status, 'confirmed'),
+      ),
+    )
+    .returning()
+
+  if (!updated) {
+    return { status: 'already_checked_in', message: 'Peserta ini sudah pernah check-in.' }
+  }
+
+  await db.insert(checkInLogs).values({
+    registrationId: updated.id,
+    rawToken: updated.token,
+    result: 'ok',
+    staffLabel,
+    scannedAt: now,
+  })
+
+  return { status: 'ok', item: toAdminRow(updated) }
+}
+
+/**
+ * Reverses a check-in status back to unconfirmed presence without modifying the registration.
+ */
+export async function adminUndoCheckIn(id: string): Promise<AdminActionResult> {
+  const [existing] = await db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.id, id))
+    .limit(1)
+
+  if (!existing) {
+    return { status: 'not_found', message: 'Pendaftaran tidak ditemukan.' }
+  }
+
+  if (!existing.checkedInAt) {
+    return { status: 'not_checked_in', message: 'Peserta ini belum check-in.' }
+  }
+
+  const now = new Date()
+  const [updated] = await db
+    .update(registrations)
+    .set({
+      checkedInAt: null,
+      checkedInBy: null,
+      updatedAt: now,
+    })
+    .where(eq(registrations.id, id))
+    .returning()
+
+  return { status: 'ok', item: toAdminRow(updated) }
+}
+
+/**
+ * Cancels a registration, releasing quota and allowing the phone number to re-register.
+ */
+export async function adminCancelRegistration(id: string): Promise<AdminActionResult> {
+  const [existing] = await db
+    .select()
+    .from(registrations)
+    .where(eq(registrations.id, id))
+    .limit(1)
+
+  if (!existing) {
+    return { status: 'not_found', message: 'Pendaftaran tidak ditemukan.' }
+  }
+
+  if (existing.status === 'cancelled') {
+    return { status: 'ok', item: toAdminRow(existing) }
+  }
+
+  const now = new Date()
+  const [updated] = await db
+    .update(registrations)
+    .set({
+      status: 'cancelled',
+      updatedAt: now,
+    })
+    .where(eq(registrations.id, id))
+    .returning()
+
+  return { status: 'ok', item: toAdminRow(updated) }
+}
+
+/**
+ * Restores a previously cancelled registration back to confirmed,
+ * verifying capacity and phone uniqueness.
+ */
+export async function adminRestoreRegistration(id: string): Promise<AdminActionResult> {
+  return await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(registrations)
+      .where(eq(registrations.id, id))
+      .limit(1)
+
+    if (!existing) {
+      return { status: 'not_found', message: 'Pendaftaran tidak ditemukan.' }
+    }
+
+    if (existing.status === 'confirmed') {
+      return { status: 'ok', item: toAdminRow(existing) }
+    }
+
+    // Check phone uniqueness
+    const [existingPhone] = await tx
+      .select({ id: registrations.id })
+      .from(registrations)
+      .where(
+        and(
+          eq(registrations.eventId, existing.eventId),
+          eq(registrations.phone, existing.phone),
+          ne(registrations.status, 'cancelled'),
+          ne(registrations.id, id),
+        ),
+      )
+      .limit(1)
+
+    if (existingPhone) {
+      return {
+        status: 'phone_already_registered',
+        message: 'Nomor telepon ini sudah terdaftar oleh pendaftaran lain yang aktif.',
+      }
+    }
+
+    // Check capacity
+    const [event] = await tx
+      .select()
+      .from(events)
+      .where(eq(events.id, existing.eventId))
+      .limit(1)
+
+    if (event && event.capacity !== null) {
+      const [countRow] = await tx
+        .select({
+          count: sql<number>`count(*) filter (where ${registrations.status} = 'confirmed')`.mapWith(Number),
+        })
+        .from(registrations)
+        .where(eq(registrations.eventId, event.id))
+
+      const current = countRow?.count ?? 0
+      if (current >= event.capacity) {
+        return {
+          status: 'event_full',
+          message: 'Kuota acara sudah penuh, tidak dapat memulihkan pendaftaran.',
+        }
+      }
+    }
+
+    const now = new Date()
+    const [updated] = await tx
+      .update(registrations)
+      .set({
+        status: 'confirmed',
+        updatedAt: now,
+      })
+      .where(eq(registrations.id, id))
+      .returning()
+
+    return { status: 'ok', item: toAdminRow(updated) }
+  })
+}
+
 
 
 

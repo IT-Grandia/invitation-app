@@ -6,16 +6,18 @@ import { formatWibTime } from '@/lib/datetime'
 import { fetchOrNull } from '@/lib/network'
 import { formatPhoneForDisplay } from '@/lib/phone'
 
+import { AdminRowActions } from './AdminRowActions'
 import { withAdminKey } from './admin-session'
-import type { AdminRegistrationsResponse } from './types'
+import type { AdminRegistrationItem, AdminRegistrationsResponse } from './types'
 
 type Props = {
   adminKey: string
+  onDataChanged?: () => void
 }
 
 const TABLE_TIMEOUT_MS = 10000
 
-export function AdminRegistrationsTable({ adminKey }: Props) {
+export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
   const [q, setQ] = useState('')
   const [status, setStatus] = useState<string>('all')
   const [checkedIn, setCheckedIn] = useState<string>('all')
@@ -82,6 +84,17 @@ export function AdminRegistrationsTable({ adminKey }: Props) {
     setCheckedIn('all')
     setSort('created_desc')
     setPage(1)
+  }
+
+  const handleRowUpdated = (updatedItem: AdminRegistrationItem) => {
+    setData((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        items: prev.items.map((it) => (it.id === updatedItem.id ? updatedItem : it)),
+      }
+    })
+    onDataChanged?.()
   }
 
   const totalPages = Math.ceil((data?.total ?? 0) / limit) || 1
@@ -330,13 +343,11 @@ export function AdminRegistrationsTable({ adminKey }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      type="button"
-                      title="Menu aksi pendaftar"
-                      className="inline-flex min-h-tap min-w-[36px] items-center justify-center rounded-md p-1.5 text-ink-muted hover:bg-canvas hover:text-ink"
-                    >
-                      <span className="text-lg leading-none">⋮</span>
-                    </button>
+                    <AdminRowActions
+                      item={item}
+                      adminKey={adminKey}
+                      onActionSuccess={handleRowUpdated}
+                    />
                   </td>
                 </tr>
               ))

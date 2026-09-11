@@ -196,8 +196,15 @@ export function AdminDashboard() {
         {/* Task A11: Kartu Statistik & Kehadiran */}
         {stats && <AdminStatsCards stats={stats} />}
 
-        {/* Task A12: Tabel Pendaftar */}
-        {adminKey && <AdminRegistrationsTable adminKey={adminKey} />}
+        {/* Task A12 & A13: Tabel Pendaftar & Aksi Baris */}
+        {adminKey && (
+          <AdminRegistrationsTable
+            adminKey={adminKey}
+            onDataChanged={() => {
+              void verifyAndLoad(adminKey)
+            }}
+          />
+        )}
       </main>
     </div>
   )
