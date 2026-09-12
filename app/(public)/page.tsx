@@ -16,6 +16,11 @@ import { resolveRegistrationState } from "@/lib/event-state";
 import { isWellFormedToken } from "@/lib/qr";
 import { TICKET_COOKIE_NAME } from "@/lib/ticket-cookie";
 
+// The page is already dynamic at runtime because it reads the ticket cookie.
+// Declaring it here also keeps the build from prerendering the page, which would
+// query the database and fail the deploy whenever that database is unreachable.
+export const dynamic = "force-dynamic";
+
 // generateMetadata and the page both need the event; React's cache dedupes
 // the query within one request so the database is asked once.
 const loadEvent = cache(getPublishedEvent);
