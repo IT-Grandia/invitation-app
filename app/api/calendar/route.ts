@@ -1,5 +1,6 @@
 import { getPublishedEvent } from '@/lib/db/queries/event'
 import { buildIcs } from '@/lib/ics'
+import { siteUrl } from '@/lib/site-url'
 
 /**
  * GET /api/calendar — the event as an .ics file, for the "Tambah ke kalender"
@@ -17,18 +18,18 @@ export async function GET() {
     return new Response(null, { status: 404 })
   }
 
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
+  const origin = siteUrl()
   const location =
     event.venueAddress && event.venueAddress !== event.venueName
       ? `${event.venueName}, ${event.venueAddress}`
       : event.venueName
 
   const ics = buildIcs({
-    uid: `${event.id}@${new URL(siteUrl).host}`,
+    uid: `${event.id}@${new URL(origin).host}`,
     summary: event.name,
     location,
-    description: `Tiket dan detail acara: ${siteUrl}`,
-    url: siteUrl,
+    description: `Tiket dan detail acara: ${origin}`,
+    url: origin,
     startsAt: event.startsAt,
     endsAt: event.endsAt,
   })

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 // No web font is loaded at all. DESIGN.md specifies system-ui, and the digits
@@ -8,13 +9,13 @@ import "./globals.css";
 // iOS support. A loaded monospace face cost 39.5 KB to buy something the
 // system fonts already provide.
 
-// Falls back to localhost so the build never breaks when the variable is unset;
-// the real value comes from NEXT_PUBLIC_SITE_URL and must point at the final
-// domain before the first participant registers (docs/01-PRD.md section 10.1).
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// metadataBase only resolves relative Open Graph URLs, so the localhost
+// fallback is harmless here. The value that must never be wrong — the host
+// inside the QR — is guarded in lib/qr.ts instead.
+const metadataBaseUrl = siteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(metadataBaseUrl),
   title: {
     default: "Padel Day 2026",
     template: "%s · Padel Day 2026",
