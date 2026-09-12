@@ -1,5 +1,6 @@
 import QRCode from 'qrcode'
 
+import { isSiteUrlConfigured, siteUrl } from '@/lib/site-url'
 import { TOKEN_LENGTH } from '@/lib/token'
 
 /**
@@ -17,14 +18,21 @@ export function isWellFormedToken(value: string): boolean {
  * The string the QR encodes. This is the contract with the scanner
  * (docs/11-JOBDESK.md section 5): the full ticket URL, nothing else.
  *
- * Read at call time rather than module load so a test can set the variable.
- * The localhost fallback matches app/layout.tsx; the real value must point at
- * the final domain before the first participant registers, because a QR that
- * has already been issued cannot be reissued (docs/01-PRD.md section 10.1).
+ * In production this refuses to run without NEXT_PUBLIC_SITE_URL. A blank
+ * variable would otherwise put localhost inside every QR — silently, since
+ * the image still renders and scans — and a QR that has been saved to a
+ * participant's photos cannot be reissued (docs/01-PRD.md section 10.1). A
+ * broken image on the ticket page is noticed in the post-deploy check within
+ * minutes; a wrong host is noticed at the gate on event day.
  */
 export function ticketUrl(token: string): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
-  return `${base}/t/${token}`
+  if (process.env.NODE_ENV === 'production' && !isSiteUrlConfigured()) {
+    throw new Error(
+      'NEXT_PUBLIC_SITE_URL is not set. Refusing to issue a ticket URL that would point at localhost.',
+    )
+  }
+
+  return `${siteUrl()}/t/${token}`
 }
 
 /**
