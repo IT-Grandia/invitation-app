@@ -102,25 +102,36 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
   const endRow = Math.min(page * limit, data?.total ?? 0)
 
   return (
-    <div className="rounded-card border border-line bg-surface p-5 shadow-sm">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+    <div className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-4 sm:p-5 shadow-[0_2px_12px_rgba(15,15,15,0.05)] font-['Space_Grotesk',sans-serif]">
+      {/* Header section with responsive layout */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-base font-bold text-ink">Daftar Pendaftar</h2>
-          <p className="text-xs text-ink-muted">
+          <div className="flex items-center justify-between sm:justify-start gap-2.5">
+            <h2 className="font-['Archivo_Black',sans-serif] text-base sm:text-lg tracking-tight text-[#0F0F0F]">
+              Daftar Pendaftar
+            </h2>
+            <span className="sm:hidden inline-flex items-center rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-2 py-0.5 text-xs font-mono font-bold text-[#0F0F0F]">
+              {data?.total ?? 0}
+            </span>
+          </div>
+          <p className="text-xs text-[#0F0F0F]/70">
             Kelola peserta terdaftar, verifikasi tiket, dan status kehadiran
           </p>
         </div>
-        <div className="text-xs font-medium text-ink-muted">
-          Total: <strong className="font-numeric text-ink">{data?.total ?? 0}</strong> pendaftar
+        <div className="hidden sm:block text-xs font-medium text-[#0F0F0F]/70">
+          Total: <strong className="font-mono font-bold text-[#0F0F0F]">{data?.total ?? 0}</strong> pendaftar
         </div>
       </div>
 
       {/* Filter & Search Bar */}
       <div className="mt-4 flex flex-col gap-3">
-        <form onSubmit={handleSearchSubmit} className="flex flex-1 gap-2">
+        {/* Search form */}
+        <form onSubmit={handleSearchSubmit} className="flex gap-2 w-full">
           <div className="relative flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink-muted">
-              🔍
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-[#0F0F0F]/50">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </span>
             <input
               type="search"
@@ -129,64 +140,74 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
                 setQ(e.target.value)
                 setPage(1)
               }}
-              placeholder="Cari nama, nomor HP, atau nomor tiket..."
-              className="min-h-tap w-full rounded-card border border-line-input bg-canvas/40 pl-9 pr-4 text-xs text-ink placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
+              placeholder="Cari nama, nomor HP, tiket..."
+              className="min-h-tap w-full rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] pl-9 pr-3 text-xs font-medium text-[#0F0F0F] placeholder:text-[#0F0F0F]/40 focus:outline-none focus:ring-2 focus:ring-[#1F8A4C] focus:ring-offset-2 sm:text-sm"
             />
           </div>
           <button
             type="submit"
-            className="flex min-h-tap items-center justify-center rounded-card bg-primary px-4 text-xs font-semibold text-on-primary transition-opacity hover:opacity-90 sm:text-sm"
+            className="flex min-h-tap items-center justify-center rounded-[4px] border border-[#0F0F0F] bg-[#1F8A4C] px-3.5 sm:px-4 text-xs font-bold text-white transition-all hover:bg-[#186B3F] active:translate-y-[1px] sm:text-sm shrink-0"
           >
             Cari
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Filters grid on mobile, inline on desktop */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end">
           {/* Status Filter */}
-          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
-            <span>Status:</span>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="admin-filter-status" className="text-[10px] font-bold uppercase tracking-wider text-[#0F0F0F]/70 sm:text-xs">
+              Status
+            </label>
             <select
+              id="admin-filter-status"
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value)
                 setPage(1)
               }}
-              className="min-h-tap rounded-card border border-line bg-canvas/50 px-2.5 py-1 text-xs font-medium text-ink focus:outline-none focus:ring-1 focus:ring-primary"
+              className="min-h-tap w-full sm:w-auto rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-2.5 py-1 text-xs font-bold text-[#0F0F0F] focus:outline-none focus:ring-1 focus:ring-[#1F8A4C]"
             >
               <option value="all">Semua Status</option>
               <option value="confirmed">Terdaftar</option>
               <option value="waitlist">Waiting List</option>
               <option value="cancelled">Dibatalkan</option>
             </select>
-          </label>
+          </div>
 
           {/* Checked-in Filter */}
-          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
-            <span>Kehadiran:</span>
+          <div className="flex flex-col gap-1">
+            <label htmlFor="admin-filter-checkin" className="text-[10px] font-bold uppercase tracking-wider text-[#0F0F0F]/70 sm:text-xs">
+              Kehadiran
+            </label>
             <select
+              id="admin-filter-checkin"
               value={checkedIn}
               onChange={(e) => {
                 setCheckedIn(e.target.value)
                 setPage(1)
               }}
-              className="min-h-tap rounded-card border border-line bg-canvas/50 px-2.5 py-1 text-xs font-medium text-ink focus:outline-none focus:ring-1 focus:ring-primary"
+              className="min-h-tap w-full sm:w-auto rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-2.5 py-1 text-xs font-bold text-[#0F0F0F] focus:outline-none focus:ring-1 focus:ring-[#1F8A4C]"
             >
               <option value="all">Semua</option>
               <option value="true">Sudah Hadir</option>
               <option value="false">Belum Hadir</option>
             </select>
-          </label>
+          </div>
 
           {/* Sort Filter */}
-          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
-            <span>Urutkan:</span>
+          <div className="col-span-2 sm:col-span-1 flex flex-col gap-1">
+            <label htmlFor="admin-filter-sort" className="text-[10px] font-bold uppercase tracking-wider text-[#0F0F0F]/70 sm:text-xs">
+              Urutkan
+            </label>
             <select
+              id="admin-filter-sort"
               value={sort}
               onChange={(e) => {
                 setSort(e.target.value)
                 setPage(1)
               }}
-              className="min-h-tap rounded-card border border-line bg-canvas/50 px-2.5 py-1 text-xs font-medium text-ink focus:outline-none focus:ring-1 focus:ring-primary"
+              className="min-h-tap w-full sm:w-auto rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-2.5 py-1 text-xs font-bold text-[#0F0F0F] focus:outline-none focus:ring-1 focus:ring-[#1F8A4C]"
             >
               <option value="created_desc">Pendaftaran (Terbaru)</option>
               <option value="created_asc">Pendaftaran (Terlama)</option>
@@ -194,13 +215,13 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
               <option value="name_desc">Nama (Z–A)</option>
               <option value="checkin_desc">Check-in (Terbaru)</option>
             </select>
-          </label>
+          </div>
 
           {(q || status !== 'all' || checkedIn !== 'all' || sort !== 'created_desc') && (
             <button
               type="button"
               onClick={handleResetFilters}
-              className="ml-auto text-xs font-medium text-primary hover:underline"
+              className="col-span-2 sm:col-span-1 sm:ml-auto flex min-h-tap items-center justify-center rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-3 py-1 text-xs font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px]"
             >
               Reset Filter
             </button>
@@ -212,23 +233,130 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
       {error && (
         <div
           role="alert"
-          className="mt-4 flex items-center justify-between rounded-card border border-danger/30 bg-danger/10 p-3 text-xs text-danger"
+          className="mt-4 flex items-center justify-between rounded-[4px] border border-[#A3271F] bg-[#A3271F]/10 p-3 text-xs font-bold text-[#A3271F]"
         >
           <span>{error}</span>
           <button
             type="button"
             onClick={() => void loadData()}
-            className="font-semibold underline hover:opacity-80"
+            className="font-bold underline hover:opacity-80"
           >
             Coba lagi
           </button>
         </div>
       )}
 
-      {/* Table Container */}
-      <div className="mt-4 overflow-x-auto rounded-card border border-line">
+      {/* MOBILE VIEW: Participant Cards Stack (< md) */}
+      <div className="mt-4 space-y-3 md:hidden">
+        {loading ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <div
+              key={`m-skeleton-${idx}`}
+              className="animate-pulse rounded-[4px] border border-[#0F0F0F]/15 bg-[#FAF8F2] p-4 space-y-3"
+            >
+              <div className="flex justify-between items-center">
+                <div className="h-5 w-20 bg-[#0F0F0F]/10 rounded-[2px]" />
+                <div className="h-5 w-16 bg-[#0F0F0F]/10 rounded-[2px]" />
+              </div>
+              <div className="h-5 w-3/4 bg-[#0F0F0F]/10 rounded-[2px]" />
+              <div className="h-4 w-1/2 bg-[#0F0F0F]/10 rounded-[2px]" />
+            </div>
+          ))
+        ) : !data || data.items.length === 0 ? (
+          <div className="rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] p-6 text-center text-[#0F0F0F]/70">
+            <p className="font-['Archivo_Black',sans-serif] text-sm text-[#0F0F0F]">
+              Tidak ada pendaftar ditemukan
+            </p>
+            <p className="mt-1 text-xs">
+              {q || status !== 'all' || checkedIn !== 'all'
+                ? 'Coba sesuaikan filter atau kata kunci pencarian kamu.'
+                : 'Belum ada peserta yang mendaftar ke acara ini.'}
+            </p>
+            {(q || status !== 'all' || checkedIn !== 'all') && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="mt-3 inline-flex min-h-tap items-center rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] px-4 text-xs font-bold text-[#0F0F0F] hover:bg-[#EFE9D9]"
+              >
+                Reset Filter
+              </button>
+            )}
+          </div>
+        ) : (
+          data.items.map((item) => (
+            <div
+              key={`m-${item.id}`}
+              className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-3.5 shadow-sm transition-all hover:bg-[#FAF8F2]"
+            >
+              {/* Header row: Ticket + Status + Row Menu */}
+              <div className="flex items-center justify-between gap-2 border-b border-[#0F0F0F]/10 pb-2.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] text-[#0F0F0F]">
+                    {item.ticketNumber}
+                  </span>
+                  {item.status === 'confirmed' && (
+                    <span className="inline-flex items-center rounded-[4px] border border-[#1F8A4C] bg-[#1F8A4C]/10 px-2 py-0.5 text-[11px] font-bold text-[#1F8A4C]">
+                      Terdaftar
+                    </span>
+                  )}
+                  {item.status === 'waitlist' && (
+                    <span className="inline-flex items-center rounded-[4px] border border-[#E85A1F] bg-[#E85A1F]/10 px-2 py-0.5 text-[11px] font-bold text-[#E85A1F]">
+                      Waiting list
+                    </span>
+                  )}
+                  {item.status === 'cancelled' && (
+                    <span className="inline-flex items-center rounded-[4px] border border-[#A3271F] bg-[#A3271F]/10 px-2 py-0.5 text-[11px] font-bold text-[#A3271F]">
+                      Dibatalkan
+                    </span>
+                  )}
+                </div>
+                <AdminRowActions
+                  item={item}
+                  adminKey={adminKey}
+                  onActionSuccess={handleRowUpdated}
+                />
+              </div>
+
+              {/* Middle row: Full Name & WhatsApp */}
+              <div className="pt-2.5">
+                <h3 className="font-['Space_Grotesk',sans-serif] text-sm font-bold text-[#0F0F0F]">
+                  {item.fullName}
+                </h3>
+                <div className="mt-1 flex items-center gap-1.5 font-mono text-xs">
+                  <span className="text-[#0F0F0F]/50">WA:</span>
+                  <a
+                    href={`https://wa.me/${item.phone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-[#1F8A4C] hover:underline"
+                    title="Kirim pesan WhatsApp"
+                  >
+                    {formatPhoneForDisplay(item.phone)}
+                  </a>
+                </div>
+              </div>
+
+              {/* Bottom row: Check-in status */}
+              <div className="mt-2.5 flex items-center justify-between border-t border-[#0F0F0F]/10 pt-2 text-[11px] font-mono text-[#0F0F0F]/70">
+                <span>Check-in:</span>
+                {item.checkedInAt ? (
+                  <span className="inline-flex items-center gap-1.5 font-bold text-[#1F8A4C]">
+                    <span className="h-2 w-2 rounded-[2px] bg-[#1F8A4C]" aria-hidden="true" />
+                    <span>{formatWibTime(item.checkedInAt)} WIB</span>
+                  </span>
+                ) : (
+                  <span className="text-[#0F0F0F]/40 font-medium">Belum Hadir</span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* DESKTOP VIEW: Full Data Table (>= md) */}
+      <div className="mt-4 hidden md:block overflow-x-auto rounded-[4px] border border-[#0F0F0F]">
         <table className="w-full min-w-[640px] text-left text-xs sm:text-sm">
-          <thead className="border-b border-line bg-surface-2/40 text-xs font-semibold text-ink-muted">
+          <thead className="border-b border-[#0F0F0F] bg-[#FAF8F2] text-[11px] font-bold uppercase tracking-wider text-[#0F0F0F]/80">
             <tr>
               <th scope="col" className="px-4 py-3">
                 Tiket
@@ -250,35 +378,37 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/60 bg-surface">
+          <tbody className="divide-y divide-[#0F0F0F]/15 bg-[#FFFFFF]">
             {loading ? (
               // Skeleton rows
               Array.from({ length: 5 }).map((_, index) => (
                 <tr key={`skeleton-${index}`} className="animate-pulse">
                   <td className="px-4 py-3">
-                    <div className="h-5 w-16 rounded bg-line/60" />
+                    <div className="h-5 w-16 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-5 w-32 rounded bg-line/60" />
+                    <div className="h-5 w-32 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-5 w-24 rounded bg-line/60" />
+                    <div className="h-5 w-24 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-5 w-16 rounded bg-line/60" />
+                    <div className="h-5 w-16 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-5 w-20 rounded bg-line/60" />
+                    <div className="h-5 w-20 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="ml-auto h-5 w-6 rounded bg-line/60" />
+                    <div className="ml-auto h-5 w-6 rounded-[2px] bg-[#0F0F0F]/10" />
                   </td>
                 </tr>
               ))
             ) : !data || data.items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-ink-muted">
-                  <p className="font-semibold text-ink">Tidak ada pendaftar ditemukan</p>
+                <td colSpan={6} className="px-4 py-12 text-center text-[#0F0F0F]/70">
+                  <p className="font-['Archivo_Black',sans-serif] text-sm text-[#0F0F0F]">
+                    Tidak ada pendaftar ditemukan
+                  </p>
                   <p className="mt-1 text-xs">
                     {q || status !== 'all' || checkedIn !== 'all'
                       ? 'Coba sesuaikan filter atau kata kunci pencarian kamu.'
@@ -288,7 +418,7 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
                     <button
                       type="button"
                       onClick={handleResetFilters}
-                      className="mt-3 inline-flex min-h-tap items-center rounded-pill bg-primary/10 px-4 text-xs font-semibold text-primary hover:bg-primary/20"
+                      className="mt-3 inline-flex min-h-tap items-center rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-4 text-xs font-bold text-[#0F0F0F] hover:bg-[#EFE9D9]"
                     >
                       Reset Filter
                     </button>
@@ -297,19 +427,19 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
               </tr>
             ) : (
               data.items.map((item) => (
-                <tr key={item.id} className="transition-colors hover:bg-canvas/30">
-                  <td className="px-4 py-3 font-numeric font-semibold text-ink">
-                    <span className="rounded border border-line bg-canvas/60 px-2 py-0.5 text-xs">
+                <tr key={item.id} className="transition-colors hover:bg-[#FAF8F2]">
+                  <td className="px-4 py-3 font-mono font-semibold text-[#0F0F0F]">
+                    <span className="rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-2 py-0.5 text-xs">
                       {item.ticketNumber}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-medium text-ink">{item.fullName}</td>
+                  <td className="px-4 py-3 font-bold text-[#0F0F0F]">{item.fullName}</td>
                   <td className="px-4 py-3">
                     <a
                       href={`https://wa.me/${item.phone}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-numeric text-primary hover:underline"
+                      className="inline-flex items-center gap-1 font-mono text-xs font-bold text-[#1F8A4C] hover:underline"
                       title="Kirim pesan WhatsApp"
                     >
                       {formatPhoneForDisplay(item.phone)}
@@ -317,29 +447,29 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
                   </td>
                   <td className="px-4 py-3">
                     {item.status === 'confirmed' && (
-                      <span className="inline-flex items-center rounded-pill bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                      <span className="inline-flex items-center rounded-[4px] border border-[#1F8A4C] bg-[#1F8A4C]/10 px-2 py-0.5 text-xs font-bold text-[#1F8A4C]">
                         Terdaftar
                       </span>
                     )}
                     {item.status === 'waitlist' && (
-                      <span className="inline-flex items-center rounded-pill bg-warning/10 px-2 py-0.5 text-xs font-semibold text-warning">
+                      <span className="inline-flex items-center rounded-[4px] border border-[#E85A1F] bg-[#E85A1F]/10 px-2 py-0.5 text-xs font-bold text-[#E85A1F]">
                         Waiting list
                       </span>
                     )}
                     {item.status === 'cancelled' && (
-                      <span className="inline-flex items-center rounded-pill bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">
+                      <span className="inline-flex items-center rounded-[4px] border border-[#A3271F] bg-[#A3271F]/10 px-2 py-0.5 text-xs font-bold text-[#A3271F]">
                         Dibatalkan
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3">
                     {item.checkedInAt ? (
-                      <span className="inline-flex items-center gap-1 text-ink">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        {formatWibTime(item.checkedInAt)} WIB
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[#0F0F0F]">
+                        <span className="h-2 w-2 rounded-[2px] bg-[#1F8A4C]" aria-hidden="true" />
+                        <span>{formatWibTime(item.checkedInAt)} WIB</span>
                       </span>
                     ) : (
-                      <span className="text-ink-muted">—</span>
+                      <span className="font-mono text-xs text-[#0F0F0F]/40">—</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -357,31 +487,33 @@ export function AdminRegistrationsTable({ adminKey, onDataChanged }: Props) {
       </div>
 
       {/* Pagination Footer */}
-      <div className="mt-4 flex flex-col items-center justify-between gap-3 text-xs text-ink-muted sm:flex-row">
-        <div>
-          Menampilkan <strong className="font-numeric text-ink">{startRow}</strong>–
-          <strong className="font-numeric text-ink">{endRow}</strong> dari{' '}
-          <strong className="font-numeric text-ink">{data?.total ?? 0}</strong> peserta
+      <div className="mt-4 flex flex-col gap-2.5 border-t border-[#0F0F0F]/15 pt-3.5 text-xs font-mono text-[#0F0F0F]/70 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-center sm:text-left">
+          Menampilkan <strong className="font-bold text-[#0F0F0F]">{startRow}</strong>–
+          <strong className="font-bold text-[#0F0F0F]">{endRow}</strong> dari{' '}
+          <strong className="font-bold text-[#0F0F0F]">{data?.total ?? 0}</strong> peserta
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           <button
             type="button"
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
             disabled={page <= 1 || loading}
-            className="flex min-h-tap items-center justify-center rounded-card border border-line bg-surface px-3 py-1 font-semibold text-ink transition-colors hover:bg-canvas disabled:opacity-50"
+            className="flex flex-1 sm:flex-none min-h-tap items-center justify-center rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-3 py-1 font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] disabled:opacity-50 font-['Space_Grotesk',sans-serif]"
           >
             ◄ Sebelumnya
           </button>
-          <span className="px-2 font-medium">
-            Halaman <strong className="font-numeric text-ink">{page}</strong> dari{' '}
-            <strong className="font-numeric text-ink">{totalPages}</strong>
+          <span className="px-2 font-bold text-center shrink-0">
+            <span className="hidden sm:inline">Halaman </span>
+            <strong className="text-[#0F0F0F]">{page}</strong>
+            <span className="text-[#0F0F0F]/50"> / </span>
+            <strong className="text-[#0F0F0F]">{totalPages}</strong>
           </span>
           <button
             type="button"
             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
             disabled={page >= totalPages || loading}
-            className="flex min-h-tap items-center justify-center rounded-card border border-line bg-surface px-3 py-1 font-semibold text-ink transition-colors hover:bg-canvas disabled:opacity-50"
+            className="flex flex-1 sm:flex-none min-h-tap items-center justify-center rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-3 py-1 font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] disabled:opacity-50 font-['Space_Grotesk',sans-serif]"
           >
             Berikutnya ►
           </button>

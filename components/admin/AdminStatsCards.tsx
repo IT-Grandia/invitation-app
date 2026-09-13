@@ -18,45 +18,58 @@ export function AdminStatsCards({ stats }: Props) {
     totals.registered > 0 ? Math.round((totals.notCheckedIn / totals.registered) * 100) : 0
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 font-['Space_Grotesk',sans-serif]">
       {/* 4 Primary Metric Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* Total Terdaftar */}
-        <div className="rounded-card border border-line bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
-          <span className="text-xs font-semibold text-ink-muted">Terdaftar</span>
-          <p className="mt-1 font-numeric text-3xl font-bold tracking-tight text-ink">
+        <div className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-4 shadow-[0_2px_12px_rgba(15,15,15,0.05)] transition-transform hover:-translate-y-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F0F0F]/70">
+            Terdaftar
+          </span>
+          <p className="mt-1 font-['Archivo_Black',sans-serif] text-3xl tracking-tight text-[#0F0F0F] sm:text-4xl">
             {totals.registered}
           </p>
-          <p className="mt-1 text-xs text-ink-muted">
+          <p className="mt-1 text-xs text-[#0F0F0F]/60">
             {totals.waitlist > 0 ? `${totals.waitlist} menunggu antrean` : 'Peserta terkonfirmasi'}
           </p>
         </div>
 
-        {/* Sudah Hadir */}
-        <div className="rounded-card border border-line bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
-          <span className="text-xs font-semibold text-primary">Sudah Hadir</span>
-          <p className="mt-1 font-numeric text-3xl font-bold tracking-tight text-primary">
+        {/* Sudah Hadir - Primary Accent Card */}
+        <div className="relative overflow-hidden rounded-[4px] border-2 border-[#1F8A4C] bg-[#F4F9F5] p-4 shadow-[0_2px_12px_rgba(31,138,76,0.12)] transition-transform hover:-translate-y-0.5">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#1F8A4C]" aria-hidden="true" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#1F8A4C]">
+            Sudah Hadir
+          </span>
+          <p className="mt-1 font-['Archivo_Black',sans-serif] text-3xl tracking-tight text-[#1F8A4C] sm:text-4xl">
             {totals.checkedIn}
           </p>
-          <p className="mt-1 text-xs text-ink-muted">{attendancePercentage}% dari total peserta</p>
+          <p className="mt-1 text-xs font-semibold text-[#1F8A4C]/80">
+            {attendancePercentage}% dari total peserta
+          </p>
         </div>
 
         {/* Belum Hadir */}
-        <div className="rounded-card border border-line bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
-          <span className="text-xs font-semibold text-ink-muted">Belum Hadir</span>
-          <p className="mt-1 font-numeric text-3xl font-bold tracking-tight text-ink">
+        <div className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-4 shadow-[0_2px_12px_rgba(15,15,15,0.05)] transition-transform hover:-translate-y-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#0F0F0F]/70">
+            Belum Hadir
+          </span>
+          <p className="mt-1 font-['Archivo_Black',sans-serif] text-3xl tracking-tight text-[#0F0F0F] sm:text-4xl">
             {totals.notCheckedIn}
           </p>
-          <p className="mt-1 text-xs text-ink-muted">{notCheckedInPercentage}% belum datang</p>
+          <p className="mt-1 text-xs text-[#0F0F0F]/60">
+            {notCheckedInPercentage}% belum datang
+          </p>
         </div>
 
         {/* Sisa Kuota */}
-        <div className="rounded-card border border-line bg-surface p-4 shadow-sm transition-shadow hover:shadow-md">
-          <span className="text-xs font-semibold text-ink-muted">Sisa Kuota</span>
-          <p className="mt-1 font-numeric text-3xl font-bold tracking-tight text-ink">
+        <div className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-4 shadow-[0_2px_12px_rgba(15,15,15,0.05)] transition-transform hover:-translate-y-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#E85A1F]">
+            Sisa Kuota
+          </span>
+          <p className="mt-1 font-['Archivo_Black',sans-serif] text-3xl tracking-tight text-[#0F0F0F] sm:text-4xl">
             {totals.remaining !== null ? totals.remaining : 'Tak terbatas'}
           </p>
-          <p className="mt-1 text-xs text-ink-muted">
+          <p className="mt-1 text-xs text-[#0F0F0F]/60">
             {event.capacity !== null ? `Kapasitas maksimal ${event.capacity}` : 'Tanpa batas kuota'}
           </p>
         </div>
@@ -65,31 +78,31 @@ export function AdminStatsCards({ stats }: Props) {
       {/* Kehadiran & Check-in Terakhir */}
       <section
         aria-labelledby="attendance-section-title"
-        className="rounded-card border border-line bg-surface p-5 shadow-sm"
+        className="rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-5 shadow-[0_2px_12px_rgba(15,15,15,0.05)]"
       >
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 id="attendance-section-title" className="font-display text-base font-bold text-ink">
+            <h2 id="attendance-section-title" className="font-['Archivo_Black',sans-serif] text-base tracking-tight text-[#0F0F0F]">
               Tingkat Kehadiran
             </h2>
-            <p className="text-xs text-ink-muted">
+            <p className="text-xs text-[#0F0F0F]/70">
               Persentase pendaftar yang sudah memindai tiket di venue
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {sheetSync.pending > 0 ? (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning">
+              <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#E85A1F] bg-[#E85A1F]/10 px-2.5 py-1 text-xs font-bold text-[#E85A1F]">
                 ⚠ {sheetSync.pending} belum sync Sheets
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-pill bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-[4px] border border-[#1F8A4C] bg-[#1F8A4C]/10 px-2.5 py-1 text-xs font-bold text-[#1F8A4C]">
                 ✓ Sheets tersinkron
               </span>
             )}
 
             {totals.cancelled > 0 && (
-              <span className="inline-flex items-center rounded-pill bg-danger/10 px-2.5 py-1 text-xs font-medium text-danger">
+              <span className="inline-flex items-center rounded-[4px] border border-[#A3271F] bg-[#A3271F]/10 px-2.5 py-1 text-xs font-bold text-[#A3271F]">
                 {totals.cancelled} dibatalkan
               </span>
             )}
@@ -98,9 +111,9 @@ export function AdminStatsCards({ stats }: Props) {
 
         {/* Visual Progress Bar */}
         <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between text-xs font-semibold text-ink">
+          <div className="flex items-center justify-between text-xs font-bold text-[#0F0F0F]">
             <span>Kehadiran</span>
-            <span className="font-numeric">
+            <span className="font-mono">
               {totals.checkedIn} dari {totals.registered} ({attendancePercentage}%)
             </span>
           </div>
@@ -111,30 +124,32 @@ export function AdminStatsCards({ stats }: Props) {
             aria-valuemin={0}
             aria-valuemax={totals.registered}
             aria-valuetext={`${totals.checkedIn} dari ${totals.registered} peserta hadir (${attendancePercentage}%)`}
-            className="h-3 w-full overflow-hidden rounded-pill bg-surface-2/60"
+            className="h-3.5 w-full overflow-hidden rounded-[4px] border border-[#0F0F0F] bg-[#E4DCC4]/50"
           >
             <div
-              className="h-full rounded-pill bg-primary transition-all duration-500 ease-out"
+              className="h-full bg-[#1F8A4C] transition-all duration-500 ease-out"
               style={{ width: `${attendancePercentage}%` }}
             />
           </div>
         </div>
 
         {/* Footer info: Last check-in & Last sheet sync */}
-        <div className="mt-4 flex flex-col justify-between gap-2 border-t border-line/60 pt-3 text-xs text-ink-muted sm:flex-row sm:items-center">
-          <div className="flex items-center gap-1.5">
+        <div className="mt-4 flex flex-col justify-between gap-2 border-t border-[#0F0F0F]/15 pt-3 text-xs text-[#0F0F0F]/70 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-2">
             <span
-              className={`h-2 w-2 rounded-full ${totals.checkedIn > 0 ? 'bg-primary' : 'bg-line-input'}`}
+              className={`h-2.5 w-2.5 rounded-[2px] border border-[#0F0F0F] ${
+                totals.checkedIn > 0 ? 'bg-[#1F8A4C]' : 'bg-[#E4DCC4]'
+              }`}
               aria-hidden="true"
             />
             {lastCheckIn ? (
               <span>
                 Check-in terakhir:{' '}
-                <strong className="font-semibold text-ink">
+                <strong className="font-mono font-bold text-[#0F0F0F]">
                   {formatWibTime(lastCheckIn.checkedInAt)} WIB
                 </strong>
                 {lastCheckIn.checkedInBy && (
-                  <span className="text-ink-muted"> · {lastCheckIn.checkedInBy}</span>
+                  <span className="text-[#0F0F0F]/70"> · {lastCheckIn.checkedInBy}</span>
                 )}
               </span>
             ) : (
@@ -143,7 +158,7 @@ export function AdminStatsCards({ stats }: Props) {
           </div>
 
           {sheetSync.lastSyncedAt && (
-            <span className="text-xs text-ink-muted">
+            <span className="font-mono text-xs text-[#0F0F0F]/70">
               Sync Sheets terakhir: {formatWib(sheetSync.lastSyncedAt)} WIB
             </span>
           )}
