@@ -290,7 +290,12 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
       }
 
       const ticketToken = data?.token
-      if (onSuccess && ticketToken) {
+      if (validationResult.data.attending === 'no') {
+        if (onSuccess && ticketToken) {
+          onSuccess(ticketToken)
+        }
+        router.push('/')
+      } else if (onSuccess && ticketToken) {
         onSuccess(ticketToken)
       } else if (ticketToken) {
         router.push(`/t/${ticketToken}`)

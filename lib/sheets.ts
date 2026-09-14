@@ -1,36 +1,35 @@
 import { JWT } from 'google-auth-library'
 import { GoogleSpreadsheet } from 'google-spreadsheet'
 
-import { formatWib } from '@/lib/datetime'
 import { formatPhoneForDisplay } from '@/lib/phone'
 import { ticketNumber } from '@/lib/token'
 
 export const SHEET_TAB_PESERTA = 'Peserta'
-export const SHEET_TAB_LOG_CHECKIN = 'Log Check-in'
-export const SHEET_TAB_RINGKASAN = 'Ringkasan'
 
 export const PESERTA_HEADERS = [
-  'No. Tiket',
-  'Nama Lengkap',
+  'No Tiket',
+  'Name',
   'WhatsApp',
-  'Email',
-  'Status',
-  'Waktu Daftar',
-  'Waktu Check-in',
-  'Petugas',
-  'Catatan',
+  'Community',
+  'Investment Interest',
+  'RSVP',
+  'Check-in',
 ] as const
 
 export type PesertaHeader = (typeof PESERTA_HEADERS)[number]
 
 export type SheetRegistrationInput = {
-  token: string
+  token?: string
+  ticketNumber?: string
   fullName: string
   phone: string
   email?: string | null
   notes?: string | null
-  status: 'confirmed' | 'waitlist' | 'cancelled' | string
-  createdAt: Date | string
+  community?: string | null
+  investmentInterests?: string[] | null
+  attending?: boolean | null
+  status?: 'confirmed' | 'waitlist' | 'cancelled' | string
+  createdAt?: Date | string
   checkedInAt?: Date | string | null
   checkedInBy?: string | null
 }
@@ -44,8 +43,44 @@ export function mapStatusToIndonesian(status: SheetRegistrationInput['status']):
     case 'cancelled':
       return 'Batal'
     default:
-      return status
+      return status ?? ''
   }
+}
+
+/**
+ * Formats community code/label for Google Sheets display.
+ */
+export function formatCommunityForSheet(community?: string | null): string {
+  if (!community) return ''
+  if (community === 'club_79' || community === 'Club 79') return 'Club 79'
+  if (community === 'womenpreneur_hipmi_jateng' || community === 'Womenpreneur Hipmi Jateng') {
+    return 'Womenpreneur Hipmi Jateng'
+  }
+  return community
+}
+
+/**
+ * Formats investment interests array as capitalized comma-separated string (e.g. "Gold, Property").
+ */
+export function formatInvestmentInterestsForSheet(interests?: string[] | null): string {
+  if (!interests || !Array.isArray(interests) || interests.length === 0) {
+    return ''
+  }
+
+  const labelMap: Record<string, string> = {
+    gold: 'Gold',
+    deposit: 'Deposito',
+    deposito: 'Deposito',
+    stocks: 'Stocks',
+    property: 'Property',
+  }
+
+  return interests
+    .map((item) => {
+      const lower = item.toLowerCase().trim()
+      return labelMap[lower] ?? (item.charAt(0).toUpperCase() + item.slice(1))
+    })
+    .join(', ')
 }
 
 /**
@@ -76,25 +111,28 @@ export function isSheetsConfigured(): boolean {
 }
 
 /**
- * Transforms a registration DB entity/input into the exact 9-column format
- * specified for Tab 'Peserta' in 03-DATA-MODEL.md.
- *
- * Security rule: Full token is NEVER leaked to Google Sheets.
- * Only the 8-character uppercase ticket number is written.
+ * Transforms a registration DB entity/input into the 7-column format
+ * specified for Tab 'Peserta' (No Tiket, Name, WhatsApp, Community, Investment Interest, RSVP, Check-in).
  */
 export function formatRegistrationForSheet(
   input: SheetRegistrationInput,
 ): Record<PesertaHeader, string> {
+  const isAttending = input.attending !== false
+  const isCheckedIn = Boolean(input.checkedInAt)
+  const displayTicket = input.ticketNumber
+    ? input.ticketNumber
+    : input.token
+      ? ticketNumber(input.token)
+      : ''
+
   return {
-    'No. Tiket': ticketNumber(input.token),
-    'Nama Lengkap': input.fullName,
+    'No Tiket': displayTicket,
+    'Name': input.fullName,
     'WhatsApp': formatPhoneForDisplay(input.phone),
-    'Email': input.email ?? '',
-    Status: mapStatusToIndonesian(input.status),
-    'Waktu Daftar': formatWib(input.createdAt),
-    'Waktu Check-in': input.checkedInAt ? formatWib(input.checkedInAt) : '',
-    Petugas: input.checkedInBy ?? '',
-    Catatan: input.notes ?? '',
+    'Community': formatCommunityForSheet(input.community),
+    'Investment Interest': formatInvestmentInterestsForSheet(input.investmentInterests),
+    'RSVP': isAttending ? 'Yes' : 'No',
+    'Check-in': isCheckedIn ? 'Yes' : 'No',
   }
 }
 
@@ -149,53 +187,20 @@ export async function appendRegistration(
   }
 }
 
-export const LOG_CHECKIN_HEADERS = [
-  'Waktu (WIB)',
-  'No. Tiket',
-  'Nama',
-  'Hasil',
-  'Petugas',
-  'Mode',
-] as const
-
-export type LogCheckInHeader = (typeof LOG_CHECKIN_HEADERS)[number]
-
-export type SheetLogCheckInInput = {
-  timestamp: Date | string
-  ticketNumber: string
-  fullName?: string | null
-  result: string
-  staffLabel?: string | null
-  mode?: 'online' | 'offline'
-}
-
-export function mapCheckInOutcomeToIndonesian(outcome: string): string {
-  switch (outcome) {
-    case 'ok':
-      return 'Berhasil'
-    case 'already_used':
-      return 'Sudah Digunakan'
-    case 'not_found':
-      return 'Tidak Ditemukan'
-    case 'cancelled':
-      return 'Dibatalkan'
-    case 'wrong_event':
-      return 'Acara Berbeda'
-    default:
-      return outcome
-  }
-}
-
 export type UpdateCheckInInput = {
-  ticketNumber: string
+  ticketNumber?: string
   sheetRow?: number | null
-  checkedInAt: Date | string
+  fullName?: string | null
+  phone?: string | null
+  checkedInAt?: Date | string | null
   checkedInBy?: string | null
+  checkInValue?: 'Yes' | 'No'
 }
 
 /**
- * Updates columns 'Waktu Check-in' and 'Petugas' in Tab 'Peserta' for a participant.
- * Uses fast path if sheetRow is known and valid, with fallback search by 'No. Tiket'.
+ * Updates column 'Check-in' in Tab 'Peserta' for a participant.
+ * Sets to 'Yes' when checked in, or 'No' when check-in is reversed.
+ * Uses fast path if sheetRow is known and valid, with fallback search by WhatsApp, Name, or ticket number.
  */
 export async function updateParticipantCheckIn(
   input: UpdateCheckInInput,
@@ -209,17 +214,16 @@ export async function updateParticipantCheckIn(
     return { updated: false }
   }
 
-  const checkInTimeWib = formatWib(input.checkedInAt)
-  const staff = input.checkedInBy ?? ''
+  const checkInVal: 'Yes' | 'No' = input.checkInValue ?? (input.checkedInAt ? 'Yes' : 'No')
+  const cleanPhone = input.phone ? input.phone.replace(/\D/g, '') : ''
 
   // 1. Fast path: if sheetRow is known and points to a data row (>= 2)
   if (input.sheetRow && input.sheetRow >= 2) {
     try {
       const rows = await sheet.getRows({ offset: input.sheetRow - 2, limit: 1 })
       const targetRow = rows[0]
-      if (targetRow && targetRow.get('No. Tiket') === input.ticketNumber) {
-        targetRow.set('Waktu Check-in', checkInTimeWib)
-        targetRow.set('Petugas', staff)
+      if (targetRow) {
+        targetRow.set('Check-in', checkInVal)
         await targetRow.save()
         return { updated: true, sheetRow: input.sheetRow }
       }
@@ -228,13 +232,30 @@ export async function updateParticipantCheckIn(
     }
   }
 
-  // 2. Fallback: Search rows by No. Tiket
+  // 2. Fallback: Search rows by WhatsApp, Name, or No Tiket
   try {
     const allRows = await sheet.getRows()
-    const matched = allRows.find((r) => r.get('No. Tiket') === input.ticketNumber)
+    const matched = allRows.find((r) => {
+      if (input.phone) {
+        const rowPhone = String(r.get('WhatsApp') ?? '').replace(/\D/g, '')
+        if (rowPhone && cleanPhone && (rowPhone.includes(cleanPhone) || cleanPhone.includes(rowPhone))) {
+          return true
+        }
+      }
+      if (input.fullName && r.get('Name') === input.fullName) {
+        return true
+      }
+      if (
+        input.ticketNumber &&
+        (r.get('No Tiket') === input.ticketNumber || r.get('No. Tiket') === input.ticketNumber)
+      ) {
+        return true
+      }
+      return false
+    })
+
     if (matched) {
-      matched.set('Waktu Check-in', checkInTimeWib)
-      matched.set('Petugas', staff)
+      matched.set('Check-in', checkInVal)
       await matched.save()
       return { updated: true, sheetRow: matched.rowNumber }
     }
@@ -245,47 +266,21 @@ export async function updateParticipantCheckIn(
   return { updated: false }
 }
 
-/**
- * Appends a check-in attempt log entry into Tab 'Log Check-in'.
- */
-export async function appendCheckInLog(
-  input: SheetLogCheckInInput,
-  docInstance?: GoogleSpreadsheet,
-): Promise<{ success: boolean }> {
-  const doc = docInstance ?? (await sheets.getSpreadsheetDoc())
-  const sheet = doc.sheetsByTitle[SHEET_TAB_LOG_CHECKIN]
-
-  if (!sheet) {
-    console.warn(`[Sheets Mirror] Tab "${SHEET_TAB_LOG_CHECKIN}" tidak ditemukan di spreadsheet.`)
-    return { success: false }
-  }
-
-  await sheet.addRow({
-    'Waktu (WIB)': formatWib(input.timestamp),
-    'No. Tiket': input.ticketNumber,
-    Nama: input.fullName ?? '-',
-    Hasil: mapCheckInOutcomeToIndonesian(input.result),
-    Petugas: input.staffLabel ?? '',
-    Mode: input.mode === 'offline' ? 'Offline tersinkron' : 'Online',
-  })
-
-  return { success: true }
-}
-
 export type RecordCheckInSheetInput = {
   ticketNumber: string
   fullName?: string | null
+  phone?: string | null
   sheetRow?: number | null
   checkedInAt?: Date | string | null
   checkedInBy?: string | null
   result: string
   mode?: 'online' | 'offline'
+  checkInValue?: 'Yes' | 'No'
 }
 
 /**
  * Best-effort mirror helper for check-ins:
- * - Updates Tab 1 'Peserta' if check-in was successful ('ok')
- * - Appends audit entry to Tab 2 'Log Check-in' for all attempts
+ * - Updates column 'Check-in' in Tab 'Peserta' to 'Yes' if check-in was successful ('ok')
  * - Catches any internal error so calling handler is never interrupted
  */
 export async function recordCheckInToSheet(
@@ -296,65 +291,43 @@ export async function recordCheckInToSheet(
     return
   }
 
-  try {
-    const doc = docInstance ?? (await sheets.getSpreadsheetDoc())
-    const timestamp = input.checkedInAt ?? new Date()
-    const mode = input.mode ?? 'online'
-
-    // 1. Tab 1: Update cell in 'Peserta' when check-in succeeded
-    if (input.result === 'ok') {
-      try {
-        await sheets.updateParticipantCheckIn(
-          {
-            ticketNumber: input.ticketNumber,
-            sheetRow: input.sheetRow,
-            checkedInAt: timestamp,
-            checkedInBy: input.checkedInBy,
-          },
-          doc,
-        )
-      } catch (updateErr) {
-        console.warn(
-          `[Sheets Mirror] Gagal memperbarui sel check-in peserta (${input.ticketNumber}):`,
-          updateErr,
-        )
-      }
-    }
-
-    // 2. Tab 2: Append audit row to 'Log Check-in' for all outcomes
+  // Only Tab 'Peserta' exists now. Update cell in 'Peserta' when check-in succeeded ('ok')
+  if (input.result === 'ok') {
     try {
-      await sheets.appendCheckInLog(
+      const doc = docInstance ?? (await sheets.getSpreadsheetDoc())
+      const timestamp = input.checkedInAt ?? new Date()
+
+      await sheets.updateParticipantCheckIn(
         {
-          timestamp,
           ticketNumber: input.ticketNumber,
           fullName: input.fullName,
-          result: input.result,
-          staffLabel: input.checkedInBy,
-          mode,
+          phone: input.phone,
+          sheetRow: input.sheetRow,
+          checkedInAt: timestamp,
+          checkedInBy: input.checkedInBy,
+          checkInValue: input.checkInValue ?? 'Yes',
         },
         doc,
       )
-    } catch (logErr) {
+    } catch (err) {
       console.warn(
-        `[Sheets Mirror] Gagal menambahkan log check-in (${input.ticketNumber}):`,
-        logErr,
+        `[Sheets Mirror] Gagal memperbarui sel check-in peserta (${input.ticketNumber}):`,
+        err,
       )
     }
-  } catch (err) {
-    console.warn('[Sheets Mirror] Gagal memproses sinkronisasi check-in ke Sheets:', err)
   }
 }
 
 export const sheets = {
   appendRegistration,
   formatRegistrationForSheet,
+  formatCommunityForSheet,
+  formatInvestmentInterestsForSheet,
   getSpreadsheetDoc,
   isSheetsConfigured,
   normalizePrivateKey,
   extractSpreadsheetId,
   mapStatusToIndonesian,
-  mapCheckInOutcomeToIndonesian,
   updateParticipantCheckIn,
-  appendCheckInLog,
   recordCheckInToSheet,
 }

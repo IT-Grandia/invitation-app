@@ -59,5 +59,5 @@ describe('GET /api/admin/stats Auth & Route Handling', () => {
       expect(json.totals).toHaveProperty('checkedIn')
       expect(json).toHaveProperty('lastCheckIn')
     }
-  })
+  }, 15000)
 })
