@@ -4,10 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   appendRegistration,
   extractSpreadsheetId,
+  formatCommunityForSheet,
+  formatInvestmentInterestsForSheet,
   formatRegistrationForSheet,
   getSpreadsheetDoc,
   isSheetsConfigured,
-  mapStatusToIndonesian,
   normalizePrivateKey,
   PESERTA_HEADERS,
   sheets,
@@ -22,28 +23,41 @@ describe('formatRegistrationForSheet', () => {
     email: 'budi@example.com',
     notes: 'Alergi kacang',
     status: 'confirmed',
+    community: 'club_79',
+    investmentInterests: ['gold', 'property'],
+    attending: true,
     createdAt: '2026-09-20T08:30:00.000Z',
     checkedInAt: '2026-09-26T01:15:00.000Z',
     checkedInBy: 'Petugas A',
   }
 
-  it('contains exactly the 9 required headers from 03-DATA-MODEL.md', () => {
+  it('contains exactly the 7 required headers: No Tiket, Name, WhatsApp, Community, Investment Interest, RSVP, Check-in', () => {
     const row = formatRegistrationForSheet(sampleInput)
     const keys = Object.keys(row)
 
     expect(keys).toEqual(PESERTA_HEADERS)
-    expect(keys).toHaveLength(9)
+    expect(keys).toEqual([
+      'No Tiket',
+      'Name',
+      'WhatsApp',
+      'Community',
+      'Investment Interest',
+      'RSVP',
+      'Check-in',
+    ])
+    expect(keys).toHaveLength(7)
   })
 
-  it('formats ticket number as 8 uppercase characters and NEVER leaks full token', () => {
+  it('formats No Tiket as uppercase 8-character string and never leaks full token or private data in any sheet cell', () => {
     const row = formatRegistrationForSheet(sampleInput)
 
-    expect(row['No. Tiket']).toBe('ABCDEF12')
-    expect(row['No. Tiket']).toHaveLength(8)
+    expect(row['No Tiket']).toBe('ABCDEF12')
+    expect(row['No Tiket']).toHaveLength(8)
 
-    // Ensure full secret token is nowhere in the sheet row values
     const allValues = Object.values(row).join(' ')
     expect(allValues).not.toContain('abcdef123456ghijk-7890xy')
+    expect(allValues).not.toContain('Alergi kacang')
+    expect(allValues).not.toContain('budi@example.com')
   })
 
   it('formats Indonesian mobile phone with hyphens for display', () => {
@@ -51,48 +65,78 @@ describe('formatRegistrationForSheet', () => {
     expect(row.WhatsApp).toBe('0812-3456-789')
   })
 
-  it('formats registration and check-in times in WIB', () => {
-    const row = formatRegistrationForSheet(sampleInput)
-    // 08:30 UTC = 15:30 WIB
-    expect(row['Waktu Daftar']).toBe('20 Sep 2026, 15:30')
-    // 01:15 UTC = 08:15 WIB
-    expect(row['Waktu Check-in']).toBe('26 Sep 2026, 08:15')
+  it('formats Community correctly for Club 79 and Womenpreneur Hipmi Jateng', () => {
+    expect(formatCommunityForSheet('club_79')).toBe('Club 79')
+    expect(formatCommunityForSheet('Club 79')).toBe('Club 79')
+    expect(formatCommunityForSheet('womenpreneur_hipmi_jateng')).toBe('Womenpreneur Hipmi Jateng')
+    expect(formatCommunityForSheet('Womenpreneur Hipmi Jateng')).toBe('Womenpreneur Hipmi Jateng')
+    expect(formatCommunityForSheet(null)).toBe('')
+    expect(formatCommunityForSheet(undefined)).toBe('')
+
+    const row = formatRegistrationForSheet({
+      ...sampleInput,
+      community: 'womenpreneur_hipmi_jateng',
+    })
+    expect(row.Community).toBe('Womenpreneur Hipmi Jateng')
   })
 
-  it('maps DB statuses to Indonesian labels', () => {
-    expect(mapStatusToIndonesian('confirmed')).toBe('Terdaftar')
-    expect(mapStatusToIndonesian('waitlist')).toBe('Waiting List')
-    expect(mapStatusToIndonesian('cancelled')).toBe('Batal')
+  it('formats Investment Interest as comma-separated capitalized labels', () => {
+    expect(formatInvestmentInterestsForSheet(['gold'])).toBe('Gold')
+    expect(formatInvestmentInterestsForSheet(['gold', 'property'])).toBe('Gold, Property')
+    expect(formatInvestmentInterestsForSheet(['deposit', 'stocks'])).toBe('Deposito, Stocks')
+    expect(formatInvestmentInterestsForSheet(['deposito'])).toBe('Deposito')
+    expect(formatInvestmentInterestsForSheet([])).toBe('')
+    expect(formatInvestmentInterestsForSheet(null)).toBe('')
+    expect(formatInvestmentInterestsForSheet(undefined)).toBe('')
 
-    const confirmedRow = formatRegistrationForSheet({ ...sampleInput, status: 'confirmed' })
-    expect(confirmedRow.Status).toBe('Terdaftar')
+    const row = formatRegistrationForSheet({
+      ...sampleInput,
+      investmentInterests: ['deposit', 'stocks'],
+    })
+    expect(row['Investment Interest']).toBe('Deposito, Stocks')
+  })
 
-    const waitlistRow = formatRegistrationForSheet({ ...sampleInput, status: 'waitlist' })
-    expect(waitlistRow.Status).toBe('Waiting List')
+  it('formats RSVP as Yes when attending is true and No when false', () => {
+    const attendingRow = formatRegistrationForSheet({ ...sampleInput, attending: true })
+    expect(attendingRow.RSVP).toBe('Yes')
 
-    const cancelledRow = formatRegistrationForSheet({ ...sampleInput, status: 'cancelled' })
-    expect(cancelledRow.Status).toBe('Batal')
+    const notAttendingRow = formatRegistrationForSheet({ ...sampleInput, attending: false })
+    expect(notAttendingRow.RSVP).toBe('No')
+  })
+
+  it('formats Check-in as Yes when checkedInAt is present, and No when null/undefined', () => {
+    const checkedInRow = formatRegistrationForSheet({
+      ...sampleInput,
+      checkedInAt: '2026-09-26T01:15:00.000Z',
+    })
+    expect(checkedInRow['Check-in']).toBe('Yes')
+
+    const notCheckedInRow = formatRegistrationForSheet({
+      ...sampleInput,
+      checkedInAt: null,
+    })
+    expect(notCheckedInRow['Check-in']).toBe('No')
   })
 
   it('handles optional fields when null or undefined', () => {
     const minimalInput: SheetRegistrationInput = {
-      token: 'abcdef123456ghijk-7890xy',
       fullName: 'Siti Rahma',
       phone: '6285712345678',
-      email: null,
-      notes: undefined,
-      status: 'confirmed',
-      createdAt: new Date('2026-09-20T08:30:00.000Z'),
+      community: null,
+      investmentInterests: null,
+      attending: null,
       checkedInAt: null,
-      checkedInBy: null,
     }
 
     const row = formatRegistrationForSheet(minimalInput)
 
-    expect(row.Email).toBe('')
-    expect(row.Catatan).toBe('')
-    expect(row['Waktu Check-in']).toBe('')
-    expect(row.Petugas).toBe('')
+    expect(row['No Tiket']).toBe('')
+    expect(row.Name).toBe('Siti Rahma')
+    expect(row.WhatsApp).toBe('0857-1234-5678')
+    expect(row.Community).toBe('')
+    expect(row['Investment Interest']).toBe('')
+    expect(row.RSVP).toBe('Yes')
+    expect(row['Check-in']).toBe('No')
   })
 })
 
@@ -201,8 +245,9 @@ describe('appendRegistration', () => {
       token: '1234567890abcdefghijklmn',
       fullName: 'Ahmad Dahlan',
       phone: '6281298765432',
-      email: 'ahmad@example.com',
-      notes: null,
+      community: 'club_79',
+      investmentInterests: ['gold', 'deposit'],
+      attending: true,
       status: 'confirmed',
       createdAt: '2026-09-20T08:00:00.000Z',
     }
@@ -211,15 +256,15 @@ describe('appendRegistration', () => {
 
     expect(result).toEqual({ sheetRow: 42 })
     expect(mockAddRow).toHaveBeenCalledTimes(1)
-    expect(mockAddRow).toHaveBeenCalledWith(
-      expect.objectContaining({
-        'No. Tiket': '12345678',
-        'Nama Lengkap': 'Ahmad Dahlan',
-        WhatsApp: '0812-9876-5432',
-        Email: 'ahmad@example.com',
-        Status: 'Terdaftar',
-      }),
-    )
+    expect(mockAddRow).toHaveBeenCalledWith({
+      'No Tiket': '12345678',
+      Name: 'Ahmad Dahlan',
+      WhatsApp: '0812-9876-5432',
+      Community: 'Club 79',
+      'Investment Interest': 'Gold, Deposito',
+      RSVP: 'Yes',
+      'Check-in': 'No',
+    })
   })
 
   it('throws an error if "Peserta" worksheet is missing', async () => {

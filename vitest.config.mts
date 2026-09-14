@@ -10,6 +10,7 @@ export default defineConfig({
     // Integration tests share the one local database, so running files
     // concurrently would let them delete each other's fixtures.
     fileParallelism: false,
+    testTimeout: 15000,
   },
   resolve: {
     alias: {

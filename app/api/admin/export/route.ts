@@ -49,6 +49,9 @@ export async function GET(request: Request) {
       createdAt: row.createdAt,
       checkedInAt: row.checkedInAt,
       checkedInBy: row.checkedInBy,
+      community: row.community,
+      investmentInterests: row.investmentInterests,
+      attending: row.attending,
     })
 
     return PESERTA_HEADERS.map((header) => escapeCsvCell(formatted[header])).join(',')

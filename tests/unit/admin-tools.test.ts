@@ -74,10 +74,13 @@ describe('Admin Tools Endpoints (Sync Sheets, Export CSV, Toggle Registration)',
 
         const csvText = await res.text()
         const [headerLine] = csvText.split('\r\n')
-        expect(headerLine).toContain('No. Tiket')
-        expect(headerLine).toContain('Nama Lengkap')
+        expect(headerLine).toContain('No Tiket')
+        expect(headerLine).toContain('Name')
         expect(headerLine).toContain('WhatsApp')
-        expect(headerLine).toContain('Status')
+        expect(headerLine).toContain('Community')
+        expect(headerLine).toContain('Investment Interest')
+        expect(headerLine).toContain('RSVP')
+        expect(headerLine).toContain('Check-in')
 
         // Security rule: raw token must not be in headers or csv output
         expect(headerLine).not.toContain('token')

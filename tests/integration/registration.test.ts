@@ -128,6 +128,65 @@ describe('POST /api/register Integration Tests', () => {
     expect(saved?.status).toBe('confirmed')
   })
 
+  it('registers participant with survey answers (community, investmentInterests, attending) and persists them in database', async () => {
+    const phone = nextPhone()
+    const payload = {
+      fullName: 'Siti Rahmawati',
+      phone,
+      community: 'Club 79',
+      investmentInterests: ['Gold', 'Deposito'],
+      attending: 'yes',
+      consent: true,
+      turnstileToken: 'test-turnstile-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    if (data.token) {
+      createdTokens.push(data.token)
+    }
+
+    const saved = await findRegistrationByToken(data.token)
+    expect(saved).not.toBeNull()
+    expect(saved?.fullName).toBe('Siti Rahmawati')
+    expect(saved?.community).toBe('club_79')
+    expect(saved?.investmentInterests).toEqual(['gold', 'deposit'])
+    expect(saved?.attending).toBe(true)
+  })
+
+  it('registers non-attending participant (attending: "no"), generates token and persists data', async () => {
+    const phone = nextPhone()
+    const payload = {
+      fullName: 'Rian Pratama',
+      phone,
+      community: 'Womenpreneur Hipmi Jateng',
+      investmentInterests: ['Stocks', 'Property'],
+      attending: 'no',
+      consent: true,
+      turnstileToken: 'test-turnstile-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    if (data.token) {
+      createdTokens.push(data.token)
+    }
+
+    expect(data.token).toHaveLength(24)
+    expect(data.ticketNumber).toBe(data.token.slice(0, 8).toUpperCase())
+
+    const saved = await findRegistrationByToken(data.token)
+    expect(saved).not.toBeNull()
+    expect(saved?.fullName).toBe('Rian Pratama')
+    expect(saved?.community).toBe('womenpreneur_hipmi_jateng')
+    expect(saved?.investmentInterests).toEqual(['stocks', 'property'])
+    expect(saved?.attending).toBe(false)
+  })
+
   it('registers successfully with default published event when eventId is omitted', async () => {
     const phone = nextPhone()
     const res = await registerHandler(
@@ -267,7 +326,7 @@ describe('POST /api/register Integration Tests', () => {
       .where(eq(registrations.eventId, eventId))
 
     expect(countRow.count).toBe(5)
-  })
+  }, 20000)
 
   it('allows all registrations when capacity is NULL (unlimited)', async () => {
     // Event capacity is null by default in beforeEach

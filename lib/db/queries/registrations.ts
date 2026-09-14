@@ -11,6 +11,9 @@ export type RegisterParticipantInput = {
   phone: string // Already normalised to E.164 (e.g. 628123456789)
   email?: string | null
   notes?: string | null
+  community?: string | null
+  investmentInterests?: string[]
+  attending?: boolean
   ipHash?: string | null
 }
 
@@ -139,6 +142,9 @@ export async function registerParticipant(
           phone: input.phone,
           email: input.email ?? null,
           notes: input.notes ?? null,
+          community: input.community ?? null,
+          investmentInterests: input.investmentInterests ?? [],
+          attending: input.attending ?? true,
           status: 'confirmed',
           ipHash: input.ipHash ?? null,
         })
