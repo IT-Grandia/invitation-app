@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  attendingApiSchema,
   attendingSchema,
-  communitySchema,
+  communityApiSchema,
   consentSchema,
   emailSchema,
   fullNameSchema,
   investmentInstrumentsSchema,
+  investmentInterestsApiSchema,
   notesSchema,
   phoneSchema,
   registerApiSchema,
   registrationFormSchema,
   revisedRegistrationFormSchema,
+  singleCommunitySchema,
 } from '@/lib/validation/registration'
 
 describe('fullNameSchema', () => {
@@ -334,30 +337,99 @@ describe('registerApiSchema', () => {
     const res = registerApiSchema.safeParse(apiPayload)
     expect(res.success).toBe(true)
   })
-})
 
-describe('communitySchema', () => {
-  it('accepts valid single or multiple communities', () => {
-    expect(communitySchema.safeParse(['Club 79']).data).toEqual(['Club 79'])
-    expect(communitySchema.safeParse(['Womenpreneur Hipmi Jateng']).data).toEqual([
-      'Womenpreneur Hipmi Jateng',
-    ])
-    expect(
-      communitySchema.safeParse(['Club 79', 'Womenpreneur Hipmi Jateng']).data,
-    ).toEqual(['Club 79', 'Womenpreneur Hipmi Jateng'])
-  })
+  it('validates submission with new survey fields (community, investment, attending)', () => {
+    const apiPayload = {
+      fullName: 'Budi Santoso',
+      phone: '08123456789',
+      consent: true,
+      turnstileToken: '0.sample',
+      community: 'Club 79',
+      investmentInterests: ['Gold', 'Deposito'],
+      attending: 'yes',
+    }
 
-  it('rejects empty community array', () => {
-    const res = communitySchema.safeParse([])
-    expect(res.success).toBe(false)
-    if (!res.success) {
-      expect(res.error.issues[0].message).toBe('Pilih minimal 1 komunitas.')
+    const res = registerApiSchema.safeParse(apiPayload)
+    expect(res.success).toBe(true)
+    if (res.success) {
+      expect(res.data.community).toBe('club_79')
+      expect(res.data.investmentInterests).toEqual(['gold', 'deposit'])
+      expect(res.data.attending).toBe(true)
     }
   })
+
+  it('rejects API submission with more than 2 investment interests', () => {
+    const apiPayload = {
+      fullName: 'Budi Santoso',
+      phone: '08123456789',
+      consent: true,
+      turnstileToken: '0.sample',
+      investmentInterests: ['Gold', 'Deposito', 'Stocks'],
+    }
+
+    const res = registerApiSchema.safeParse(apiPayload)
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      const errors = res.error.flatten().fieldErrors
+      expect(errors.investmentInterests).toContain('Pilih maksimal 2 instrumen investasi.')
+    }
+  })
+
+  it('rejects API submission with duplicate investment interests', () => {
+    const apiPayload = {
+      fullName: 'Budi Santoso',
+      phone: '08123456789',
+      consent: true,
+      turnstileToken: '0.sample',
+      investmentInterests: ['Gold', 'Gold'],
+    }
+
+    const res = registerApiSchema.safeParse(apiPayload)
+    expect(res.success).toBe(false)
+  })
+
+  it('rejects API submission when community is passed as an array (strictly max 1 choice)', () => {
+    const apiPayload = {
+      fullName: 'Budi Santoso',
+      phone: '08123456789',
+      consent: true,
+      turnstileToken: '0.sample',
+      community: ['Club 79', 'Womenpreneur Hipmi Jateng'],
+    }
+
+    const res = registerApiSchema.safeParse(apiPayload)
+    expect(res.success).toBe(false)
+  })
 })
 
-describe('investmentInstrumentsSchema', () => {
-  it('accepts 1 or 2 valid instruments', () => {
+describe('singleCommunitySchema & communityApiSchema (max 1 pilihan)', () => {
+  it('accepts valid single community choice', () => {
+    expect(singleCommunitySchema.safeParse('Club 79').data).toBe('Club 79')
+    expect(singleCommunitySchema.safeParse('Womenpreneur Hipmi Jateng').data).toBe(
+      'Womenpreneur Hipmi Jateng',
+    )
+  })
+
+  it('rejects invalid community string or array', () => {
+    expect(singleCommunitySchema.safeParse('Komunitas Lain').success).toBe(false)
+    expect(singleCommunitySchema.safeParse(['Club 79']).success).toBe(false)
+  })
+
+  it('communityApiSchema transforms label or code to canonical code', () => {
+    expect(communityApiSchema.safeParse('Club 79').data).toBe('club_79')
+    expect(communityApiSchema.safeParse('Womenpreneur Hipmi Jateng').data).toBe(
+      'womenpreneur_hipmi_jateng',
+    )
+    expect(communityApiSchema.safeParse('club_79').data).toBe('club_79')
+  })
+
+  it('communityApiSchema rejects array (strictly max 1 choice)', () => {
+    expect(communityApiSchema.safeParse(['club_79']).success).toBe(false)
+  })
+})
+
+describe('investmentInstrumentsSchema & investmentInterestsApiSchema (min 1, max 2)', () => {
+  it('accepts 1 or 2 valid instruments on client', () => {
     expect(investmentInstrumentsSchema.safeParse(['Gold']).data).toEqual(['Gold'])
     expect(investmentInstrumentsSchema.safeParse(['Gold', 'Stocks']).data).toEqual([
       'Gold',
@@ -369,7 +441,7 @@ describe('investmentInstrumentsSchema', () => {
     ])
   })
 
-  it('rejects 0 selected instruments', () => {
+  it('rejects 0 selected instruments on client', () => {
     const res = investmentInstrumentsSchema.safeParse([])
     expect(res.success).toBe(false)
     if (!res.success) {
@@ -377,34 +449,71 @@ describe('investmentInstrumentsSchema', () => {
     }
   })
 
-  it('rejects more than 2 instruments', () => {
+  it('rejects more than 2 instruments on client', () => {
     const res = investmentInstrumentsSchema.safeParse(['Gold', 'Deposito', 'Stocks'])
     expect(res.success).toBe(false)
     if (!res.success) {
       expect(res.error.issues[0].message).toBe('Pilih maksimal 2 instrumen investasi.')
     }
   })
+
+  it('rejects duplicate instruments on client', () => {
+    const res = investmentInstrumentsSchema.safeParse(['Gold', 'Gold'])
+    expect(res.success).toBe(false)
+  })
+
+  it('investmentInterestsApiSchema transforms and enforces min 1, max 2', () => {
+    const res1 = investmentInterestsApiSchema.safeParse(['Gold'])
+    expect(res1.success).toBe(true)
+    if (res1.success) {
+      expect(res1.data).toEqual(['gold'])
+    }
+
+    const res2 = investmentInterestsApiSchema.safeParse(['Deposito', 'Stocks'])
+    expect(res2.success).toBe(true)
+    if (res2.success) {
+      expect(res2.data).toEqual(['deposit', 'stocks'])
+    }
+
+    expect(investmentInterestsApiSchema.safeParse([]).success).toBe(false)
+    expect(
+      investmentInterestsApiSchema.safeParse(['Gold', 'Deposito', 'Stocks']).success,
+    ).toBe(false)
+    expect(investmentInterestsApiSchema.safeParse(['Gold', 'Gold']).success).toBe(false)
+  })
 })
 
-describe('attendingSchema', () => {
-  it('accepts yes and no', () => {
+describe('attendingSchema & attendingApiSchema (max 1 pilihan)', () => {
+  it('accepts yes and no on client', () => {
     expect(attendingSchema.safeParse('yes').data).toBe('yes')
     expect(attendingSchema.safeParse('no').data).toBe('no')
   })
 
-  it('rejects invalid or empty values', () => {
+  it('rejects invalid or empty values on client', () => {
     expect(attendingSchema.safeParse('maybe').success).toBe(false)
     expect(attendingSchema.safeParse('').success).toBe(false)
     expect(attendingSchema.safeParse(undefined).success).toBe(false)
   })
+
+  it('attendingApiSchema accepts boolean or string and transforms to boolean', () => {
+    expect(attendingApiSchema.safeParse(true).data).toBe(true)
+    expect(attendingApiSchema.safeParse(false).data).toBe(false)
+    expect(attendingApiSchema.safeParse('yes').data).toBe(true)
+    expect(attendingApiSchema.safeParse('no').data).toBe(false)
+  })
+
+  it('attendingApiSchema rejects arrays (strictly max 1 choice)', () => {
+    expect(attendingApiSchema.safeParse(['yes']).success).toBe(false)
+    expect(attendingApiSchema.safeParse(['yes', 'no']).success).toBe(false)
+  })
 })
 
 describe('revisedRegistrationFormSchema', () => {
-  it('validates a complete revised form input', () => {
+  it('validates a complete revised form input with single community', () => {
     const rawInput = {
       fullName: 'Siti Rahmawati',
       phone: '081234567890',
-      community: ['Club 79'],
+      community: 'Club 79',
       investmentInstruments: ['Gold', 'Property'],
       attending: 'yes',
     }
@@ -415,7 +524,7 @@ describe('revisedRegistrationFormSchema', () => {
       expect(res.data).toEqual({
         fullName: 'Siti Rahmawati',
         phone: '081234567890',
-        community: ['Club 79'],
+        community: 'Club 79',
         investmentInstruments: ['Gold', 'Property'],
         attending: 'yes',
       })
@@ -426,7 +535,7 @@ describe('revisedRegistrationFormSchema', () => {
     const rawInput = {
       fullName: 'Al',
       phone: 'invalid-phone',
-      community: [],
+      community: '',
       investmentInstruments: ['Gold', 'Deposito', 'Stocks'],
       attending: '',
     }
@@ -439,7 +548,7 @@ describe('revisedRegistrationFormSchema', () => {
       expect(fieldErrors.phone).toContain(
         'Nomor WhatsApp tidak valid. Contoh: 08123456789',
       )
-      expect(fieldErrors.community).toContain('Pilih minimal 1 komunitas.')
+      expect(fieldErrors.community).toBeDefined()
       expect(fieldErrors.investmentInstruments).toContain(
         'Pilih maksimal 2 instrumen investasi.',
       )

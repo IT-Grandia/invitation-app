@@ -110,12 +110,20 @@ export async function POST(request: Request) {
 
   // 8. Perform registration in atomic transaction
   try {
+    const investmentInterests =
+      data.investmentInterests && data.investmentInterests.length > 0
+        ? data.investmentInterests
+        : (data.investmentInstruments ?? [])
+
     const outcome = await registerParticipant({
       eventId: event.id,
       fullName: data.fullName,
       phone: normalisedPhone,
       email: data.email,
       notes: data.notes,
+      community: data.community,
+      investmentInterests,
+      attending: data.attending,
       ipHash,
     })
 

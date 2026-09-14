@@ -128,6 +128,34 @@ describe('POST /api/register Integration Tests', () => {
     expect(saved?.status).toBe('confirmed')
   })
 
+  it('registers participant with survey answers (community, investmentInterests, attending) and persists them in database', async () => {
+    const phone = nextPhone()
+    const payload = {
+      fullName: 'Siti Rahmawati',
+      phone,
+      community: 'Club 79',
+      investmentInterests: ['Gold', 'Deposito'],
+      attending: 'yes',
+      consent: true,
+      turnstileToken: 'test-turnstile-token',
+    }
+
+    const res = await registerHandler(createRequest(payload, eventId))
+    expect(res.status).toBe(201)
+
+    const data = await res.json()
+    if (data.token) {
+      createdTokens.push(data.token)
+    }
+
+    const saved = await findRegistrationByToken(data.token)
+    expect(saved).not.toBeNull()
+    expect(saved?.fullName).toBe('Siti Rahmawati')
+    expect(saved?.community).toBe('club_79')
+    expect(saved?.investmentInterests).toEqual(['gold', 'deposit'])
+    expect(saved?.attending).toBe(true)
+  })
+
   it('registers successfully with default published event when eventId is omitted', async () => {
     const phone = nextPhone()
     const res = await registerHandler(

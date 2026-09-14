@@ -8,12 +8,12 @@ import { TurnstileWidget } from './TurnstileWidget'
 import {
   attendingSchema,
   COMMUNITY_OPTIONS,
-  communitySchema,
   fullNameSchema,
   INVESTMENT_OPTIONS,
   investmentInstrumentsSchema,
   phoneSchema,
   revisedRegistrationFormSchema,
+  singleCommunitySchema,
   type CommunityOption,
   type InvestmentOption,
   type RevisedRegistrationFormValues,
@@ -24,7 +24,7 @@ type FormField = 'fullName' | 'phone' | 'community' | 'investmentInstruments' | 
 type FormValues = {
   fullName: string
   phone: string
-  community: CommunityOption[]
+  community: CommunityOption | ''
   investmentInstruments: InvestmentOption[]
   attending: 'yes' | 'no' | ''
   // Honeypot field: invisible to real users, trapped bots fill this in
@@ -43,7 +43,7 @@ type Props = {
 const INITIAL_VALUES: FormValues = {
   fullName: '',
   phone: '',
-  community: [],
+  community: '',
   investmentInstruments: [],
   attending: '',
   website: '',
@@ -73,7 +73,8 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
       case 'Nomor WhatsApp tidak valid. Contoh: 08123456789':
         return 'Invalid WhatsApp number. Example: 08123456789'
       case 'Pilih minimal 1 komunitas.':
-        return 'Please select at least 1 community.'
+      case 'Pilih salah satu komunitas.':
+        return 'Please select 1 community.'
       case 'Pilih minimal 1 instrumen investasi.':
         return 'Please select at least 1 investment instrument.'
       case 'Pilih maksimal 2 instrumen investasi.':
@@ -101,7 +102,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         result = phoneSchema.safeParse(currentValues.phone)
         break
       case 'community':
-        result = communitySchema.safeParse(currentValues.community)
+        result = singleCommunitySchema.safeParse(currentValues.community)
         break
       case 'investmentInstruments':
         result = investmentInstrumentsSchema.safeParse(currentValues.investmentInstruments)
@@ -136,14 +137,9 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
     }
   }
 
-  const handleCommunityToggle = (option: CommunityOption) => {
-    const exists = values.community.includes(option)
-    const updated = exists
-      ? values.community.filter((c) => c !== option)
-      : [...values.community, option]
-
+  const handleCommunitySelect = (option: CommunityOption) => {
     setTouched((prev) => ({ ...prev, community: true }))
-    const updatedValues = { ...values, community: updated }
+    const updatedValues = { ...values, community: option }
     setValues(updatedValues)
 
     const errorMsg = validateField('community', updatedValues)
@@ -246,13 +242,6 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
       }
 
       // Default registration submission to existing POST /api/register
-      // Store revised fields formatted cleanly in notes field until database schema is updated
-      const formattedNotes = [
-        `Community: ${values.community.join(', ')}`,
-        `Investment: ${values.investmentInstruments.join(', ')}`,
-        `Attending: ${values.attending === 'yes' ? 'Yes' : 'No'}`,
-      ].join(' | ')
-
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -260,7 +249,10 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           fullName: validationResult.data.fullName,
           phone: validationResult.data.phone,
           email: null,
-          notes: formattedNotes,
+          notes: null,
+          community: validationResult.data.community,
+          investmentInstruments: validationResult.data.investmentInstruments,
+          attending: validationResult.data.attending === 'yes',
           consent: true,
           turnstileToken,
         }),
@@ -435,11 +427,11 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {COMMUNITY_OPTIONS.map((option) => {
-            const isChecked = values.community.includes(option)
+            const isChecked = values.community === option
             return (
               <label
                 key={option}
-                onClick={() => handleCommunityToggle(option)}
+                onClick={() => handleCommunitySelect(option)}
                 className={`flex items-center gap-3 p-3 rounded-[8px] border transition-all cursor-pointer select-none text-left ${
                   isChecked
                     ? 'bg-[#FAF7F0] border-[#4E644D] shadow-xs ring-1 ring-[#4E644D]'
