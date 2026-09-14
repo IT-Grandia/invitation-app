@@ -38,7 +38,9 @@ function rise(step: number) {
 export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: CoverProps) {
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
-      <article className="w-full max-w-[26.25rem] rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8">
+      {/* my-auto, not justify-center: auto margins centre the card on a tall
+          screen but never push its top out of reach on a short one. */}
+      <article className="my-auto w-full max-w-[26.25rem] rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10 md:py-10">
         <div className="animate-rise" style={rise(0)}>
           <BrandHeader />
         </div>
@@ -46,13 +48,13 @@ export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: Co
         {/* Not text-hero: the name is a full sentence in capitals, and at hero
             size it would run to five lines on a 360px screen. */}
         <h1
-          className="animate-rise mt-5 font-display text-2xl leading-tight font-semibold tracking-[0.04em] text-balance uppercase sm:text-3xl"
+          className="animate-rise mt-5 font-display text-2xl leading-tight font-semibold tracking-[0.04em] text-balance uppercase sm:text-3xl md:text-4xl"
           style={rise(1)}
         >
           {eventName}
         </h1>
 
-        <p className="animate-rise mt-2 font-display text-lg text-ink-muted italic" style={rise(2)}>
+        <p className="animate-rise mt-2 font-display text-lg text-ink-muted italic md:text-xl" style={rise(2)}>
           {BRAND.tagline}
         </p>
 
@@ -61,9 +63,9 @@ export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: Co
         </div>
 
         <div className="animate-rise mt-5 flex flex-col gap-0.5" style={rise(4)}>
-          <p className="font-display text-lg font-semibold">{dateLabel}</p>
-          <p className="font-mono text-sm tabular-nums">{timeLabel}</p>
-          <p className="text-ink-muted">{venueName}</p>
+          <p className="font-display text-lg font-semibold md:text-xl">{dateLabel}</p>
+          <p className="font-mono text-sm tabular-nums md:text-base">{timeLabel}</p>
+          <p className="text-ink-muted md:text-lg">{venueName}</p>
         </div>
 
         <div className="animate-rise mt-5" style={rise(5)}>
@@ -81,15 +83,17 @@ export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: Co
 /**
  * Stands where the flyer will go, at the flyer's own 4:5 ratio, so the real
  * file drops in without moving anything (DESIGN.md section 4). Capped at
- * 32dvh so that, with a one-line event name, the button is still on screen on
- * a 360×740 phone; a longer name costs one short scroll. The court mark is
- * the project's own drawing — nothing borrowed, nothing generated.
+ * 32dvh tall so that, with a one-line event name, the button is still on
+ * screen on a 360×740 phone; a longer name costs one short scroll. Never
+ * narrower than 9rem, so a landscape phone still shows a frame rather than
+ * a stamp. The court mark is the project's own drawing — nothing borrowed,
+ * nothing generated.
  */
 function FlyerPlaceholder() {
   return (
     <div
       aria-hidden="true"
-      className="mx-auto flex aspect-[4/5] w-[min(100%,25.6dvh)] items-center justify-center overflow-hidden rounded-md border-[3px] border-double border-line bg-surface-2"
+      className="mx-auto flex aspect-[4/5] w-[clamp(9rem,25.6dvh,100%)] items-center justify-center overflow-hidden rounded-md border-[3px] border-double border-line bg-surface-2 md:w-[clamp(9rem,27dvh,100%)]"
     >
       {/* 2:1 court turned upright: at 110% of the frame's width it stands
           1.1× the width tall, inside a frame 1.25× tall — whole, not cropped.

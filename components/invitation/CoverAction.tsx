@@ -30,7 +30,7 @@ export type CoverActionProps = {
 };
 
 const BUTTON =
-  "min-h-tap inline-flex w-full items-center justify-center rounded-pill px-8 font-display text-lg font-semibold tracking-[0.06em]";
+  "min-h-tap inline-flex w-full items-center justify-center rounded-pill px-8 font-display text-lg font-semibold tracking-[0.06em] md:min-h-14 md:text-xl";
 const BUTTON_LIVE = `${BUTTON} bg-primary text-on-primary shadow-card transition-transform active:scale-[0.98]`;
 const BUTTON_OFF = `${BUTTON} border border-line bg-surface-2 text-ink-muted`;
 

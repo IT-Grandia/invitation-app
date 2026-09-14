@@ -18,7 +18,7 @@ export function SupportedBy() {
         {BRAND.sponsors.map((sponsor) => (
           <li
             key={sponsor.name}
-            className="flex h-7 items-center font-display text-xs font-semibold tracking-[0.16em] uppercase before:mx-2.5 before:text-line-input before:content-['·'] first:before:hidden"
+            className="flex h-7 items-center font-display text-xs font-semibold tracking-[0.16em] uppercase before:mx-2.5 before:text-line-input before:content-['·'] first:before:hidden md:text-sm"
           >
             {sponsor.name}
           </li>
