@@ -6,34 +6,58 @@ const checkedInAt = new Date('2026-09-26T01:03:25.000Z')
 
 describe('resolveTicketStatus', () => {
   it('reads a confirmed, unused ticket as registered', () => {
-    expect(resolveTicketStatus({ status: 'confirmed', checkedInAt: null })).toEqual({
-      kind: 'registered',
-    })
+    expect(
+      resolveTicketStatus({ status: 'confirmed', checkedInAt: null, attending: true }),
+    ).toEqual({ kind: 'registered' })
   })
 
   it('reads a confirmed, used ticket as checked in with the timestamp', () => {
-    expect(resolveTicketStatus({ status: 'confirmed', checkedInAt })).toEqual({
+    expect(resolveTicketStatus({ status: 'confirmed', checkedInAt, attending: true })).toEqual({
       kind: 'checked_in',
       at: checkedInAt,
     })
   })
 
   it('reads a waitlisted registration as waitlist', () => {
-    expect(resolveTicketStatus({ status: 'waitlist', checkedInAt: null })).toEqual({
-      kind: 'waitlist',
-    })
+    expect(
+      resolveTicketStatus({ status: 'waitlist', checkedInAt: null, attending: true }),
+    ).toEqual({ kind: 'waitlist' })
   })
 
   it('reads a cancelled registration as cancelled', () => {
-    expect(resolveTicketStatus({ status: 'cancelled', checkedInAt: null })).toEqual({
+    expect(
+      resolveTicketStatus({ status: 'cancelled', checkedInAt: null, attending: true }),
+    ).toEqual({ kind: 'cancelled' })
+  })
+
+  it('never reports a cancelled registration as checked in, even with a timestamp', () => {
+    expect(resolveTicketStatus({ status: 'cancelled', checkedInAt, attending: true })).toEqual({
       kind: 'cancelled',
     })
   })
 
-  it('never reports a cancelled registration as checked in, even with a timestamp', () => {
-    expect(resolveTicketStatus({ status: 'cancelled', checkedInAt })).toEqual({
-      kind: 'cancelled',
+  it('reads a "not attending" answer as not attending', () => {
+    expect(
+      resolveTicketStatus({ status: 'confirmed', checkedInAt: null, attending: false }),
+    ).toEqual({ kind: 'not_attending' })
+  })
+
+  // lib/db/schema.ts: someone who answered no but turns up is still admitted,
+  // so the check-in is the fact that counts.
+  it('lets a check-in outrank a "not attending" answer', () => {
+    expect(resolveTicketStatus({ status: 'confirmed', checkedInAt, attending: false })).toEqual({
+      kind: 'checked_in',
+      at: checkedInAt,
     })
+  })
+
+  it('keeps cancelled and waitlist ahead of the attendance answer', () => {
+    expect(
+      resolveTicketStatus({ status: 'cancelled', checkedInAt: null, attending: false }),
+    ).toEqual({ kind: 'cancelled' })
+    expect(
+      resolveTicketStatus({ status: 'waitlist', checkedInAt: null, attending: false }),
+    ).toEqual({ kind: 'waitlist' })
   })
 })
 
@@ -46,10 +70,11 @@ describe('qrPresentation', () => {
     expect(qrPresentation({ kind: 'checked_in', at: checkedInAt })).toBe('spent')
   })
 
-  it.each([{ kind: 'cancelled' } as const, { kind: 'waitlist' } as const])(
-    'hides the QR for %o',
-    (status) => {
-      expect(qrPresentation(status)).toBe('hidden')
-    },
-  )
+  it.each([
+    { kind: 'cancelled' } as const,
+    { kind: 'waitlist' } as const,
+    { kind: 'not_attending' } as const,
+  ])('hides the QR for %o', (status) => {
+    expect(qrPresentation(status)).toBe('hidden')
+  })
 })

@@ -13,10 +13,10 @@ type SaveTicketButtonProps = {
 type Phase = "idle" | "preparing" | "done" | "error";
 
 const LABEL: Record<Phase, string> = {
-  idle: "Simpan QR ke HP",
-  preparing: "Menyiapkan gambar…",
-  done: "Tersimpan",
-  error: "Simpan QR ke HP",
+  idle: "Download QR Code",
+  preparing: "Preparing image…",
+  done: "Saved",
+  error: "Download QR Code",
 };
 
 /**
@@ -30,7 +30,7 @@ const LABEL: Record<Phase, string> = {
  */
 export function SaveTicketButton({ token, ticketNumber, ticketUrl, eventName }: SaveTicketButtonProps) {
   const [phase, setPhase] = useState<Phase>("idle");
-  const fileName = `tiket-padel-${ticketNumber}.png`;
+  const fileName = `ticket-${ticketNumber}.png`;
 
   async function save() {
     setPhase("preparing");
@@ -51,8 +51,8 @@ export function SaveTicketButton({ token, ticketNumber, ticketUrl, eventName }: 
       try {
         await navigator.share({
           files: [file],
-          title: `Tiket ${eventName}`,
-          text: `Tiket ${eventName} kamu: ${ticketUrl}`,
+          title: `${eventName} ticket`,
+          text: `Your ${eventName} ticket: ${ticketUrl}`,
         });
         setPhase("done");
       } catch (error) {
@@ -85,15 +85,15 @@ export function SaveTicketButton({ token, ticketNumber, ticketUrl, eventName }: 
         onClick={save}
         disabled={phase === "preparing"}
         aria-busy={phase === "preparing"}
-        className="min-h-tap flex w-full items-center justify-center gap-2 rounded-pill bg-primary px-8 font-display text-lg font-bold text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+        className="min-h-tap flex w-full items-center justify-center gap-2 rounded-pill bg-primary px-8 font-display text-lg font-semibold tracking-[0.06em] text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <span aria-hidden="true">{phase === "done" ? "✓" : "📥"}</span>
+        {phase === "done" && <span aria-hidden="true">✓ </span>}
         {LABEL[phase]}
       </button>
 
       {phase === "error" && (
         <p role="alert" className="mt-2 text-center text-sm text-danger text-pretty">
-          Gambarnya belum bisa disiapkan. Cek koneksi kamu, lalu coba lagi.
+          The image could not be prepared. Check your connection and try again.
         </p>
       )}
     </div>

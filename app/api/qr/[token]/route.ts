@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto'
-
+import { clientIpKey } from '@/lib/client-ip'
 import { isWellFormedToken, renderTicketQr } from '@/lib/qr'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { ticketNumber } from '@/lib/token'
@@ -7,14 +6,6 @@ import { ticketNumber } from '@/lib/token'
 /** docs/04-API-SPEC.md section 1: 60 requests per minute, keyed by IP hash. */
 const RATE_LIMIT = 60
 const RATE_WINDOW_MS = 60 * 1000
-
-// Same derivation as app/api/register/route.ts so one client is one key
-// across both endpoints. Worth lifting into a shared helper once a third
-// route needs it.
-function hashClientIp(ip: string): string {
-  const salt = process.env.IP_SALT ?? 'grandia-padel-salt'
-  return createHash('sha256').update(`${ip}:${salt}`).digest('hex')
-}
 
 /**
  * GET /api/qr/[token] — the ticket QR as a PNG.
@@ -35,11 +26,7 @@ export async function GET(
     return new Response(null, { status: 404 })
   }
 
-  const clientIp =
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    request.headers.get('x-real-ip') ??
-    '127.0.0.1'
-  const limit = checkRateLimit(hashClientIp(clientIp), RATE_LIMIT, RATE_WINDOW_MS)
+  const limit = checkRateLimit(clientIpKey(request), RATE_LIMIT, RATE_WINDOW_MS)
 
   if (!limit.success) {
     return new Response(null, {

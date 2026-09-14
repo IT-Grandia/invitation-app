@@ -1,22 +1,25 @@
 import type { Registration } from '@/lib/db/schema'
 
 /**
- * What the ticket page shows for a registration. The four states come from
- * docs/05-UX-FLOWS.md section 4.3 and decide the badge, whether the QR is
- * shown, dimmed, or hidden, and the wording around it.
+ * What the ticket page shows for a registration — DESIGN.md section 6.3. The
+ * five states decide the headline, whether the QR is shown, spent, or hidden,
+ * and which buttons appear.
  */
 export type TicketStatus =
   | { kind: 'registered' }
   | { kind: 'checked_in'; at: Date }
+  | { kind: 'not_attending' }
   | { kind: 'cancelled' }
   | { kind: 'waitlist' }
 
 /**
- * Precedence matters: a cancelled registration that somehow carries a
- * check-in timestamp must still read as cancelled, never as attended.
+ * Precedence matters. A cancelled registration that somehow carries a
+ * check-in timestamp must still read as cancelled, never as attended. And a
+ * participant who answered "not attending" on the form but turned up anyway
+ * is admitted (lib/db/schema.ts), so a check-in outranks that answer.
  */
 export function resolveTicketStatus(
-  registration: Pick<Registration, 'status' | 'checkedInAt'>,
+  registration: Pick<Registration, 'status' | 'checkedInAt' | 'attending'>,
 ): TicketStatus {
   if (registration.status === 'cancelled') {
     return { kind: 'cancelled' }
@@ -30,6 +33,10 @@ export function resolveTicketStatus(
     return { kind: 'checked_in', at: registration.checkedInAt }
   }
 
+  if (!registration.attending) {
+    return { kind: 'not_attending' }
+  }
+
   return { kind: 'registered' }
 }
 
@@ -40,6 +47,7 @@ export function qrPresentation(status: TicketStatus): 'live' | 'spent' | 'hidden
       return 'live'
     case 'checked_in':
       return 'spent'
+    case 'not_attending':
     case 'cancelled':
     case 'waitlist':
       return 'hidden'

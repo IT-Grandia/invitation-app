@@ -37,11 +37,3 @@ export function storeTicket(token: string): void {
     // Nothing to do: the cookie layer still holds.
   }
 }
-
-export function clearStoredTicket(): void {
-  try {
-    window.localStorage.removeItem(TICKET_STORAGE_KEY)
-  } catch {
-    // Already unreadable, so effectively cleared.
-  }
-}

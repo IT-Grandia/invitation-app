@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ForgetDeviceButton } from "@/components/ticket/ForgetDeviceButton";
+import { CheckedIn } from "@/components/ticket/CheckedIn";
+import { LiveStatus } from "@/components/ticket/LiveStatus";
 import { QrCard } from "@/components/ticket/QrCard";
-import { StatusBadge } from "@/components/ticket/StatusBadge";
 import { TicketActions } from "@/components/ticket/TicketActions";
 import { TicketDetails } from "@/components/ticket/TicketDetails";
-import { formatWibDateLong, formatWibTime } from "@/lib/datetime";
+import { TicketNotice } from "@/components/ticket/TicketNotice";
+import { BrandHeader } from "@/components/ui/BrandHeader";
 import { getPublishedEvent } from "@/lib/db/queries/event";
 import { findRegistrationByToken } from "@/lib/db/queries/registrations";
+import { pollingWindow } from "@/lib/live-status";
 import { isWellFormedToken, ticketUrl } from "@/lib/qr";
-import { qrPresentation, resolveTicketStatus } from "@/lib/ticket-status";
+import { resolveTicketStatus } from "@/lib/ticket-status";
 import { ticketNumber } from "@/lib/token";
 
 // This page carries a participant's name. It must never be served from a CDN
@@ -20,17 +22,17 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   // Deliberately generic: the participant's name stays out of the browser
   // title, tab history, and any link preview.
-  title: "Tiket kamu",
+  title: "Your ticket",
   robots: { index: false, follow: false },
 };
 
-const HIDDEN_QR_REASON = {
-  cancelled: "Pendaftaran ini sudah dibatalkan. Kalau menurutmu ini keliru, hubungi panitia.",
-  waitlist:
-    "Kuota sedang penuh, jadi kamu masuk waiting list. Kalau ada yang batal, panitia menghubungi kamu lewat WhatsApp — QR baru muncul setelah itu.",
-} as const;
-
 /**
+ * One page for two moments — DESIGN.md section 6.3: the confirmation right
+ * after registering (the form redirects here) and the ticket opened again at
+ * the desk. After the scan it becomes the "Checked In" screen of section 6.4,
+ * on its own if the page is open at the time (LiveStatus), otherwise the next
+ * time it is opened.
+ *
  * The ticket is chosen by the token in the URL and nothing else. This page
  * never reads the ticket cookie: if it did, someone opening a friend's link
  * would see their own ticket instead — docs/team/DEV-B.md rule B-4.
@@ -56,57 +58,69 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
   }
 
   const status = resolveTicketStatus(registration);
-  const presentation = qrPresentation(status);
   const number = ticketNumber(registration.token);
-  const hiddenReason =
-    status.kind === "cancelled" || status.kind === "waitlist"
-      ? HIDDEN_QR_REASON[status.kind]
-      : undefined;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-7 px-6 py-10">
-      <header className="flex flex-col items-center gap-4 text-center">
-        <StatusBadge status={status} />
-        <div>
-          <h1 className="text-2xl font-bold text-balance">{registration.fullName}</h1>
-          <p className="mt-1 text-ink-muted">
-            No. Tiket <span className="font-mono font-bold tabular-nums">{number}</span>
-          </p>
-        </div>
-      </header>
+    <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
+      <article className="flex w-full max-w-[26.25rem] flex-col gap-6 rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8">
+        <BrandHeader />
 
-      <QrCard
-        token={registration.token}
-        ticketNumber={number}
-        presentation={presentation}
-        hiddenReason={hiddenReason}
-      />
+        {status.kind === "registered" && (
+          <>
+            <div>
+              <h1 className="font-display text-2xl text-primary italic">
+                Thank you for your registration
+              </h1>
+              <p className="mt-2 text-ink-muted">
+                <span className="font-semibold text-ink">{registration.fullName}</span>
+                {" · "}
+                Ticket No. <span className="font-mono font-bold tabular-nums">{number}</span>
+              </p>
+            </div>
 
-      <TicketDetails event={event} />
+            <QrCard token={registration.token} ticketNumber={number} presentation="live" />
 
-      {presentation !== "hidden" && (
-        <TicketActions
-          token={registration.token}
-          ticketNumber={number}
-          ticketUrl={ticketUrl(registration.token)}
-          fullName={registration.fullName}
-          eventName={event.name}
-          whenWhere={`${formatWibDateLong(event.startsAt)} · ${formatWibTime(event.startsAt)} WIB · ${event.venueName}`}
-          venueMapUrl={event.venueMapUrl}
-          qrIsLive={presentation === "live"}
-        />
-      )}
+            <TicketDetails event={event} />
 
-      {presentation === "live" && (
-        <p className="rounded-card border border-line bg-surface-2 px-4 py-3 text-center text-sm text-pretty">
-          <span aria-hidden="true">⚠️ </span>
-          Simpan tiket ini. Kamu butuh QR-nya saat masuk.
-        </p>
-      )}
+            <p className="text-sm text-ink-muted text-pretty">
+              Please save your QR code and show it at the registration desk on the event day.
+            </p>
 
-      <div className="mt-4 border-t border-line pt-6">
-        <ForgetDeviceButton />
-      </div>
+            <TicketActions
+              token={registration.token}
+              ticketNumber={number}
+              ticketUrl={ticketUrl(registration.token)}
+              fullName={registration.fullName}
+              eventName={event.name}
+            />
+
+            <LiveStatus
+              token={registration.token}
+              windowStart={pollingWindow(event).start.toISOString()}
+              windowEnd={pollingWindow(event).end.toISOString()}
+            />
+          </>
+        )}
+
+        {status.kind === "checked_in" && (
+          <CheckedIn
+            token={registration.token}
+            ticketNumber={number}
+            fullName={registration.fullName}
+            community={registration.community}
+            checkedInAt={status.at}
+          />
+        )}
+
+        {(status.kind === "waitlist" ||
+          status.kind === "cancelled" ||
+          status.kind === "not_attending") && (
+          <>
+            <TicketNotice kind={status.kind} contactWhatsapp={event.contactWhatsapp} />
+            <TicketDetails event={event} />
+          </>
+        )}
+      </article>
     </main>
   );
 }
