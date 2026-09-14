@@ -89,6 +89,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('A'),
+          investmentInterests: ['property', 'stocks'],
           fullName: 'Budi Santoso',
           phone: '628123456701',
           email: 'budi@example.com',
@@ -97,6 +98,8 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('B'),
+          investmentInterests: ['gold'],
+          attending: false,
           fullName: 'Siti Aminah',
           phone: '628123456702',
           status: 'confirmed',
@@ -104,6 +107,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('C'),
+          investmentInterests: ['deposit', 'property'],
           fullName: 'Andi Wijaya',
           phone: '628123456703',
           status: 'confirmed',
@@ -113,6 +117,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('D'),
+          investmentInterests: ['stocks'],
           fullName: 'Rina Lestari',
           phone: '628123456704',
           status: 'confirmed',
@@ -122,6 +127,8 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('E'),
+          investmentInterests: ['gold'],
+          attending: false,
           fullName: 'Dimas Prakoso',
           phone: '628123456705',
           status: 'cancelled',

@@ -63,6 +63,12 @@ export const registrations = pgTable(
     phone: text('phone').notNull(),
     email: text('email'),
     notes: text('notes'),
+    // Survey answered on the registration form, stored as codes so the wording
+    // can change without rewriting rows.
+    investmentInterests: text('investment_interests').array().notNull().default([]),
+    // A participant who answers no keeps the row and the token, but is not shown
+    // a QR code. They are still admitted if they turn up.
+    attending: boolean('attending').notNull().default(true),
     status: text('status').notNull().default('confirmed'),
     checkedInAt: timestamp('checked_in_at', { withTimezone: true }),
     checkedInBy: text('checked_in_by'),
@@ -94,6 +100,13 @@ export const registrations = pgTable(
     check(
       'registrations_notes_length',
       sql`${table.notes} is null or char_length(${table.notes}) <= 300`,
+    ),
+    // Only the shape is enforced here. Requiring at least one answer is left to
+    // lib/validation/investment.ts, because rows written before this column
+    // existed have none.
+    check(
+      'registrations_investment_interests_valid',
+      sql`${table.investmentInterests} <@ array['gold', 'deposit', 'stocks', 'property']::text[] and cardinality(${table.investmentInterests}) <= 2`,
     ),
   ],
 )
