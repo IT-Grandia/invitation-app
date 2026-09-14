@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { TurnstileWidget } from './TurnstileWidget'
+
 import {
   consentSchema,
   emailSchema,
@@ -50,6 +52,9 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
   const [touched, setTouched] = useState<TouchedFields>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState<string>('')
+  const [turnstileError, setTurnstileError] = useState<string | null>(null)
+  const [turnstileResetTrigger, setTurnstileResetTrigger] = useState(0)
 
   /**
    * Validates a single field when it loses focus (onBlur).
@@ -140,6 +145,11 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
       return
     }
 
+    if (!onSubmit && !turnstileToken) {
+      setTurnstileError('Selesaikan verifikasi anti-bot sebelum mendaftar.')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -158,8 +168,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           email: validationResult.data.email,
           notes: validationResult.data.notes,
           consent: validationResult.data.consent,
-          // Placeholder until Turnstile is integrated in feat/a-antispam
-          turnstileToken: 'client-pending-token',
+          turnstileToken,
         }),
       })
 
@@ -182,6 +191,8 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         } else if (errorCode === 'REGISTRATION_CLOSED') {
           setFormError(errorMessage || 'Pendaftaran belum dibuka atau sudah ditutup.')
         } else if (errorCode === 'TURNSTILE_FAILED') {
+          setTurnstileToken('')
+          setTurnstileResetTrigger((prev) => prev + 1)
           setFormError(errorMessage || 'Verifikasi anti-bot gagal. Coba muat ulang halaman.')
         } else {
           setFormError(
@@ -361,6 +372,29 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         {errors.consent && touched.consent && (
           <p id="consent-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.consent}
+          </p>
+        )}
+      </div>
+
+      {/* Field 6: Turnstile Anti-Bot Verification Widget */}
+      <div className="flex flex-col items-center">
+        <TurnstileWidget
+          onVerify={(token) => {
+            setTurnstileToken(token)
+            setTurnstileError(null)
+          }}
+          onExpire={() => {
+            setTurnstileToken('')
+          }}
+          onError={() => {
+            setTurnstileToken('')
+            setTurnstileError('Gagal memuat verifikasi anti-bot. Coba muat ulang halaman.')
+          }}
+          resetTrigger={turnstileResetTrigger}
+        />
+        {turnstileError && (
+          <p role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B] text-center">
+            {turnstileError}
           </p>
         )}
       </div>
