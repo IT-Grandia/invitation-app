@@ -1,0 +1,3 @@
+ALTER TABLE "registrations" ADD COLUMN "investment_interests" text[] DEFAULT '{}' NOT NULL;--> statement-breakpoint
+ALTER TABLE "registrations" ADD COLUMN "attending" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "registrations" ADD CONSTRAINT "registrations_investment_interests_valid" CHECK ("registrations"."investment_interests" <@ array['gold', 'deposit', 'stocks', 'property']::text[] and cardinality("registrations"."investment_interests") <= 2);

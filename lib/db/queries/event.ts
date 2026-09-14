@@ -49,6 +49,8 @@ export type EventStats = {
   registered: number
   checkedIn: number
   notCheckedIn: number
+  attending: number
+  notAttending: number
   waitlist: number
   cancelled: number
 }
@@ -63,6 +65,14 @@ export async function getEventStats(eventId: string): Promise<EventStats> {
       ),
       checkedIn:
         sql<number>`count(*) filter (where ${registrations.status} = 'confirmed' and ${registrations.checkedInAt} is not null)`.mapWith(
+          Number,
+        ),
+      attending:
+        sql<number>`count(*) filter (where ${registrations.status} = 'confirmed' and ${registrations.attending})`.mapWith(
+          Number,
+        ),
+      notAttending:
+        sql<number>`count(*) filter (where ${registrations.status} = 'confirmed' and not ${registrations.attending})`.mapWith(
           Number,
         ),
       waitlist: sql<number>`count(*) filter (where ${registrations.status} = 'waitlist')`.mapWith(
