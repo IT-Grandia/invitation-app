@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// Disable JIT evaluation probing (`new Function("")`) to comply with strict CSP in production
+z.config({ jitless: true })
+
 const text = z.string().trim().min(1)
 
 export const eventDetailSchema = z.object({
