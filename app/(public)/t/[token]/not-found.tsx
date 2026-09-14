@@ -1,36 +1,40 @@
 import Link from "next/link";
+import { BrandHeader } from "@/components/ui/BrandHeader";
 import { PadelBall } from "@/components/ui/PadelMarks";
 
 /**
  * Rendered for any token that does not resolve — malformed, unknown, or from
  * another event. The wording never distinguishes between those cases, so the
  * page cannot be used to tell a real-but-mistyped token from a made-up one.
- * Copy per docs/05-UX-FLOWS.md section 5: no jargon, always an exit.
+ * Copy per DESIGN.md section 5: no jargon, always an exit.
  */
 export default function TicketNotFound() {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-6 px-6 py-16 text-center">
-      <PadelBall className="h-14 w-14 text-primary" />
+    <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
+      <div className="flex w-full max-w-[26.25rem] flex-col items-center gap-6 rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8">
+        <BrandHeader className="w-full" />
 
-      <div>
-        <h1 className="text-2xl font-bold">Tiket tidak ditemukan</h1>
-        <p className="mt-3 text-ink-muted text-pretty">
-          Link-nya mungkin tidak lengkap tersalin. Coba buka lagi dari chat WhatsApp kamu —
-          atau kalau belum daftar, daftar dulu di bawah.
+        <PadelBall className="h-14 w-14 text-primary" />
+
+        <div>
+          <h1 className="font-display text-2xl font-semibold">Ticket not found</h1>
+          <p className="mt-3 text-ink-muted text-pretty">
+            The link may not have copied completely. Open it again from your WhatsApp chat —
+            or, if you have not registered yet, register below.
+          </p>
+        </div>
+
+        <Link
+          href="/regist"
+          className="min-h-tap flex w-full items-center justify-center rounded-pill bg-primary px-8 font-display text-lg font-semibold tracking-[0.06em] text-on-primary shadow-card"
+        >
+          Register
+        </Link>
+
+        <p className="text-sm text-ink-muted text-pretty">
+          Registered but the ticket still cannot be found? Contact the organiser.
         </p>
       </div>
-
-      <Link
-        href="/regist"
-        className="min-h-tap flex w-full max-w-xs items-center justify-center rounded-pill bg-primary px-8 font-bold text-on-primary shadow-card"
-      >
-        Daftar Sekarang
-      </Link>
-
-      <p className="text-sm text-ink-muted text-pretty">
-        Sudah daftar tapi tiketnya tetap tidak ketemu? Hubungi panitia lewat tombol di halaman
-        undangan.
-      </p>
     </main>
   );
 }

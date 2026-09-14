@@ -2,51 +2,34 @@ import { formatWibDateLong, formatWibTime } from "@/lib/datetime";
 import type { Event } from "@/lib/db/schema";
 
 type TicketDetailsProps = {
-  event: Pick<Event, "name" | "startsAt" | "endsAt" | "venueName" | "venueAddress">;
+  event: Pick<Event, "startsAt" | "endsAt" | "venueName" | "venueMapUrl">;
 };
 
-/** Event facts on the ticket — docs/05-UX-FLOWS.md section 4.3. */
+/**
+ * When and where, in the same three lines as the cover — DESIGN.md section
+ * 6.3. The venue is a link to the map when the committee has supplied one:
+ * on the day, that is the one thing a participant opens the ticket for
+ * besides the QR.
+ */
 export function TicketDetails({ event }: TicketDetailsProps) {
-  const rows = [
-    { icon: "📅", label: "Tanggal", value: formatWibDateLong(event.startsAt), detail: null },
-    {
-      icon: "🕐",
-      label: "Jam",
-      value: `${formatWibTime(event.startsAt)}–${formatWibTime(event.endsAt)} WIB`,
-      detail: null,
-    },
-    {
-      icon: "📍",
-      label: "Lokasi",
-      value: event.venueName,
-      // The seed fills both with "TBA"; joining them reads as "TBA, TBA".
-      // Only show an address that actually adds something.
-      detail: event.venueAddress && event.venueAddress !== event.venueName ? event.venueAddress : null,
-    },
-  ];
-
   return (
-    <section aria-labelledby="ticket-event-name" className="border-y border-line py-5">
-      <h2 id="ticket-event-name" className="text-xl font-bold">
-        {event.name}
-      </h2>
-
-      <dl className="mt-3 space-y-2">
-        {rows.map((row) => (
-          <div key={row.label} className="flex gap-3">
-            <dt className="shrink-0">
-              <span aria-hidden="true">{row.icon}</span>
-              <span className="sr-only">{row.label}</span>
-            </dt>
-            <dd className="text-ink-muted text-pretty">
-              {row.value}
-              {row.detail && (
-                <span className="block text-sm">{row.detail}</span>
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <div className="flex flex-col gap-0.5 text-center">
+      <p className="font-display text-lg font-semibold">{formatWibDateLong(event.startsAt, "en")}</p>
+      <p className="font-mono text-sm tabular-nums">
+        {formatWibTime(event.startsAt)}–{formatWibTime(event.endsAt)} WIB
+      </p>
+      {event.venueMapUrl ? (
+        <a
+          href={event.venueMapUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-ink-muted underline decoration-line underline-offset-4 hover:text-ink"
+        >
+          {event.venueName}
+        </a>
+      ) : (
+        <p className="text-ink-muted">{event.venueName}</p>
+      )}
+    </div>
   );
 }
