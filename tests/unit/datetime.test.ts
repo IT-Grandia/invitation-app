@@ -24,6 +24,15 @@ describe('WIB formatting', () => {
     expect(formatWibDateLong(EVENT_START)).toBe('Sabtu, 26 September 2026')
   })
 
+  // Participant pages are in English; the default stays Indonesian so staff,
+  // admin and spreadsheet output do not change.
+  it('renders in English when asked, without changing the default', () => {
+    expect(formatWibDateLong(EVENT_START, 'en')).toBe('Saturday, 26 September 2026')
+    expect(formatWib(EVENT_START, 'en')).toBe('26 Sep 2026, 08:00')
+    expect(formatWibDate(EVENT_START, 'en')).toBe('26 Sep 2026')
+    expect(formatWibDateLong(EVENT_START, 'id')).toBe(formatWibDateLong(EVENT_START))
+  })
+
   it('renders date and time separately', () => {
     expect(formatWibDate(EVENT_START)).toBe('26 Sep 2026')
     expect(formatWibTime(EVENT_START)).toBe('08:00')

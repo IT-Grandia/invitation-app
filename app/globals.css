@@ -54,13 +54,6 @@
 
   --ring: #2f5233;
 
-  --hero-wash: radial-gradient(
-      120% 90% at 50% 0%,
-      rgb(47 82 51 / 0.1) 0%,
-      transparent 62%
-    ),
-    linear-gradient(180deg, #f8f5ec 0%, #f3efe4 100%);
-  --hero-stripe: rgb(30 42 34 / 0.06);
   /* Faint vertical rules, like laid paper. */
   --paper-stripe: rgb(30 42 34 / 0.045);
 
@@ -101,13 +94,12 @@
      loads it through next/font, which self-hosts the files under
      /_next/static/media so the CSP's font-src 'self' holds, and exposes the
      family as --font-cormorant. The serif fallbacks cover the swap period and
-     any environment where the variable is missing. */
+     any environment where the variable is missing.
+
+     `font-display italic` reaches the one italic face, 500. Font synthesis is
+     off, so a weight without an italic face falls to that one instead of a
+     slanted upright — a slanted Garamond is not an italic Garamond. */
   --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
-  /* The 500 italic lives in its own family (see app/layout.tsx), reached with
-     `font-display-italic`. `font-display italic` on its own renders upright:
-     font-synthesis is off, and that is on purpose — a slanted Garamond is not
-     an italic Garamond. */
-  --font-display-italic: var(--font-cormorant-italic), Georgia, "Times New Roman", serif;
   /* Digits that must not jitter: ticket number, rundown times.
      System monospace only — no web font. The fixed width actually comes from
      `tabular-nums` on the element, which Roboto and SF Pro both support, so a
@@ -139,7 +131,6 @@
      0.01ms — each one lands on its final state instead of disappearing. */
   --animate-rise: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-fade: fade 1s ease-out both;
-  --animate-sweep: sweep 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes rise {
@@ -159,18 +150,6 @@
   }
   to {
     opacity: 1;
-  }
-}
-
-/* Court lines slide in from the side, like walking onto the court. */
-@keyframes sweep {
-  from {
-    opacity: 0;
-    transform: translateX(-12%);
-  }
-  to {
-    opacity: 1;
-    transform: none;
   }
 }
 
@@ -222,20 +201,6 @@
       transition-duration: 0.01ms !important;
     }
   }
-}
-
-@utility hero-surface {
-  background-image: var(--hero-wash);
-}
-
-/* Court line pattern — stands in for the venue photo until the committee
-   supplies one, and costs zero bytes of image payload. */
-@utility court-lines {
-  background-image: repeating-linear-gradient(
-    115deg,
-    transparent 0 38px,
-    var(--hero-stripe) 38px 40px
-  );
 }
 
 /* Laid-paper texture behind the cover and the ticket (DESIGN.md section 3):
