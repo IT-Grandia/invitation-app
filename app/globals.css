@@ -9,58 +9,62 @@
    Tailwind v4 has no tailwind.config.ts — theme configuration lives here, in
    the @theme block below. See docs/adr/0007-next-16-tailwind-v4.md.
 
-   The palette follows the AEOLIA preset in DESIGN.md (Minimal/Zen, sage
-   greens), with one addition the preset does not provide: a saturated court
-   green for actions. Every colour in the preset is a background tint, so a
-   button built from them lands at 1.36:1 against the page — invisible in
-   sunlight, which docs/05-UX-FLOWS.md section 4.1 rules out.
+   The palette is the classic-editorial direction from DESIGN.md v2: warm
+   cream paper with a dark forest green, taken from the organiser's mockup.
+   Token names are unchanged from v1 — only the values moved — so every page
+   that uses the vocabulary picked up the new look without editing.
 
    Every pair below is verified against WCAG 2.1 AA — 4.5:1 for text, 3:1 for
-   input boundaries (1.4.11). Re-run the check after any colour change.
+   input boundaries (1.4.11). The measured ratios are recorded in DESIGN.md
+   section 1; re-run the check after any colour change.
    ============================================================================ */
 
 :root {
   color-scheme: light;
 
-  /* ── Surfaces — straight from the AEOLIA preset ─────────────────────── */
-  --canvas: #dfe8dd;
-  --surface: #f2f6f0;
-  --surface-2: #c9d8c6;
+  /* ── Surfaces — cream paper ─────────────────────────────────────────── */
+  --canvas: #f3efe4;
+  --surface: #faf8f2;
+  --surface-2: #e9e3d3;
 
-  --line: #b8ccb4;
+  --line: #d6cfbc;
   /* Form controls need their own, stronger line: WCAG 1.4.11 asks 3:1 for a
-     control boundary, which a decorative divider is not required to meet. */
-  --line-input: #6f8a6a;
+     control boundary, which a decorative divider is not required to meet.
+     3.29:1 on the page, 3.56:1 on a card. */
+  --line-input: #8a836f;
 
-  /* ── Text ───────────────────────────────────────────────────────────── */
-  --ink: #1a2230;
-  --ink-muted: #41513f;
+  /* ── Text — green-black ink ─────────────────────────────────────────── */
+  --ink: #1e2a22;
+  --ink-muted: #4e5a50;
 
-  /* ── Action — the one colour added on top of the preset ─────────────── */
-  --primary: #186b3f;
+  /* ── Action — forest green ──────────────────────────────────────────── */
+  --primary: #2f5233;
   --on-primary: #ffffff;
-  /* Padel ball. Background only: as text on a light canvas it fails AA. */
-  --accent: #f2c200;
-  --on-accent: #1a2230;
+  /* Muted gold. Background only, for the waiting-list chip: as text on a
+     light canvas it fails AA. */
+  --accent: #d9b64a;
+  --on-accent: #1e2a22;
 
-  --success: #186b3f;
+  --success: #2f5233;
   --warning: #7a5600;
   --danger: #a3271f;
   /* Checked-in badge on the ticket. docs/05-UX-FLOWS.md section 4.3 asks for
-     blue there, and the preset has none. 8.42:1 with white text. */
-  --info: #1e4d8c;
+     blue there; this slate blue sits well on cream. 8.14:1 with white text. */
+  --info: #35507a;
 
-  --ring: #186b3f;
+  --ring: #2f5233;
 
   --hero-wash: radial-gradient(
       120% 90% at 50% 0%,
-      rgb(24 107 63 / 0.14) 0%,
+      rgb(47 82 51 / 0.1) 0%,
       transparent 62%
     ),
-    linear-gradient(180deg, #eaf1e8 0%, #dfe8dd 100%);
-  --hero-stripe: rgb(26 34 48 / 0.06);
+    linear-gradient(180deg, #f8f5ec 0%, #f3efe4 100%);
+  --hero-stripe: rgb(30 42 34 / 0.06);
+  /* Faint vertical rules, like laid paper. */
+  --paper-stripe: rgb(30 42 34 / 0.045);
 
-  --shadow-card: 0 1px 2px rgb(26 34 48 / 0.05), 0 8px 24px -14px rgb(26 34 48 / 0.22);
+  --shadow-card: 0 1px 2px rgb(30 42 34 / 0.05), 0 8px 24px -14px rgb(30 42 34 / 0.22);
 }
 
 /* ---------------------------------------------------------------------------
@@ -88,26 +92,35 @@
   --color-danger: var(--danger);
   --color-info: var(--info);
 
-  /* DESIGN.md specifies system-ui, which costs zero bytes and paints on the
-     first frame — worth more here than a downloaded display face, given most
-     visitors arrive on a mid-range Android over mobile data. `font-display`
-     stays in the vocabulary so Dev A and Dev C keep a stable class to reach
-     for if a display face is ever introduced. */
+  /* Body text stays on system-ui: zero bytes, paints on the first frame, and
+     most visitors arrive on a mid-range Android over mobile data. */
   --font-sans:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: var(--font-sans);
+  /* Headings, the brand lockup and letter-spaced labels use Cormorant Garamond,
+     the one web font in the project (DESIGN.md section 2). app/layout.tsx
+     loads it through next/font, which self-hosts the files under
+     /_next/static/media so the CSP's font-src 'self' holds, and exposes the
+     family as --font-cormorant. The serif fallbacks cover the swap period and
+     any environment where the variable is missing. */
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  /* The 500 italic lives in its own family (see app/layout.tsx), reached with
+     `font-display-italic`. `font-display italic` on its own renders upright:
+     font-synthesis is off, and that is on purpose — a slanted Garamond is not
+     an italic Garamond. */
+  --font-display-italic: var(--font-cormorant-italic), Georgia, "Times New Roman", serif;
   /* Digits that must not jitter: ticket number, rundown times.
      System monospace only — no web font. The fixed width actually comes from
      `tabular-nums` on the element, which Roboto and SF Pro both support, so a
      loaded face would have bought nothing for 39.5 KB. Courier New stays last
-     in the stack as a nod to the preset, and as a floor for old devices. */
+     in the stack as a floor for old devices. */
   --font-mono: ui-monospace, "SF Mono", "Roboto Mono", "Courier New", monospace;
 
-  /* Hero headline scales with the viewport: lands on the preset's 2.5rem at
-     360px and grows from there, so 360px never wraps awkwardly. */
-  --text-hero: clamp(2.25rem, 11vw, 4rem);
-  --text-hero--line-height: 1.04;
-  --text-hero--letter-spacing: -0.02em;
+  /* Hero headline scales with the viewport: 2.5rem at 360px and grows from
+     there, so 360px never wraps awkwardly. Slightly larger than v1 because
+     Cormorant's small x-height reads smaller than a sans at the same size. */
+  --text-hero: clamp(2.5rem, 12vw, 4.5rem);
+  --text-hero--line-height: 1.02;
+  --text-hero--letter-spacing: 0.02em;
 
   /* Minimum touch target from docs/05-UX-FLOWS.md section 6: use min-h-tap
      and min-w-tap on anything tappable. */
@@ -174,6 +187,9 @@
     /* Participants read this outdoors, one-handed. */
     line-height: 1.6;
     text-rendering: optimizeLegibility;
+    /* Only 500, 600 and 700 of the serif are loaded. A heavier request must
+       fall to 700, not to a smeared synthetic bold. */
+    font-synthesis: none;
   }
 
   /* A visible focus ring is a hard requirement, not a preference:
@@ -188,7 +204,8 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    /* Garamond wants no negative tracking; the sans-era -0.02em pinched it. */
+    letter-spacing: 0;
     line-height: 1.15;
   }
 
@@ -218,5 +235,16 @@
     115deg,
     transparent 0 38px,
     var(--hero-stripe) 38px 40px
+  );
+}
+
+/* Laid-paper texture behind the cover and the ticket (DESIGN.md section 3):
+   faint vertical rules every 16px, drawn by CSS rather than shipped as an
+   image. Apply on top of bg-canvas or bg-surface. */
+@utility paper-stripes {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 15px,
+    var(--paper-stripe) 15px 16px
   );
 }

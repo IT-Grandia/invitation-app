@@ -1,34 +1,57 @@
 import type { Metadata, Viewport } from "next";
+import { Cormorant_Garamond } from "next/font/google";
 import type { ReactNode } from "react";
+import { BRAND } from "@/lib/brand";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-// No web font is loaded at all. DESIGN.md specifies system-ui, and the digits
-// that must not jitter — ticket number, rundown times — get their
-// fixed width from `tabular-nums`, which both Roboto on Android and SF Pro on
-// iOS support. A loaded monospace face cost 39.5 KB to buy something the
-// system fonts already provide.
+// The one web font in the project (DESIGN.md section 2). next/font downloads
+// it at build time and serves it from /_next/static/media, so the CSP's
+// font-src 'self' holds and no request ever leaves for Google.
+//
+// Two loaders instead of one: a single call with both styles would fetch and
+// preload the italic of every weight, and only the 500 italic is ever used
+// (tagline, appreciation line). Keeping it in its own family, without preload,
+// means it is fetched only by pages that actually render it.
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  style: "normal",
+  display: "swap",
+  variable: "--font-cormorant",
+});
+
+const cormorantItalic = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: "500",
+  style: "italic",
+  display: "swap",
+  preload: false,
+  variable: "--font-cormorant-italic",
+});
 
 // metadataBase only resolves relative Open Graph URLs, so the localhost
 // fallback is harmless here. The value that must never be wrong — the host
 // inside the QR — is guarded in lib/qr.ts instead.
 const metadataBaseUrl = siteUrl();
 
+// The brand, not the event: pages that know the event set their own title
+// through generateMetadata, and this template appends the lockup to it.
+const description = `Your invitation from ${BRAND.lockup}. Register once and your QR ticket is ready right away.`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(metadataBaseUrl),
   title: {
-    default: "Padel Day 2026",
-    template: "%s · Padel Day 2026",
+    default: BRAND.lockup,
+    template: `%s · ${BRAND.lockup}`,
   },
-  description:
-    "Undangan dan pendaftaran Padel Day 2026. Daftar sekali, tiket QR kamu langsung jadi.",
+  description,
   openGraph: {
     type: "website",
-    locale: "id_ID",
-    siteName: "Padel Day 2026",
-    title: "Padel Day 2026",
-    description:
-      "Undangan dan pendaftaran Padel Day 2026. Daftar sekali, tiket QR kamu langsung jadi.",
+    locale: "en_US",
+    siteName: BRAND.lockup,
+    title: BRAND.lockup,
+    description,
   },
 };
 
@@ -38,7 +61,8 @@ export const viewport: Viewport = {
   // Zoom stays available: docs/05-UX-FLOWS.md section 6 requires the page to
   // still work at 200%.
   maximumScale: 5,
-  themeColor: "#dfe8dd",
+  // Keep in step with --canvas in globals.css.
+  themeColor: "#f3efe4",
 };
 
 export default function RootLayout({
@@ -47,7 +71,13 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="id" className="h-full antialiased">
+    // Everything a participant reads is in English (DESIGN.md section 5).
+    // Staff and admin pages that stay in Indonesian mark their own <main>
+    // with lang="id".
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${cormorantItalic.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col bg-canvas text-ink">{children}</body>
     </html>
   );
