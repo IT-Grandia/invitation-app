@@ -59,7 +59,6 @@ export default async function InvitationPage() {
 
   return (
     <Cover
-      eventName={event.name}
       dateLabel={formatWibDateLong(event.startsAt, "en")}
       timeLabel={`${formatWibTime(event.startsAt)}–${formatWibTime(event.endsAt)} WIB`}
       venueName={event.venueName}

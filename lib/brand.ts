@@ -32,6 +32,13 @@ const SPONSORS: readonly Sponsor[] = [
 export const BRAND = {
   /** `Grandia × Folkafe` — the multiplication sign, not the letter x. */
   lockup: PARTNERS.join(" × "),
+  /**
+   * The line that heads the cover, in place of the event name. The event
+   * itself is called "FA Live Padel Society" in the database and appears
+   * under that name in titles, the WhatsApp message and the spreadsheet;
+   * this is the description the organiser wants people to read first.
+   */
+  headline: "Padel, Coffee, & Business Networking",
   /** With full stops, as the organiser's mockup writes it. */
   tagline: "Play. Connect. Build.",
   supportedByLabel: "Supported by",

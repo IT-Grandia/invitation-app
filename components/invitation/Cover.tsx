@@ -6,7 +6,7 @@ import { SupportedBy } from "./SupportedBy";
 
 /**
  * The cover — the whole of `/` — as the organiser's mockup lays it out and
- * DESIGN.md section 6.1 specifies it: header, event name, tagline, flyer,
+ * DESIGN.md section 5.1 specifies it: header, headline, tagline, flyer,
  * when and where, sponsors, one button. The button leads to the registration
  * form; there is no invitation body underneath any more.
  *
@@ -14,12 +14,12 @@ import { SupportedBy } from "./SupportedBy";
  * element fits without scrolling, on a shorter one the page scrolls and the
  * button stays in the flow where a thumb expects it.
  *
- * The event name, date, time and venue come from the database; only the
- * brand lines (lib/brand.ts) are fixed.
+ * The date, time and venue come from the database. The headline, tagline
+ * and sponsors are brand lines (lib/brand.ts); the event's own name is used
+ * in the page title and the ticket, not here.
  */
 
 type CoverProps = {
-  eventName: string;
   /** `Saturday, 26 September 2026` */
   dateLabel: string;
   /** `16:00–20:00 WIB` */
@@ -28,14 +28,14 @@ type CoverProps = {
   action: CoverActionProps;
 };
 
-// Seven elements rise in turn — DESIGN.md section 11. Under
+// Seven elements rise in turn — DESIGN.md section 4.8. Under
 // prefers-reduced-motion the base layer collapses the durations and each
 // element simply lands in place.
 function rise(step: number) {
   return { animationDelay: `${step * 80}ms` };
 }
 
-export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: CoverProps) {
+export function Cover({ dateLabel, timeLabel, venueName, action }: CoverProps) {
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
       {/* my-auto, not justify-center: auto margins centre the card on a tall
@@ -45,13 +45,14 @@ export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: Co
           <BrandHeader />
         </div>
 
-        {/* Not text-hero: the name is a full sentence in capitals, and at hero
-            size it would run to five lines on a 360px screen. */}
+        {/* Not text-hero: the headline is a full sentence in capitals. At
+            this size it sits on two lines at 360px; at hero size it would take
+            five. */}
         <h1
-          className="animate-rise mt-5 font-display text-2xl leading-tight font-semibold tracking-[0.04em] text-balance uppercase sm:text-3xl md:text-4xl"
+          className="animate-rise mt-5 font-display text-xl leading-tight font-semibold tracking-[0.04em] text-balance uppercase sm:text-2xl md:text-3xl"
           style={rise(1)}
         >
-          {eventName}
+          {BRAND.headline}
         </h1>
 
         <p className="animate-rise mt-2 font-display text-lg text-ink-muted italic md:text-xl" style={rise(2)}>
@@ -82,9 +83,9 @@ export function Cover({ eventName, dateLabel, timeLabel, venueName, action }: Co
 
 /**
  * Stands where the flyer will go, at the flyer's own 4:5 ratio, so the real
- * file drops in without moving anything (DESIGN.md section 4). Capped at
- * 32dvh tall so that, with a one-line event name, the button is still on
- * screen on a 360×740 phone; a longer name costs one short scroll. Never
+ * file drops in without moving anything (DESIGN.md section 7). Capped at
+ * 32dvh tall so that the button is still on screen on a 360×740 phone with
+ * the two-line headline; a taller screen gets a larger frame. Never
  * narrower than 9rem, so a landscape phone still shows a frame rather than
  * a stamp. The court mark is the project's own drawing — nothing borrowed,
  * nothing generated.
