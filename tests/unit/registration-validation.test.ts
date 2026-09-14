@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  attendingSchema,
+  communitySchema,
   consentSchema,
   emailSchema,
   fullNameSchema,
+  investmentInstrumentsSchema,
   notesSchema,
   phoneSchema,
   registerApiSchema,
   registrationFormSchema,
+  revisedRegistrationFormSchema,
 } from '@/lib/validation/registration'
 
 describe('fullNameSchema', () => {
@@ -331,3 +335,116 @@ describe('registerApiSchema', () => {
     expect(res.success).toBe(true)
   })
 })
+
+describe('communitySchema', () => {
+  it('accepts valid single or multiple communities', () => {
+    expect(communitySchema.safeParse(['Club 79']).data).toEqual(['Club 79'])
+    expect(communitySchema.safeParse(['Womenpreneur Hipmi Jateng']).data).toEqual([
+      'Womenpreneur Hipmi Jateng',
+    ])
+    expect(
+      communitySchema.safeParse(['Club 79', 'Womenpreneur Hipmi Jateng']).data,
+    ).toEqual(['Club 79', 'Womenpreneur Hipmi Jateng'])
+  })
+
+  it('rejects empty community array', () => {
+    const res = communitySchema.safeParse([])
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe('Pilih minimal 1 komunitas.')
+    }
+  })
+})
+
+describe('investmentInstrumentsSchema', () => {
+  it('accepts 1 or 2 valid instruments', () => {
+    expect(investmentInstrumentsSchema.safeParse(['Gold']).data).toEqual(['Gold'])
+    expect(investmentInstrumentsSchema.safeParse(['Gold', 'Stocks']).data).toEqual([
+      'Gold',
+      'Stocks',
+    ])
+    expect(investmentInstrumentsSchema.safeParse(['Deposito', 'Property']).data).toEqual([
+      'Deposito',
+      'Property',
+    ])
+  })
+
+  it('rejects 0 selected instruments', () => {
+    const res = investmentInstrumentsSchema.safeParse([])
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe('Pilih minimal 1 instrumen investasi.')
+    }
+  })
+
+  it('rejects more than 2 instruments', () => {
+    const res = investmentInstrumentsSchema.safeParse(['Gold', 'Deposito', 'Stocks'])
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      expect(res.error.issues[0].message).toBe('Pilih maksimal 2 instrumen investasi.')
+    }
+  })
+})
+
+describe('attendingSchema', () => {
+  it('accepts yes and no', () => {
+    expect(attendingSchema.safeParse('yes').data).toBe('yes')
+    expect(attendingSchema.safeParse('no').data).toBe('no')
+  })
+
+  it('rejects invalid or empty values', () => {
+    expect(attendingSchema.safeParse('maybe').success).toBe(false)
+    expect(attendingSchema.safeParse('').success).toBe(false)
+    expect(attendingSchema.safeParse(undefined).success).toBe(false)
+  })
+})
+
+describe('revisedRegistrationFormSchema', () => {
+  it('validates a complete revised form input', () => {
+    const rawInput = {
+      fullName: 'Siti Rahmawati',
+      phone: '081234567890',
+      community: ['Club 79'],
+      investmentInstruments: ['Gold', 'Property'],
+      attending: 'yes',
+    }
+
+    const res = revisedRegistrationFormSchema.safeParse(rawInput)
+    expect(res.success).toBe(true)
+    if (res.success) {
+      expect(res.data).toEqual({
+        fullName: 'Siti Rahmawati',
+        phone: '081234567890',
+        community: ['Club 79'],
+        investmentInstruments: ['Gold', 'Property'],
+        attending: 'yes',
+      })
+    }
+  })
+
+  it('rejects missing or invalid fields in revised form', () => {
+    const rawInput = {
+      fullName: 'Al',
+      phone: 'invalid-phone',
+      community: [],
+      investmentInstruments: ['Gold', 'Deposito', 'Stocks'],
+      attending: '',
+    }
+
+    const res = revisedRegistrationFormSchema.safeParse(rawInput)
+    expect(res.success).toBe(false)
+    if (!res.success) {
+      const fieldErrors = res.error.flatten().fieldErrors
+      expect(fieldErrors.fullName).toContain('Nama minimal 3 karakter.')
+      expect(fieldErrors.phone).toContain(
+        'Nomor WhatsApp tidak valid. Contoh: 08123456789',
+      )
+      expect(fieldErrors.community).toContain('Pilih minimal 1 komunitas.')
+      expect(fieldErrors.investmentInstruments).toContain(
+        'Pilih maksimal 2 instrumen investasi.',
+      )
+      expect(fieldErrors.attending).toBeDefined()
+    }
+  })
+})
+

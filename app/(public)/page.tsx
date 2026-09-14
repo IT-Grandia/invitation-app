@@ -33,7 +33,7 @@ const loadEvent = cache(getPublishedEvent);
  * this becomes "#rsvp" and nothing else changes — the CTA is a plain anchor
  * either way, so E2E scenario E1 keeps passing.
  */
-const REGISTER_HREF = "/daftar";
+const REGISTER_HREF = "/regist";
 
 export async function generateMetadata(): Promise<Metadata> {
   const event = await loadEvent();

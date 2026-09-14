@@ -84,8 +84,60 @@ export const registerApiSchema = registrationFormSchema.extend({
   website: z.string().max(0, 'Spam terdeteksi.').optional(),
 })
 
+/**
+ * Community options for the event.
+ */
+export const COMMUNITY_OPTIONS = ['Club 79', 'Womenpreneur Hipmi Jateng'] as const
+export type CommunityOption = (typeof COMMUNITY_OPTIONS)[number]
+
+/**
+ * Validates selected community options.
+ * Must select at least 1 community.
+ */
+export const communitySchema = z
+  .array(z.string().trim())
+  .min(1, 'Pilih minimal 1 komunitas.')
+
+/**
+ * Investment instrument options.
+ */
+export const INVESTMENT_OPTIONS = ['Gold', 'Deposito', 'Stocks', 'Property'] as const
+export type InvestmentOption = (typeof INVESTMENT_OPTIONS)[number]
+
+/**
+ * Validates participant's investment instrument interests.
+ * Must select at least 1 and at most 2 options.
+ */
+export const investmentInstrumentsSchema = z
+  .array(z.enum(INVESTMENT_OPTIONS))
+  .min(1, 'Pilih minimal 1 instrumen investasi.')
+  .max(2, 'Pilih maksimal 2 instrumen investasi.')
+
+/**
+ * Validates participant's event attendance confirmation.
+ * Must be either 'yes' or 'no'.
+ */
+export const attendingSchema = z.enum(['yes', 'no'], {
+  message: 'Pilih konfirmasi kehadiran Anda (Yes atau No).',
+})
+
+/**
+ * Revised client-side registration form schema.
+ */
+export const revisedRegistrationFormSchema = z.object({
+  fullName: fullNameSchema,
+  phone: phoneSchema,
+  community: communitySchema,
+  investmentInstruments: investmentInstrumentsSchema,
+  attending: attendingSchema,
+})
+
+export type RevisedRegistrationFormInput = z.input<typeof revisedRegistrationFormSchema>
+export type RevisedRegistrationFormValues = z.output<typeof revisedRegistrationFormSchema>
+
 export type RegistrationFormInput = z.input<typeof registrationFormSchema>
 export type RegistrationFormValues = z.output<typeof registrationFormSchema>
 
 export type RegisterApiInput = z.input<typeof registerApiSchema>
 export type RegisterApiValues = z.output<typeof registerApiSchema>
+

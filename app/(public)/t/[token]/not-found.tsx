@@ -21,7 +21,7 @@ export default function TicketNotFound() {
       </div>
 
       <Link
-        href="/daftar"
+        href="/regist"
         className="min-h-tap flex w-full max-w-xs items-center justify-center rounded-pill bg-primary px-8 font-bold text-on-primary shadow-card"
       >
         Daftar Sekarang
