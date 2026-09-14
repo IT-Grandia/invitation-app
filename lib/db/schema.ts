@@ -69,6 +69,9 @@ export const registrations = pgTable(
     // A participant who answers no keeps the row and the token, but is not shown
     // a QR code. They are still admitted if they turn up.
     attending: boolean('attending').notNull().default(true),
+    // Which community the participant was invited through. Nullable because rows
+    // written before this column existed have no answer.
+    community: text('community'),
     status: text('status').notNull().default('confirmed'),
     checkedInAt: timestamp('checked_in_at', { withTimezone: true }),
     checkedInBy: text('checked_in_by'),
@@ -104,6 +107,12 @@ export const registrations = pgTable(
     // Only the shape is enforced here. Requiring at least one answer is left to
     // lib/validation/investment.ts, because rows written before this column
     // existed have none.
+    // The list of communities belongs to the event and may grow, so the column
+    // keeps only a sane shape and lib/validation/survey.ts owns the choices.
+    check(
+      'registrations_community_length',
+      sql`${table.community} is null or char_length(${table.community}) between 1 and 80`,
+    ),
     check(
       'registrations_investment_interests_valid',
       sql`${table.investmentInterests} <@ array['gold', 'deposit', 'stocks', 'property']::text[] and cardinality(${table.investmentInterests}) <= 2`,

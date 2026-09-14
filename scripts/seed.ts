@@ -89,6 +89,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('A'),
+          community: 'club_79',
           investmentInterests: ['property', 'stocks'],
           fullName: 'Budi Santoso',
           phone: '628123456701',
@@ -98,6 +99,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('B'),
+          community: 'womenpreneur_hipmi_jateng',
           investmentInterests: ['gold'],
           attending: false,
           fullName: 'Siti Aminah',
@@ -107,6 +109,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('C'),
+          community: 'club_79',
           investmentInterests: ['deposit', 'property'],
           fullName: 'Andi Wijaya',
           phone: '628123456703',
@@ -117,6 +120,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('D'),
+          community: 'womenpreneur_hipmi_jateng',
           investmentInterests: ['stocks'],
           fullName: 'Rina Lestari',
           phone: '628123456704',
@@ -127,6 +131,7 @@ async function main() {
         {
           eventId: event.id,
           token: seedToken('E'),
+          community: 'club_79',
           investmentInterests: ['gold'],
           attending: false,
           fullName: 'Dimas Prakoso',
