@@ -9,10 +9,11 @@ import "./globals.css";
 // it at build time and serves it from /_next/static/media, so the CSP's
 // font-src 'self' holds and no request ever leaves for Google.
 //
-// Two loaders instead of one: a single call with both styles would fetch and
-// preload the italic of every weight, and only the 500 italic is ever used
-// (tagline, appreciation line). Keeping it in its own family, without preload,
-// means it is fetched only by pages that actually render it.
+// Two loaders instead of one: a single call with both styles would preload the
+// italic on every page, and only the 500 italic is ever used (tagline,
+// appreciation line). Both register faces under the same family name, so
+// `font-display italic` picks the italic up wherever it is rendered — and only
+// there is the file fetched.
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
@@ -21,6 +22,8 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
 });
 
+// Same family name as above, so no variable of its own is ever read; applying
+// `.variable` on <html> is what makes Next emit its @font-face rules.
 const cormorantItalic = Cormorant_Garamond({
   subsets: ["latin"],
   weight: "500",
