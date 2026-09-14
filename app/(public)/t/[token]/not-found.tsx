@@ -11,7 +11,7 @@ import { PadelBall } from "@/components/ui/PadelMarks";
 export default function TicketNotFound() {
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
-      <div className="flex w-full max-w-[26.25rem] flex-col items-center gap-6 rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8">
+      <div className="my-auto flex w-full max-w-[26.25rem] flex-col items-center gap-6 rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10 md:py-10">
         <BrandHeader className="w-full" />
 
         <PadelBall className="h-14 w-14 text-primary" />
