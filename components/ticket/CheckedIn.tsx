@@ -24,7 +24,7 @@ export function CheckedIn({ token, ticketNumber, fullName, community, checkedInA
 
   return (
     <div className="flex flex-col items-center gap-5 text-center">
-      <p className="font-display text-sm font-semibold tracking-[0.2em] text-ink-muted uppercase">
+      <p className="font-display text-sm font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-base">
         Check-in
       </p>
 
