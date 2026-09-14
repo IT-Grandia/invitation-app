@@ -1,0 +1,2 @@
+ALTER TABLE "registrations" ADD COLUMN "community" text;--> statement-breakpoint
+ALTER TABLE "registrations" ADD CONSTRAINT "registrations_community_length" CHECK ("registrations"."community" is null or char_length("registrations"."community") between 1 and 80);

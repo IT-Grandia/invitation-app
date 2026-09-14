@@ -51,16 +51,21 @@ async function createRegistration(overrides: Partial<typeof registrations.$infer
 
 describe('registration survey columns', () => {
   it('stores the answers and treats a registration as attending by default', async () => {
-    const row = await createRegistration({ investmentInterests: ['stocks', 'property'] })
+    const row = await createRegistration({
+      investmentInterests: ['stocks', 'property'],
+      community: 'club_79',
+    })
 
     expect(row.investmentInterests).toEqual(['stocks', 'property'])
+    expect(row.community).toBe('club_79')
     expect(row.attending).toBe(true)
   })
 
-  it('leaves rows written before the column existed with an empty list', async () => {
+  it('leaves rows written before the columns existed without answers', async () => {
     const row = await createRegistration()
 
     expect(row.investmentInterests).toEqual([])
+    expect(row.community).toBeNull()
   })
 
   it.each([
@@ -69,6 +74,15 @@ describe('registration survey columns', () => {
   ])('refuses %s', async (_label, investmentInterests) => {
     await expect(createRegistration({ investmentInterests })).rejects.toMatchObject({
       cause: { constraint_name: 'registrations_investment_interests_valid' },
+    })
+  })
+
+  it.each([
+    ['an empty community', ''],
+    ['a community name that is absurdly long', 'x'.repeat(81)],
+  ])('refuses %s', async (_label, community) => {
+    await expect(createRegistration({ community })).rejects.toMatchObject({
+      cause: { constraint_name: 'registrations_community_length' },
     })
   })
 })
