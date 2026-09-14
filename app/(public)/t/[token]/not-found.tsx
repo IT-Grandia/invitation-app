@@ -26,7 +26,7 @@ export default function TicketNotFound() {
 
         <Link
           href="/regist"
-          className="min-h-tap flex w-full items-center justify-center rounded-pill bg-primary px-8 font-display text-lg font-semibold tracking-[0.06em] text-on-primary shadow-card"
+          className="min-h-tap flex w-full items-center justify-center rounded-pill bg-primary px-8 font-display text-lg font-semibold tracking-[0.06em] text-on-primary shadow-card md:min-h-14 md:text-xl"
         >
           Register
         </Link>

@@ -51,7 +51,7 @@ export function TicketNotice({ kind, contactWhatsapp }: TicketNoticeProps) {
           href={`https://wa.me/${whatsapp}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="min-h-tap inline-flex items-center rounded-pill border border-line-input px-6 font-display text-lg font-semibold tracking-[0.06em]"
+          className="min-h-tap inline-flex items-center rounded-pill border border-line-input px-6 font-display text-lg font-semibold tracking-[0.06em] md:min-h-14 md:text-xl"
         >
           {copy.contact}
         </a>
