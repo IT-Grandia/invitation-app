@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// Disable JIT evaluation probing (`new Function("")`) to comply with strict CSP in production
+z.config({ jitless: true })
+
 // The scanner sends whatever the QR code carried, which is a full ticket URL.
 // Manual search sends a bare token. extractToken sorts out which is which.
 const scannedToken = z.string().trim().min(1).max(300)

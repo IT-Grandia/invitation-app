@@ -143,22 +143,23 @@ export function AdminToolsBar({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 font-['Space_Grotesk',sans-serif]">
       {/* Toast / Notification Banner */}
       {message && (
         <div
           role="alert"
-          className={`flex items-center justify-between rounded-card p-3 text-xs font-medium ${
+          className={`flex items-center justify-between rounded-[4px] p-3.5 text-xs font-bold ${
             message.type === 'success'
-              ? 'border border-primary/30 bg-primary/10 text-primary'
-              : 'border border-danger/30 bg-danger/10 text-danger'
+              ? 'border border-[#1F8A4C] bg-[#1F8A4C]/10 text-[#1F8A4C]'
+              : 'border border-[#A3271F] bg-[#A3271F]/10 text-[#A3271F]'
           }`}
         >
           <span>{message.text}</span>
           <button
             type="button"
             onClick={() => setMessage(null)}
-            className="ml-2 font-bold hover:opacity-75"
+            className="ml-3 inline-flex h-6 w-6 items-center justify-center rounded-[2px] border border-current text-xs font-bold hover:opacity-75"
+            aria-label="Tutup pesan"
           >
             ✕
           </button>
@@ -166,16 +167,16 @@ export function AdminToolsBar({
       )}
 
       {/* Buttons toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-[4px] border border-[#0F0F0F] bg-[#FFFFFF] p-3.5 shadow-[0_2px_12px_rgba(15,15,15,0.05)] sm:p-4">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Toggle Registration Button */}
           <button
             type="button"
             onClick={() => setToggleModalOpen(true)}
-            className={`flex min-h-tap items-center justify-center rounded-card px-3 text-xs font-semibold transition-colors sm:px-4 sm:text-sm ${
+            className={`flex min-h-tap items-center justify-center rounded-[4px] border border-[#0F0F0F] px-4 text-xs font-bold transition-all active:translate-y-[1px] sm:text-sm ${
               isClosed
-                ? 'border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20'
-                : 'border border-danger/40 bg-danger/10 text-danger hover:bg-danger/20'
+                ? 'bg-[#1F8A4C] text-white hover:bg-[#186B3F]'
+                : 'bg-[#A3271F] text-white hover:bg-[#851E17]'
             }`}
           >
             {isClosed ? 'Buka Pendaftaran' : 'Tutup Pendaftaran'}
@@ -186,25 +187,46 @@ export function AdminToolsBar({
             type="button"
             disabled={syncPending}
             onClick={() => void handleSyncSheets()}
-            className="flex min-h-tap items-center justify-center rounded-card border border-line bg-surface px-3 text-xs font-semibold text-ink transition-colors hover:bg-canvas disabled:opacity-50 sm:px-4 sm:text-sm"
+            className="flex min-h-tap items-center justify-center gap-2 rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-4 text-xs font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] disabled:opacity-50 sm:text-sm"
           >
-            {syncPending
-              ? 'Menyinkronkan…'
-              : pendingSyncCount > 0
-                ? `Sync Sheets (${pendingSyncCount})`
-                : 'Sync Sheets'}
+            {syncPending ? (
+              'Menyinkronkan…'
+            ) : pendingSyncCount > 0 ? (
+              <>
+                <span>Sync Sheets</span>
+                <span className="rounded-[3px] border border-[#0F0F0F] bg-[#F5C518] px-1.5 py-0.2 text-[10px] font-bold text-[#0F0F0F]">
+                  {pendingSyncCount}
+                </span>
+              </>
+            ) : (
+              'Sync Sheets'
+            )}
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Export CSV Button */}
           <button
             type="button"
             disabled={exportPending}
             onClick={() => void handleExportCsv()}
-            className="flex min-h-tap items-center justify-center rounded-card border border-line bg-surface px-3 text-xs font-semibold text-ink transition-colors hover:bg-canvas disabled:opacity-50 sm:px-4 sm:text-sm"
+            className="flex min-h-tap items-center justify-center gap-1.5 rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-4 text-xs font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] disabled:opacity-50 sm:text-sm"
           >
-            {exportPending ? 'Mengunduh…' : '📥 Ekspor CSV'}
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            <span>{exportPending ? 'Mengunduh…' : 'Ekspor CSV'}</span>
           </button>
 
           {/* Google Sheets External Link if configured */}
@@ -216,10 +238,11 @@ export function AdminToolsBar({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="flex min-h-tap items-center justify-center rounded-card border border-line bg-surface px-3 text-xs font-semibold text-ink transition-colors hover:bg-canvas sm:px-4 sm:text-sm"
+            className="flex min-h-tap items-center justify-center gap-1 rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-4 text-xs font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] sm:text-sm"
             title="Buka Google Sheets di tab baru"
           >
-            Buka Sheet ↗
+            <span>Buka Sheet</span>
+            <span aria-hidden="true">↗</span>
           </a>
         </div>
       </div>
@@ -230,24 +253,24 @@ export function AdminToolsBar({
           role="dialog"
           aria-modal="true"
           aria-labelledby="toggle-modal-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F0F0F]/50 p-4 backdrop-blur-xs"
         >
-          <div className="w-full max-w-sm rounded-card border border-line bg-surface p-6 shadow-xl">
-            <h3 id="toggle-modal-title" className="font-display text-base font-bold text-ink">
+          <div className="w-full max-w-sm rounded-[4px] border-2 border-[#0F0F0F] bg-[#FFFFFF] p-6 shadow-[0_8px_32px_rgba(15,15,15,0.18)]">
+            <h3 id="toggle-modal-title" className="font-['Archivo_Black',sans-serif] text-base tracking-tight text-[#0F0F0F]">
               {isClosed ? 'Buka Kembali Pendaftaran?' : 'Tutup Pendaftaran Acara?'}
             </h3>
-            <p className="mt-2 text-xs text-ink-muted">
+            <p className="mt-2 text-xs leading-relaxed text-[#0F0F0F]/70">
               {isClosed
                 ? 'Peserta baru akan dapat kembali mengisi form pendaftaran dan menerima tiket.'
                 : 'Form pendaftaran akan ditutup dan menolak pendaftar baru dengan status Pendaftaran Ditutup.'}
             </p>
 
-            <div className="mt-6 flex items-center justify-end gap-2">
+            <div className="mt-6 flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 disabled={togglePending}
                 onClick={() => setToggleModalOpen(false)}
-                className="min-h-tap rounded-card border border-line bg-surface px-4 text-xs font-semibold text-ink transition-colors hover:bg-canvas disabled:opacity-50"
+                className="min-h-tap rounded-[4px] border border-[#0F0F0F] bg-[#FAF8F2] px-4 text-xs font-bold text-[#0F0F0F] transition-all hover:bg-[#EFE9D9] active:translate-y-[1px] disabled:opacity-50"
               >
                 Batal
               </button>
@@ -255,8 +278,8 @@ export function AdminToolsBar({
                 type="button"
                 disabled={togglePending}
                 onClick={() => void handleToggleRegistration()}
-                className={`min-h-tap rounded-card px-4 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50 ${
-                  isClosed ? 'bg-primary' : 'bg-danger'
+                className={`min-h-tap rounded-[4px] border border-[#0F0F0F] px-4 text-xs font-bold text-white transition-all active:translate-y-[1px] disabled:opacity-50 ${
+                  isClosed ? 'bg-[#1F8A4C] hover:bg-[#186B3F]' : 'bg-[#A3271F] hover:bg-[#851E17]'
                 }`}
               >
                 {togglePending

@@ -206,7 +206,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Honeypot field (hidden from view and assistive tech, traps automated bots) */}
       <div
         className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden opacity-0 pointer-events-none"
@@ -226,28 +226,28 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 1: Nama Lengkap */}
       <div className="flex flex-col">
-        <label htmlFor="fullName" className="font-sans text-sm font-medium text-ink mb-1.5">
-          Nama Lengkap <span className="text-danger" aria-hidden="true">*</span>
+        <label htmlFor="fullName" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
+          Nama Lengkap <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
         </label>
         <input
           id="fullName"
           name="fullName"
           type="text"
           autoComplete="name"
-          placeholder="Contoh: Budi Santoso"
+          placeholder="Nama lengkap kamu"
           value={values.fullName}
           onChange={(e) => handleChange('fullName', e.target.value)}
           onBlur={() => handleBlur('fullName')}
           aria-invalid={Boolean(errors.fullName && touched.fullName)}
           aria-describedby={errors.fullName && touched.fullName ? 'fullName-error' : undefined}
-          className={`min-h-tap w-full rounded-card border bg-surface px-4 py-2 text-ink placeholder:text-ink-muted/50 transition-colors focus:outline-none focus-visible:outline-3 focus-visible:outline-primary ${
+          className={`min-h-[44px] w-full rounded-[8px] border bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] ${
             errors.fullName && touched.fullName
-              ? 'border-danger focus-visible:outline-danger'
-              : 'border-line-input hover:border-ink-muted'
+              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
+              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
           }`}
         />
         {errors.fullName && touched.fullName && (
-          <p id="fullName-error" role="alert" className="mt-1 text-xs font-medium text-danger">
+          <p id="fullName-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.fullName}
           </p>
         )}
@@ -255,30 +255,29 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 2: Nomor WhatsApp */}
       <div className="flex flex-col">
-        <label htmlFor="phone" className="font-sans text-sm font-medium text-ink">
-          Nomor WhatsApp <span className="text-danger" aria-hidden="true">*</span>
+        <label htmlFor="phone" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
+          Nomor WhatsApp <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
         </label>
-        <p className="text-xs text-ink-muted mb-1.5">Tiket akan dikirim ke sini</p>
         <input
           id="phone"
           name="phone"
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="Contoh: 08123456789"
+          placeholder="08123456789 atau 628..."
           value={values.phone}
           onChange={(e) => handleChange('phone', e.target.value)}
           onBlur={() => handleBlur('phone')}
           aria-invalid={Boolean(errors.phone && touched.phone)}
           aria-describedby={errors.phone && touched.phone ? 'phone-error' : undefined}
-          className={`min-h-tap w-full rounded-card border bg-surface px-4 py-2 text-ink placeholder:text-ink-muted/50 transition-colors focus:outline-none focus-visible:outline-3 focus-visible:outline-primary ${
+          className={`min-h-[44px] w-full rounded-[8px] border bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] ${
             errors.phone && touched.phone
-              ? 'border-danger focus-visible:outline-danger'
-              : 'border-line-input hover:border-ink-muted'
+              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
+              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
           }`}
         />
         {errors.phone && touched.phone && (
-          <p id="phone-error" role="alert" className="mt-1 text-xs font-medium text-danger">
+          <p id="phone-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.phone}
           </p>
         )}
@@ -286,28 +285,28 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 3: Email (opsional) */}
       <div className="flex flex-col">
-        <label htmlFor="email" className="font-sans text-sm font-medium text-ink mb-1.5">
-          Email <span className="text-xs font-normal text-ink-muted">(opsional)</span>
+        <label htmlFor="email" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
+          Email <span className="text-xs font-normal text-[#4E644D]/70">(opsional)</span>
         </label>
         <input
           id="email"
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="Contoh: budi@example.com"
+          placeholder="nama@email.com"
           value={values.email}
           onChange={(e) => handleChange('email', e.target.value)}
           onBlur={() => handleBlur('email')}
           aria-invalid={Boolean(errors.email && touched.email)}
           aria-describedby={errors.email && touched.email ? 'email-error' : undefined}
-          className={`min-h-tap w-full rounded-card border bg-surface px-4 py-2 text-ink placeholder:text-ink-muted/50 transition-colors focus:outline-none focus-visible:outline-3 focus-visible:outline-primary ${
+          className={`min-h-[44px] w-full rounded-[8px] border bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] ${
             errors.email && touched.email
-              ? 'border-danger focus-visible:outline-danger'
-              : 'border-line-input hover:border-ink-muted'
+              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
+              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
           }`}
         />
         {errors.email && touched.email && (
-          <p id="email-error" role="alert" className="mt-1 text-xs font-medium text-danger">
+          <p id="email-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.email}
           </p>
         )}
@@ -315,35 +314,35 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 4: Catatan (opsional) */}
       <div className="flex flex-col">
-        <label htmlFor="notes" className="font-sans text-sm font-medium text-ink mb-1.5">
-          Catatan <span className="text-xs font-normal text-ink-muted">(opsional)</span>
+        <label htmlFor="notes" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
+          Catatan <span className="text-xs font-normal text-[#4E644D]/70">(opsional)</span>
         </label>
         <textarea
           id="notes"
           name="notes"
-          rows={3}
+          rows={2}
           placeholder="Catatan tambahan untuk panitia (opsional)"
           value={values.notes}
           onChange={(e) => handleChange('notes', e.target.value)}
           onBlur={() => handleBlur('notes')}
           aria-invalid={Boolean(errors.notes && touched.notes)}
           aria-describedby={errors.notes && touched.notes ? 'notes-error' : undefined}
-          className={`w-full rounded-card border bg-surface p-3 text-ink placeholder:text-ink-muted/50 transition-colors focus:outline-none focus-visible:outline-3 focus-visible:outline-primary resize-y min-h-[5.5rem] ${
+          className={`w-full rounded-[8px] border bg-[#FFFFFF] p-3 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] resize-y min-h-[4.5rem] ${
             errors.notes && touched.notes
-              ? 'border-danger focus-visible:outline-danger'
-              : 'border-line-input hover:border-ink-muted'
+              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
+              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
           }`}
         />
         {errors.notes && touched.notes && (
-          <p id="notes-error" role="alert" className="mt-1 text-xs font-medium text-danger">
+          <p id="notes-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.notes}
           </p>
         )}
       </div>
 
       {/* Field 5: Checkbox Consent */}
-      <div className="flex flex-col mt-1">
-        <label className="flex items-start gap-3 cursor-pointer select-none group">
+      <div className="flex flex-col mt-0.5">
+        <label className="flex items-start gap-2.5 cursor-pointer select-none group">
           <input
             type="checkbox"
             name="consent"
@@ -352,36 +351,36 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
             onBlur={() => handleBlur('consent')}
             aria-invalid={Boolean(errors.consent && touched.consent)}
             aria-describedby={errors.consent && touched.consent ? 'consent-error' : undefined}
-            className="mt-1 h-5 w-5 rounded border border-line-input bg-surface accent-primary focus-visible:outline-3 focus-visible:outline-primary cursor-pointer"
+            className="mt-0.5 h-4 w-4 rounded-[4px] border-[#D6D1C2] text-[#4E644D] accent-[#4E644D] focus:ring-[#4E644D]/40 cursor-pointer"
           />
-          <span className="text-sm leading-snug text-ink">
+          <span className="text-xs leading-snug text-[#2E3B2E]">
             Saya setuju data saya digunakan untuk keperluan acara ini.{' '}
-            <span className="text-danger" aria-hidden="true">*</span>
+            <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
           </span>
         </label>
         {errors.consent && touched.consent && (
-          <p id="consent-error" role="alert" className="mt-1.5 text-xs font-medium text-danger">
+          <p id="consent-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
             {errors.consent}
           </p>
         )}
       </div>
 
-      {/* Form-level Error Banner (positioned above submit button per UX spec) */}
+      {/* Form-level Error Banner */}
       {formError && (
         <div
           role="alert"
           aria-live="polite"
-          className="rounded-card border border-danger/30 bg-danger/10 p-4 text-sm text-danger flex flex-col gap-1.5"
+          className="rounded-[8px] border border-[#9E2A2B]/30 bg-[#9E2A2B]/10 p-3.5 text-xs text-[#9E2A2B] flex flex-col gap-1.5"
         >
-          <p className="font-medium">{formError}</p>
+          <p className="font-semibold">{formError}</p>
           {contactWhatsapp && (
-            <p className="text-xs text-ink-muted">
+            <p className="text-[11px] text-[#243024]/70">
               Hubungi panitia via{' '}
               <a
                 href={`https://wa.me/${contactWhatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="underline hover:text-ink font-semibold text-primary"
+                className="underline font-bold text-[#4E644D]"
               >
                 WhatsApp Panitia
               </a>
@@ -390,17 +389,17 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         </div>
       )}
 
-      {/* Submit Button (Primary action button: bg-primary, text-on-primary, rounded-pill, min-h-tap, shadow-card) */}
-      <div className="mt-2">
+      {/* Submit Button: Pill-shaped RSVP button in secondary #4E644D */}
+      <div className="mt-3">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-tap w-full rounded-pill bg-primary px-8 font-display text-lg font-bold text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 flex items-center justify-center gap-2"
+          className="min-h-[48px] w-full rounded-full bg-[#4E644D] hover:bg-[#3E523D] active:translate-y-[1px] px-8 py-3.5 font-['Plus_Jakarta_Sans',sans-serif] text-sm sm:text-base font-bold tracking-[0.2em] text-white shadow-[0_4px_16px_rgba(78,100,77,0.28)] transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-60 cursor-pointer"
         >
           {isSubmitting ? (
             <>
               <svg
-                className="h-5 w-5 animate-spin text-on-primary"
+                className="h-5 w-5 animate-spin text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -420,12 +419,15 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
                   d="M4 12a8 8 0 018-8v8H4z"
                 />
               </svg>
-              <span>Membuat tiket...</span>
+              <span>Memproses...</span>
             </>
           ) : (
-            'Daftar & Buat Tiket'
+            'RSVP'
           )}
         </button>
+        <p className="mt-2 text-center text-[11px] text-[#4E644D]/75">
+          Tiket QR diterbitkan langsung setelah pendaftaran tersimpan.
+        </p>
       </div>
     </form>
   )

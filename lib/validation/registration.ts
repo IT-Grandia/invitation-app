@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+// Disable JIT evaluation probing (`new Function("")`) to comply with strict CSP in production
+// (missing 'unsafe-eval'). Prevents security policy violation reports in browser console.
+z.config({ jitless: true })
+
 import { isValidPhone } from '@/lib/phone'
 
 /**
