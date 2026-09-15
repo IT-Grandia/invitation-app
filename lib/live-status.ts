@@ -30,3 +30,19 @@ export function shouldPoll(
 
 /** The whole of the status endpoint's response. Nothing else is ever sent. */
 export type TicketStatusResponse = { checkedIn: boolean }
+
+/**
+ * Budgets for GET /api/ticket-status, per minute.
+ *
+ * The first key is the ticket itself: one ticket, one budget, so a hall full
+ * of phones behind one venue router (one public IP) never share a quota. A
+ * page asks 12 times a minute; the allowance leaves room for a second tab and
+ * the extra check on returning to the tab. The IP layer is only a ceiling
+ * against one client spraying made-up tokens, and is sized for every phone
+ * at the venue polling at once behind that single address.
+ */
+export const TICKET_STATUS_RATE_LIMIT = {
+  windowMs: 60_000,
+  perToken: 30,
+  perIp: 1_200,
+} as const

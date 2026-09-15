@@ -3,9 +3,16 @@ import { isWellFormedToken, renderTicketQr } from '@/lib/qr'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { ticketNumber } from '@/lib/token'
 
-/** docs/04-API-SPEC.md section 1: 60 requests per minute, keyed by IP hash. */
-const RATE_LIMIT = 60
+/**
+ * docs/04-API-SPEC.md section 1. Per ticket first: a page loads the image
+ * once and the save button fetches it once more, and browsers and the CDN
+ * cache it after that. Per client second, as a ceiling only — at the venue
+ * every phone shares the router's public IP, so this number has to cover a
+ * whole hall opening their tickets in the same minute.
+ */
 const RATE_WINDOW_MS = 60 * 1000
+const PER_TOKEN_LIMIT = 20
+const PER_IP_LIMIT = 600
 
 /**
  * GET /api/qr/[token] — the ticket QR as a PNG.
@@ -26,12 +33,14 @@ export async function GET(
     return new Response(null, { status: 404 })
   }
 
-  const limit = checkRateLimit(clientIpKey(request), RATE_LIMIT, RATE_WINDOW_MS)
+  const perToken = checkRateLimit(`qr:${token}`, PER_TOKEN_LIMIT, RATE_WINDOW_MS)
+  const perIp = checkRateLimit(clientIpKey(request, 'qr'), PER_IP_LIMIT, RATE_WINDOW_MS)
+  const refused = [perToken, perIp].find((result) => !result.success)
 
-  if (!limit.success) {
+  if (refused) {
     return new Response(null, {
       status: 429,
-      headers: { 'Retry-After': String(limit.retryAfterSeconds) },
+      headers: { 'Retry-After': String(refused.retryAfterSeconds) },
     })
   }
 

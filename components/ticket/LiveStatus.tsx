@@ -38,14 +38,22 @@ export function LiveStatus({ token, windowStart, windowEnd }: LiveStatusProps) {
     const pollWindow: PollingWindow = { start: new Date(windowStart), end: new Date(windowEnd) };
     let stopped = false;
     let inFlight = false;
+    // Set from a 429's Retry-After: no request until then. The budget is per
+    // ticket, so this only trips with the same ticket open in many tabs.
+    let pausedUntil = 0;
 
     async function check() {
-      if (stopped || inFlight) return;
+      if (stopped || inFlight || Date.now() < pausedUntil) return;
       if (!shouldPoll(pollWindow, new Date(), document.visibilityState)) return;
 
       inFlight = true;
       try {
         const response = await fetch(`/api/ticket-status/${token}`, { cache: "no-store" });
+        if (response.status === 429) {
+          const seconds = Number(response.headers.get("Retry-After")) || 30;
+          pausedUntil = Date.now() + seconds * 1000;
+          return;
+        }
         if (!response.ok) return;
 
         const body = (await response.json()) as TicketStatusResponse;

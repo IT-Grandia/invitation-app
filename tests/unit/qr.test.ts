@@ -104,11 +104,13 @@ describe('GET /api/qr/[token]', () => {
     expect(body.subarray(0, 8).equals(PNG_SIGNATURE)).toBe(true)
   })
 
-  it('rate limits the 61st request in a minute from one client', async () => {
+  // Budgets are per ticket first: at the venue every phone shares the
+  // router's public IP, so a per-client budget alone would starve the queue.
+  it('rate limits the 21st request for one ticket, but not another ticket from the same client', async () => {
     const ip = '198.51.100.77'
     const token = generateToken()
 
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 20; i++) {
       expect((await callRoute(token, ip)).status).toBe(200)
     }
 
@@ -116,5 +118,6 @@ describe('GET /api/qr/[token]', () => {
 
     expect(blocked.status).toBe(429)
     expect(Number(blocked.headers.get('retry-after'))).toBeGreaterThan(0)
+    expect((await callRoute(generateToken(), ip)).status).toBe(200)
   })
 })
