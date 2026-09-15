@@ -9,7 +9,6 @@ import { TicketNotice } from "@/components/ticket/TicketNotice";
 import { BrandHeader } from "@/components/ui/BrandHeader";
 import { getPublishedEvent } from "@/lib/db/queries/event";
 import { findRegistrationByToken } from "@/lib/db/queries/registrations";
-import { pollingWindow } from "@/lib/live-status";
 import { isWellFormedToken, ticketUrl } from "@/lib/qr";
 import { resolveTicketStatus } from "@/lib/ticket-status";
 import { ticketNumber } from "@/lib/token";
@@ -27,9 +26,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * One page for two moments — DESIGN.md section 6.3: the confirmation right
+ * One page for two moments — DESIGN.md section 5.3: the confirmation right
  * after registering (the form redirects here) and the ticket opened again at
- * the desk. After the scan it becomes the "Checked In" screen of section 6.4,
+ * the desk. After the scan it becomes the "Checked In" screen of section 5.4,
  * on its own if the page is open at the time (LiveStatus), otherwise the next
  * time it is opened.
  *
@@ -94,11 +93,7 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
               eventName={event.name}
             />
 
-            <LiveStatus
-              token={registration.token}
-              windowStart={pollingWindow(event).start.toISOString()}
-              windowEnd={pollingWindow(event).end.toISOString()}
-            />
+            <LiveStatus token={registration.token} />
           </>
         )}
 
