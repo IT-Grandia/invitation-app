@@ -2,7 +2,10 @@
 
 import type { ReactNode } from 'react'
 
+import { BrandHeader } from '@/components/ui/BrandHeader'
+import { CheckMark } from '@/components/ui/CheckMark'
 import { formatWibTime } from '@/lib/datetime'
+import { COMMUNITY_LABELS, parseCommunity } from '@/lib/validation/survey'
 
 import type { Preview, PreviewStatus, Stats } from './types'
 
@@ -10,7 +13,14 @@ export type OverlayState =
   | { kind: 'lookup' }
   | { kind: 'preview'; preview: Preview; offlineSince?: string }
   | { kind: 'committing'; preview: Preview }
-  | { kind: 'done'; fullName: string; stats: Stats; queued?: boolean }
+  | {
+      kind: 'done'
+      fullName: string
+      community: string | null
+      checkedInAt: string
+      stats: Stats
+      queued?: boolean
+    }
   | { kind: 'failure'; message: string }
   | { kind: 'logout'; pending: number }
 
@@ -24,18 +34,12 @@ type Props = {
 
 type Refusal = Exclude<PreviewStatus, 'ready' | 'already_used'>
 
-const TONE: Record<PreviewStatus, string> = {
-  ready: 'bg-success',
-  already_used: 'bg-warning',
-  cancelled: 'bg-danger',
-  not_found: 'bg-danger',
-  wrong_event: 'bg-danger',
-}
-
+// English for the lines the participant reads across the desk, Indonesian for
+// the lines meant for the officer holding the phone (DESIGN.md section 5.4).
 const REFUSAL_TITLE: Record<Refusal, string> = {
-  not_found: 'QR tidak dikenali',
-  cancelled: 'Pendaftaran dibatalkan',
-  wrong_event: 'Tiket untuk acara lain',
+  not_found: 'Not found',
+  cancelled: 'Cancelled',
+  wrong_event: 'Wrong event',
 }
 
 const REFUSAL_ADVICE: Record<Refusal, string> = {
@@ -47,62 +51,86 @@ const REFUSAL_ADVICE: Record<Refusal, string> = {
 const OFFLINE_NOT_FOUND =
   'Tidak ada di daftar yang tersimpan di HP. Kalau peserta yakin terdaftar, tunggu sinyal lalu scan ulang, atau hubungi koordinator.'
 
-const NAME = 'font-display text-5xl leading-tight break-words'
-const TICKET = 'mt-2 font-mono text-lg tracking-widest'
-const PRIMARY =
-  'min-h-14 w-full max-w-sm rounded-pill bg-canvas px-6 text-lg font-semibold text-ink disabled:opacity-70'
-const SECONDARY =
-  'min-h-14 w-full max-w-sm rounded-pill border-2 border-canvas px-6 text-lg font-semibold text-canvas disabled:opacity-50'
+const BUTTON =
+  'min-h-tap inline-flex w-full max-w-sm items-center justify-center rounded-pill px-8 font-display text-lg font-semibold tracking-[0.06em] md:min-h-14 md:text-xl'
+const PRIMARY = `${BUTTON} bg-primary text-on-primary shadow-card disabled:opacity-60`
+const SECONDARY = `${BUTTON} border border-line-input text-ink disabled:opacity-50`
+
+const SCREEN_LABEL =
+  'font-display text-sm font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-base'
+const HEADLINE = 'font-display text-3xl font-semibold'
+const NAME = 'font-display text-xl font-semibold text-balance md:text-2xl'
+const TICKET = 'font-mono text-sm tracking-widest tabular-nums'
+const TIME = 'font-mono text-sm tabular-nums'
 
 function refusalOf(status: PreviewStatus): Refusal {
   return status === 'ready' || status === 'already_used' ? 'not_found' : status
 }
 
-function Icon({ children }: { children: ReactNode }) {
+function communityLabel(community: string | null): string | null {
+  const code = parseCommunity(community)
+
+  return code ? COMMUNITY_LABELS[code] : null
+}
+
+/** The warning and danger counterparts of CheckMark, same size and weight. */
+function StatusMark({ tone, glyph }: { tone: 'warning' | 'danger'; glyph: string }) {
   return (
-    <span aria-hidden="true" className="text-7xl leading-none font-bold">
-      {children}
+    <span
+      aria-hidden="true"
+      className={`flex h-32 w-32 items-center justify-center rounded-pill font-display text-6xl font-semibold text-canvas ${
+        tone === 'warning' ? 'bg-warning' : 'bg-danger'
+      }`}
+    >
+      {glyph}
     </span>
   )
 }
 
 function OfflineNote({ since }: { since: string }) {
   return (
-    <p className="rounded-pill border border-canvas px-4 py-1 text-sm font-semibold">
+    <p className="rounded-pill border border-line-input px-4 py-1 text-sm text-ink-muted">
       Mode offline · data per {formatWibTime(since)}
     </p>
   )
 }
 
 function Shell({
-  tone,
-  onEscape,
   children,
+  onEscape,
+  live,
 }: {
-  tone: string
-  onEscape?: () => void
   children: ReactNode
+  onEscape?: () => void
+  live?: boolean
 }) {
+  const role = live
+    ? { role: 'status' as const }
+    : {
+        role: 'alertdialog' as const,
+        'aria-modal': true,
+        'aria-labelledby': 'overlay-title',
+        'aria-describedby': 'overlay-detail',
+      }
+
   return (
     <div
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="overlay-title"
-      aria-describedby="overlay-detail"
+      {...role}
       onKeyDown={(event) => {
         if (event.key === 'Escape' && onEscape) {
           onEscape()
         }
       }}
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-y-auto p-6 text-center text-canvas ${tone}`}
+      className="paper-stripes fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 overflow-y-auto bg-canvas p-6 text-center text-ink"
     >
+      <BrandHeader className="w-full max-w-sm" />
       {children}
     </div>
   )
 }
 
 /**
- * Colour is never the only signal: every state also carries its own icon and
+ * Colour is never the only signal: every state also carries its own mark and
  * headline, so the result reads the same in harsh sunlight or to an officer who
  * cannot tell the tones apart. Focus lands on the least consequential action,
  * because neither a confirmed check-in nor a logout that discards unsent
@@ -121,36 +149,41 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
   }
 
   if (state.kind === 'done') {
+    const community = communityLabel(state.community)
+
     return (
-      <div
-        role="status"
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-success p-6 text-center text-canvas"
-      >
-        <Icon>{state.queued ? '✓' : '✓✓'}</Icon>
-        <p className="font-display text-4xl tracking-wide uppercase">
-          {state.queued ? 'Tersimpan' : 'Tercatat'}
-        </p>
-        <p className="text-3xl font-semibold break-words">{state.fullName}</p>
-        <p className="max-w-sm text-lg">
+      <Shell live>
+        <p className={SCREEN_LABEL}>Check-in</p>
+        <CheckMark className="h-32 w-32 text-primary" />
+        <div>
+          <h2 className={`${HEADLINE} text-primary`}>Checked In</h2>
+          <p className="mt-1 font-display text-lg text-ink-muted italic md:text-xl">Welcome!</p>
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <p className={NAME}>{state.fullName}</p>
+          {community && <p className="text-ink-muted">{community}</p>}
+          <p className={TIME}>{formatWibTime(state.checkedInAt)} WIB</p>
+        </div>
+        <p className="text-sm text-ink-muted">
           {state.queued
             ? 'Tersimpan di HP ini, dikirim otomatis saat sinyal kembali.'
             : `Hadir: ${state.stats.checkedIn} / ${state.stats.total}`}
         </p>
-        <button type="button" onClick={onDismiss} className={SECONDARY}>
+        <button type="button" onClick={onDismiss} className={PRIMARY}>
           Lanjut Scan
         </button>
-      </div>
+      </Shell>
     )
   }
 
   if (state.kind === 'failure') {
     return (
-      <Shell tone="bg-danger" onEscape={onDismiss}>
-        <Icon>✕</Icon>
-        <p id="overlay-title" className="font-display text-4xl leading-tight">
+      <Shell onEscape={onDismiss}>
+        <StatusMark tone="danger" glyph="✕" />
+        <h2 id="overlay-title" className={`${HEADLINE} text-danger`}>
           Ada gangguan
-        </p>
-        <p id="overlay-detail" className="max-w-sm text-lg">
+        </h2>
+        <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
           {state.message}
         </p>
         <button type="button" onClick={onDismiss} autoFocus className={SECONDARY}>
@@ -163,12 +196,12 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
   if (state.kind === 'logout') {
     if (state.pending > 0) {
       return (
-        <Shell tone="bg-danger" onEscape={onDismiss}>
-          <Icon>!</Icon>
-          <p id="overlay-title" className="font-display text-4xl leading-tight">
+        <Shell onEscape={onDismiss}>
+          <StatusMark tone="danger" glyph="!" />
+          <h2 id="overlay-title" className={`${HEADLINE} text-danger`}>
             {state.pending} check-in belum terkirim
-          </p>
-          <p id="overlay-detail" className="max-w-sm text-lg">
+          </h2>
+          <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
             Kalau keluar sekarang, data itu ikut terhapus dan peserta tersebut tidak akan pernah
             tercatat.
           </p>
@@ -188,11 +221,11 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
     }
 
     return (
-      <Shell tone="bg-warning" onEscape={onDismiss}>
-        <p id="overlay-title" className="font-display text-4xl leading-tight">
+      <Shell onEscape={onDismiss}>
+        <h2 id="overlay-title" className={HEADLINE}>
           Keluar dari scanner?
-        </p>
-        <p id="overlay-detail" className="max-w-sm text-lg">
+        </h2>
+        <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
           Kode petugas dan daftar peserta akan dihapus dari HP ini. Untuk masuk lagi, buka link dari
           koordinator.
         </p>
@@ -215,16 +248,18 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
 
   if (preview.status === 'ready' && person) {
     return (
-      <Shell tone={TONE.ready} onEscape={committing ? undefined : onDismiss}>
+      <Shell onEscape={committing ? undefined : onDismiss}>
         {offlineSince && <OfflineNote since={offlineSince} />}
-        <Icon>✓</Icon>
-        <div>
+        <div className="flex flex-col gap-0.5">
           <p id="overlay-title" className={NAME}>
             {person.fullName}
           </p>
-          <p className={TICKET}>{person.ticketNumber}</p>
+          {communityLabel(person.community) && (
+            <p className="text-ink-muted">{communityLabel(person.community)}</p>
+          )}
+          <p className={`${TICKET} text-ink-muted`}>{person.ticketNumber}</p>
         </div>
-        <p id="overlay-detail" className="max-w-sm text-lg">
+        <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
           {offlineSince ? 'Belum check-in menurut data di HP.' : 'Belum check-in.'} Cocokkan nama
           dengan orang di depanmu.
         </p>
@@ -254,23 +289,24 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
 
   if (preview.status === 'already_used' && person) {
     return (
-      <Shell tone={TONE.already_used} onEscape={onDismiss}>
+      <Shell onEscape={onDismiss}>
         {offlineSince && <OfflineNote since={offlineSince} />}
-        <Icon>!</Icon>
-        <div>
-          <p id="overlay-title" className={NAME}>
-            {person.fullName}
-          </p>
-          <p className={TICKET}>{person.ticketNumber}</p>
+        <StatusMark tone="warning" glyph="!" />
+        <h2 id="overlay-title" className={`${HEADLINE} text-warning`}>
+          Already used
+        </h2>
+        <div className="flex flex-col gap-0.5">
+          <p className={NAME}>{person.fullName}</p>
+          {communityLabel(person.community) && (
+            <p className="text-ink-muted">{communityLabel(person.community)}</p>
+          )}
+          {person.checkedInAt && <p className={TIME}>{formatWibTime(person.checkedInAt)} WIB</p>}
         </div>
-        <div id="overlay-detail" className="text-lg">
-          <p className="font-semibold">
-            {person.checkedInAt
-              ? `Sudah check-in pukul ${formatWibTime(person.checkedInAt)}`
-              : 'Sudah check-in'}
-          </p>
-          {person.checkedInBy && <p>oleh {person.checkedInBy}</p>}
-        </div>
+        <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
+          {person.checkedInBy
+            ? `Sudah check-in oleh ${person.checkedInBy}. Panggil koordinator kalau peserta merasa belum masuk.`
+            : 'Sudah check-in. Panggil koordinator kalau peserta merasa belum masuk.'}
+        </p>
         <button type="button" onClick={onDismiss} autoFocus className={SECONDARY}>
           Kembali
         </button>
@@ -281,14 +317,14 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
   const refusal = refusalOf(preview.status)
 
   return (
-    <Shell tone={TONE[refusal]} onEscape={onDismiss}>
+    <Shell onEscape={onDismiss}>
       {offlineSince && <OfflineNote since={offlineSince} />}
-      <Icon>✕</Icon>
-      <p id="overlay-title" className="font-display text-4xl leading-tight">
+      <StatusMark tone="danger" glyph="✕" />
+      <h2 id="overlay-title" className={`${HEADLINE} text-danger`}>
         {REFUSAL_TITLE[refusal]}
-      </p>
-      {person && <p className="text-2xl font-semibold break-words">{person.fullName}</p>}
-      <p id="overlay-detail" className="max-w-sm text-lg">
+      </h2>
+      {person && <p className={NAME}>{person.fullName}</p>}
+      <p id="overlay-detail" className="max-w-sm text-ink-muted text-pretty">
         {offlineSince && refusal === 'not_found' ? OFFLINE_NOT_FOUND : REFUSAL_ADVICE[refusal]}
       </p>
       <button type="button" onClick={onDismiss} autoFocus className={SECONDARY}>

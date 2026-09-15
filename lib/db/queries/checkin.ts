@@ -13,6 +13,7 @@ export type RegistrationSummary = {
   ticketNumber: string
   fullName: string
   status: string
+  community: string | null
   checkedInAt: string | null
   checkedInBy: string | null
 }
@@ -44,6 +45,7 @@ function summarise(row: Registration): RegistrationSummary {
     ticketNumber: ticketNumber(row.token),
     fullName: row.fullName,
     status: row.status,
+    community: row.community,
     checkedInAt: row.checkedInAt?.toISOString() ?? null,
     checkedInBy: row.checkedInBy,
   }
@@ -205,6 +207,7 @@ export async function getManifest(eventId: string): Promise<ManifestEntry[]> {
       token: registrations.token,
       fullName: registrations.fullName,
       checkedInAt: registrations.checkedInAt,
+      community: registrations.community,
     })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.status, 'confirmed')))
@@ -214,6 +217,7 @@ export async function getManifest(eventId: string): Promise<ManifestEntry[]> {
     t: row.token,
     n: row.fullName,
     c: row.checkedInAt?.toISOString() ?? null,
+    g: row.community,
   }))
 }
 

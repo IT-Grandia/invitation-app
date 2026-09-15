@@ -488,7 +488,14 @@ export function Scanner() {
 
       setManifest((current) => (current ? markCheckedIn(current, token, clientScannedAt) : current))
       setSession((current) => (current ? { ...current, stats } : current))
-      setOverlay({ kind: 'done', fullName: person.fullName, stats, queued: true })
+      setOverlay({
+        kind: 'done',
+        fullName: person.fullName,
+        community: person.community,
+        checkedInAt: clientScannedAt,
+        stats,
+        queued: true,
+      })
       scheduleDismiss(QUEUED_DISMISS_MS)
     },
     [enqueueCheckIn, scheduleDismiss, session],
@@ -555,7 +562,13 @@ export function Scanner() {
       setManifest((current) =>
         current && recorded ? markCheckedIn(current, recorded, body.registration.checkedInAt) : current,
       )
-      setOverlay({ kind: 'done', fullName: body.registration.fullName, stats })
+      setOverlay({
+        kind: 'done',
+        fullName: body.registration.fullName,
+        community: body.registration.community ?? null,
+        checkedInAt: body.registration.checkedInAt,
+        stats,
+      })
       scheduleDismiss(DONE_DISMISS_MS)
       return
     }

@@ -6,6 +6,7 @@ export type ManifestEntry = {
   t: string // token
   n: string // full name
   c: string | null // check-in time, null until the participant arrives
+  g?: string | null // community code, shown on the check-in screen
 }
 
 export type Manifest = {
