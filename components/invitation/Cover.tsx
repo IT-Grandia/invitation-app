@@ -1,5 +1,6 @@
 import { BrandHeader } from "@/components/ui/BrandHeader";
 import { PadelCourt } from "@/components/ui/PadelMarks";
+import { VenueMark } from "@/components/ui/VenueMark";
 import { BRAND } from "@/lib/brand";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
 import { SupportedBy } from "./SupportedBy";
@@ -25,6 +26,7 @@ type CoverProps = {
   /** `16:00–20:00 WIB` */
   timeLabel: string;
   venueName: string;
+  venueMapUrl: string | null;
   action: CoverActionProps;
 };
 
@@ -35,7 +37,7 @@ function rise(step: number) {
   return { animationDelay: `${step * 80}ms` };
 }
 
-export function Cover({ dateLabel, timeLabel, venueName, action }: CoverProps) {
+export function Cover({ dateLabel, timeLabel, venueName, venueMapUrl, action }: CoverProps) {
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
       {/* my-auto, not justify-center: auto margins centre the card on a tall
@@ -66,7 +68,7 @@ export function Cover({ dateLabel, timeLabel, venueName, action }: CoverProps) {
         <div className="animate-rise mt-5 flex flex-col gap-0.5" style={rise(4)}>
           <p className="font-display text-lg font-semibold md:text-xl">{dateLabel}</p>
           <p className="font-mono text-sm tabular-nums md:text-base">{timeLabel}</p>
-          <p className="text-ink-muted md:text-lg">{venueName}</p>
+          <VenueMark venueName={venueName} mapUrl={venueMapUrl} className="mt-1" />
         </div>
 
         <div className="animate-rise mt-5" style={rise(5)}>

@@ -11,7 +11,7 @@ import { BRAND } from "@/lib/brand";
 export function SupportedBy() {
   return (
     <div className="flex flex-col items-center gap-2">
-      <p className="font-display text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase">
+      <p className="font-display text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm">
         {BRAND.supportedByLabel}
       </p>
       <ul className="flex flex-wrap items-center justify-center gap-y-1">

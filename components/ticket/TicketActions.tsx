@@ -44,7 +44,7 @@ export function TicketActions({
         href={`https://wa.me/?text=${encodeURIComponent(whatsappText)}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="min-h-tap flex items-center justify-center rounded-pill border border-line-input px-6 font-display text-lg font-semibold tracking-[0.06em] text-ink"
+        className="min-h-tap flex items-center justify-center rounded-pill border border-line-input px-6 font-display text-lg font-semibold tracking-[0.06em] text-ink md:min-h-14 md:text-xl"
       >
         Send Link to WhatsApp
       </a>
