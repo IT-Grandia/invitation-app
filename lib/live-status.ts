@@ -1,31 +1,20 @@
 /**
  * When the ticket page may ask the server whether it has been scanned —
- * DESIGN.md section 9, PR 3. Kept free of React and of the browser so the
- * rules can be unit-tested; components/ticket/LiveStatus.tsx applies them.
+ * DESIGN.md section 5.3. Kept free of React and of the browser so the rules
+ * can be unit-tested; components/ticket/LiveStatus.tsx applies them.
  *
- * The page only polls while a scan is plausible: from an hour before the
- * event starts until it ends, and only while the tab is actually on screen.
- * Outside that, a participant who opened the ticket days early costs the
- * server nothing.
+ * The page polls whenever it is actually on screen and the ticket is still
+ * live. There is deliberately no "only around the event" window: a window
+ * derived from the event's dates would stop the feature silently if the
+ * committee's date were wrong or the desk opened early, and the saving is
+ * negligible for an event of this size — a phone that is locked or switched
+ * away is hidden, and a hidden page never polls.
  */
 
 export const POLL_INTERVAL_MS = 5_000
 
-/** How long before the event starts the desk is assumed to be open. */
-export const POLL_LEAD_MS = 60 * 60 * 1000
-
-export type PollingWindow = { start: Date; end: Date }
-
-export function pollingWindow(event: { startsAt: Date; endsAt: Date }): PollingWindow {
-  return { start: new Date(event.startsAt.getTime() - POLL_LEAD_MS), end: event.endsAt }
-}
-
-export function shouldPoll(
-  window: PollingWindow,
-  now: Date,
-  visibility: DocumentVisibilityState,
-): boolean {
-  return visibility === 'visible' && now >= window.start && now <= window.end
+export function shouldPoll(visibility: DocumentVisibilityState): boolean {
+  return visibility === 'visible'
 }
 
 /** The whole of the status endpoint's response. Nothing else is ever sent. */
