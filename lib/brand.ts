@@ -29,6 +29,25 @@ const SPONSORS: readonly Sponsor[] = [
   { name: "Padel79" },
 ];
 
+/**
+ * The venue's own mark, supplied by the organiser. Shown in place of the
+ * venue name wherever the event in the database is held at this venue — the
+ * name is still the source of truth, so a change of venue falls back to text
+ * on its own rather than showing the wrong logo. Trimmed to the artwork:
+ * 443 × 118, served through next/image.
+ */
+export const VENUE_LOGO = {
+  name: "Padel Ground",
+  src: "/brand/padel-ground.png",
+  width: 443,
+  height: 118,
+} as const;
+
+/** The logo for a venue name, or null when no logo matches it. */
+export function venueLogoFor(venueName: string): typeof VENUE_LOGO | null {
+  return venueName.trim().toLowerCase() === VENUE_LOGO.name.toLowerCase() ? VENUE_LOGO : null;
+}
+
 export const BRAND = {
   /** `Grandia × Folkafe` — the multiplication sign, not the letter x. */
   lockup: PARTNERS.join(" × "),
