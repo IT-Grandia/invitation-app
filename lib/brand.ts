@@ -43,9 +43,22 @@ export const VENUE_LOGO = {
   height: 118,
 } as const;
 
-/** The logo for a venue name, or null when no logo matches it. */
+/**
+ * The logo for a venue name, or null when no logo matches it.
+ *
+ * The committee writes the venue as they like — "Padel Ground", "Padel
+ * Ground, Semarang", "PADEL GROUND (Siranda)" — so the match is on the
+ * leading words up to a separator, not the whole string. "Padel Grounds"
+ * or "Old Padel Ground" would still be a different place and get no logo.
+ */
 export function venueLogoFor(venueName: string): typeof VENUE_LOGO | null {
-  return venueName.trim().toLowerCase() === VENUE_LOGO.name.toLowerCase() ? VENUE_LOGO : null;
+  const name = venueName.trim().toLowerCase().replace(/\s+/g, " ");
+  const logoName = VENUE_LOGO.name.toLowerCase();
+
+  if (!name.startsWith(logoName)) return null;
+
+  const rest = name.slice(logoName.length);
+  return rest === "" || /^[\s,.\-–—(/|]/.test(rest) ? VENUE_LOGO : null;
 }
 
 export const BRAND = {
