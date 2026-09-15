@@ -8,6 +8,7 @@ export type OfflinePreview = {
   registration: {
     ticketNumber: string
     fullName: string
+    community: string | null
     checkedInAt: string | null
     checkedInBy: string | null
   } | null
@@ -36,6 +37,7 @@ export function previewFromManifest(manifest: Manifest, rawToken: string): Offli
   const registration = {
     ticketNumber: ticketNumber(entry.t),
     fullName: entry.n,
+    community: entry.g ?? null,
     checkedInAt: entry.c,
     checkedInBy: null,
   }
@@ -70,6 +72,7 @@ export function previewFromQueue(
     registration: {
       ticketNumber: ticketNumber(token),
       fullName: entry?.n ?? ticketNumber(token),
+      community: entry?.g ?? null,
       checkedInAt: queued.clientScannedAt,
       checkedInBy: pendingLabel,
     },

@@ -25,7 +25,8 @@ const manifest: Manifest = {
   updatedAt: '2026-09-26T00:00:00.000Z',
   total: 3,
   entries: [
-    { t: A, n: 'Budi Santoso', c: null },
+    { t: A, n: 'Budi Santoso', c: null, g: 'club_79' },
+    // No community: an entry cached before the column existed.
     { t: B, n: 'Siti Aminah', c: null },
     { t: C, n: 'Andi Wijaya', c: '2026-09-26T01:05:00.000Z' },
   ],
@@ -44,10 +45,15 @@ describe('previewFromManifest', () => {
       registration: {
         ticketNumber: 'SEEDA000',
         fullName: 'Budi Santoso',
+        community: 'club_79',
         checkedInAt: null,
         checkedInBy: null,
       },
     })
+  })
+
+  it('leaves the community empty for a list cached before it existed', () => {
+    expect(previewFromManifest(manifest, B).registration?.community).toBeNull()
   })
 
   it('reports a used ticket with the time it was used', () => {
@@ -87,6 +93,7 @@ describe('previewFromQueue', () => {
         registration: {
           ticketNumber: 'SEEDA000',
           fullName: 'Budi Santoso',
+          community: 'club_79',
           checkedInAt: '2026-09-26T01:10:00.000Z',
           checkedInBy: 'HP ini',
         },

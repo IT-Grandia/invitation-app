@@ -3,6 +3,7 @@ export type PreviewStatus = 'ready' | 'already_used' | 'not_found' | 'cancelled'
 export type TicketSummary = {
   ticketNumber: string
   fullName: string
+  community: string | null
   checkedInAt: string | null
   checkedInBy: string | null
 }

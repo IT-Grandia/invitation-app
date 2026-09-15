@@ -41,9 +41,9 @@ async function main() {
       .insert(events)
       .values({
         slug: 'padel-day-2026',
-        name: 'Padel Day 2026',
+        name: 'FA Live Padel Society',
         description: 'Fun match padel terbuka untuk semua level.',
-        venueName: 'TBA',
+        venueName: 'Folkafe Siranda, Semarang',
         venueAddress: 'TBA',
         startsAt: new Date('2026-09-26T01:00:00.000Z'),
         endsAt: new Date('2026-09-26T10:00:00.000Z'),
