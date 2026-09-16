@@ -90,6 +90,7 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
               ticketNumber={number}
               ticketUrl={ticketUrl(registration.token)}
               fullName={registration.fullName}
+              phone={registration.phone}
               eventName={event.name}
             />
 
