@@ -43,13 +43,18 @@ const COPY: Record<
 export function TicketNotice({ kind, contactWhatsapp }: TicketNoticeProps) {
   const copy = COPY[kind];
 
+  // The row needs a number. Without one the sentence must not promise a
+  // WhatsApp chat it cannot offer — the committee fills events.contact_whatsapp.
+  const number = copy.contact ? contactWhatsapp?.replace(/\D/g, "") || null : null;
+  const body = number ? copy.body : copy.body.replace(" on WhatsApp", "");
+
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <h1 className={`rounded-card px-5 py-4 font-display text-xl font-semibold text-balance ${copy.className}`}>
         {copy.headline}
       </h1>
-      <p className="text-ink-muted text-pretty">{copy.body}</p>
-      {copy.contact && contactWhatsapp && <WhatsAppContact number={contactWhatsapp} />}
+      <p className="text-ink-muted text-pretty">{body}</p>
+      {number && <WhatsAppContact number={number} />}
     </div>
   );
 }
@@ -60,12 +65,11 @@ export function TicketNotice({ kind, contactWhatsapp }: TicketNoticeProps) {
  * in the local form they recognise (0812-3456-789).
  */
 function WhatsAppContact({ number }: { number: string }) {
-  const digits = number.replace(/\D/g, "");
-  const shown = formatPhoneForDisplay(digits);
+  const shown = formatPhoneForDisplay(number);
 
   return (
     <a
-      href={`https://wa.me/${digits}`}
+      href={`https://wa.me/${number}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label={`Chat the organiser on WhatsApp, ${shown}`}
