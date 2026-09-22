@@ -30,7 +30,9 @@ type CoverProps = {
   action: CoverActionProps;
 };
 
-// Seven elements rise in turn — DESIGN.md section 4.8. Under
+// Six elements rise in turn beneath the header — DESIGN.md section 4.8. The
+// header is step 0 and stays still: when everything starts transparent,
+// Chrome often records no first contentful paint for the page at all. Under
 // prefers-reduced-motion the base layer collapses the durations and each
 // element simply lands in place.
 function rise(step: number) {
@@ -43,9 +45,7 @@ export function Cover({ dateLabel, timeLabel, venueName, venueMapUrl, action }: 
       {/* my-auto, not justify-center: auto margins centre the card on a tall
           screen but never push its top out of reach on a short one. */}
       <article className="my-auto w-full max-w-[26.25rem] rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10 md:py-10">
-        <div className="animate-rise" style={rise(0)}>
-          <BrandHeader />
-        </div>
+        <BrandHeader />
 
         {/* Not text-hero: the headline is a full sentence in capitals. At
             this size it sits on two lines at 360px; at hero size it would take
