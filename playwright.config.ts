@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { E2E_STAFF_KEY } from './tests/e2e/staff'
+
 const PORT = 3100
 const baseURL = `http://localhost:${PORT}`
 
@@ -27,6 +29,8 @@ export default defineConfig({
       GOOGLE_SHEET_ID: '',
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: '',
       TURNSTILE_SECRET_KEY: '',
+      // The scanner specs sign in with this, never with the real code.
+      STAFF_KEY: E2E_STAFF_KEY,
     },
   },
 })
