@@ -61,13 +61,13 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
 
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
-      <article className="my-auto flex w-full max-w-[26.25rem] flex-col gap-6 rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10">
+      <article className="my-auto flex w-full max-w-[26.25rem] flex-col gap-6 rounded-card border border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10">
         <BrandHeader />
 
         {status.kind === "registered" && (
           <>
             <div>
-              <h1 className="font-display text-2xl text-primary italic md:text-3xl">
+              <h1 className="font-display text-2xl font-bold text-balance text-primary md:text-3xl">
                 Thank you for your registration
               </h1>
               <p className="mt-2 text-ink-muted">

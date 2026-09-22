@@ -52,16 +52,16 @@ const OFFLINE_NOT_FOUND =
   'Tidak ada di daftar yang tersimpan di HP. Kalau peserta yakin terdaftar, tunggu sinyal lalu scan ulang, atau hubungi koordinator.'
 
 const BUTTON =
-  'min-h-tap inline-flex w-full max-w-sm items-center justify-center rounded-pill px-8 font-display text-lg font-semibold tracking-[0.06em] md:min-h-14 md:text-xl'
+  'min-h-tap inline-flex w-full max-w-sm items-center justify-center rounded-pill px-8 font-sans text-base font-semibold py-2 text-center leading-tight tracking-[0.1em] text-balance uppercase md:min-h-14 md:text-lg'
 const PRIMARY = `${BUTTON} bg-primary text-on-primary shadow-card disabled:opacity-60`
 const SECONDARY = `${BUTTON} border border-line-input text-ink disabled:opacity-50`
 
 const SCREEN_LABEL =
-  'font-display text-sm font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-base'
-const HEADLINE = 'font-display text-3xl font-semibold'
-const NAME = 'font-display text-xl font-semibold text-balance md:text-2xl'
+  'font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm'
+const HEADLINE = 'font-display text-3xl font-bold md:text-4xl'
+const NAME = 'font-display text-xl font-bold text-balance md:text-2xl'
 const TICKET = 'font-mono text-sm tracking-widest tabular-nums'
-const TIME = 'font-mono text-sm tabular-nums'
+const TIME = 'font-sans text-sm tabular-nums'
 
 function refusalOf(status: PreviewStatus): Refusal {
   return status === 'ready' || status === 'already_used' ? 'not_found' : status
@@ -78,7 +78,7 @@ function StatusMark({ tone, glyph }: { tone: 'warning' | 'danger'; glyph: string
   return (
     <span
       aria-hidden="true"
-      className={`flex h-32 w-32 items-center justify-center rounded-pill font-display text-6xl font-semibold text-canvas ${
+      className={`flex h-32 w-32 items-center justify-center rounded-pill font-display text-6xl font-bold text-canvas ${
         tone === 'warning' ? 'bg-warning' : 'bg-danger'
       }`}
     >
@@ -157,7 +157,7 @@ export function ResultOverlay({ state, onConfirm, onDismiss, onLogout, onSyncNow
         <CheckMark className="h-32 w-32 text-primary" />
         <div>
           <h2 className={`${HEADLINE} text-primary`}>Checked In</h2>
-          <p className="mt-1 font-display text-lg text-ink-muted italic md:text-xl">Welcome!</p>
+          <p className="mt-1 font-sans text-lg tracking-[0.04em] text-ink-muted md:text-xl">Welcome!</p>
         </div>
         <div className="flex flex-col gap-0.5">
           <p className={NAME}>{state.fullName}</p>

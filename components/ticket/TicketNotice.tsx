@@ -33,8 +33,8 @@ const COPY: Record<
     className: "bg-danger text-white",
   },
   not_attending: {
-    headline: "You have not confirmed your attendance",
-    body: "Contact the organiser on WhatsApp to change your answer.",
+    headline: "Thank you for letting us know",
+    body: "You told us you cannot attend. If your plans change, contact the organiser on WhatsApp.",
     contact: true,
     className: "bg-surface-2 text-ink",
   },
@@ -50,7 +50,7 @@ export function TicketNotice({ kind, contactWhatsapp }: TicketNoticeProps) {
 
   return (
     <div className="flex flex-col items-center gap-4 text-center">
-      <h1 className={`rounded-card px-5 py-4 font-display text-xl font-semibold text-balance ${copy.className}`}>
+      <h1 className={`rounded-card px-5 py-4 font-display text-xl font-bold text-balance ${copy.className}`}>
         {copy.headline}
       </h1>
       <p className="text-ink-muted text-pretty">{body}</p>

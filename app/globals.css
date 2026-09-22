@@ -9,55 +9,58 @@
    Tailwind v4 has no tailwind.config.ts — theme configuration lives here, in
    the @theme block below. See docs/adr/0007-next-16-tailwind-v4.md.
 
-   The palette is the classic-editorial direction from DESIGN.md v2: warm
-   cream paper with a dark forest green, taken from the organiser's mockup.
-   Token names are unchanged from v1 — only the values moved — so every page
-   that uses the vocabulary picked up the new look without editing.
+   The palette is taken from the organiser's flyer (DESIGN.md v4): the cream
+   ribbed wall, the olive green of the title, the warm black of the labels and
+   the tennis-ball yellow-green. Token names are unchanged from v1 — only the
+   values moved — so every page that uses the vocabulary picks up the new look
+   without editing.
 
    Every pair below is verified against WCAG 2.1 AA — 4.5:1 for text, 3:1 for
    input boundaries (1.4.11). The measured ratios are recorded in DESIGN.md
-   section 1; re-run the check after any colour change.
+   section 2.1; re-run the check after any colour change.
    ============================================================================ */
 
 :root {
   color-scheme: light;
 
-  /* ── Surfaces — cream paper ─────────────────────────────────────────── */
-  --canvas: #f3efe4;
-  --surface: #faf8f2;
-  --surface-2: #e9e3d3;
+  /* ── Surfaces — the flyer's cream wall ──────────────────────────────── */
+  /* Close enough to the flyer's own background that the flyer sits on the
+     page without a visible edge. */
+  --canvas: #f4eee0;
+  --surface: #fbf8f0;
+  --surface-2: #e9e2d0;
 
-  --line: #d6cfbc;
+  --line: #dbd2bd;
   /* Form controls need their own, stronger line: WCAG 1.4.11 asks 3:1 for a
      control boundary, which a decorative divider is not required to meet.
-     3.29:1 on the page, 3.56:1 on a card. */
-  --line-input: #8a836f;
+     3.54:1 on the page, 3.85:1 on a card. */
+  --line-input: #857d69;
 
-  /* ── Text — green-black ink ─────────────────────────────────────────── */
-  --ink: #1e2a22;
-  --ink-muted: #4e5a50;
+  /* ── Text — the flyer's warm black ──────────────────────────────────── */
+  --ink: #26231e;
+  --ink-muted: #57524a;
 
-  /* ── Action — forest green ──────────────────────────────────────────── */
-  --primary: #2f5233;
+  /* ── Action — the olive green of the flyer's title ──────────────────── */
+  --primary: #2f4027;
   --on-primary: #ffffff;
-  /* Muted gold. Background only, for the waiting-list chip: as text on a
-     light canvas it fails AA. */
-  --accent: #d9b64a;
-  --on-accent: #1e2a22;
+  /* Tennis-ball yellow-green. Background only, for the waiting-list chip: as
+     text on a light canvas it fails AA. */
+  --accent: #d5da55;
+  --on-accent: #26231e;
 
-  --success: #2f5233;
+  --success: #2f4027;
   --warning: #7a5600;
   --danger: #a3271f;
   /* Checked-in badge on the ticket. docs/05-UX-FLOWS.md section 4.3 asks for
      blue there; this slate blue sits well on cream. 8.14:1 with white text. */
   --info: #35507a;
 
-  --ring: #2f5233;
+  --ring: #2f4027;
 
-  /* Faint vertical rules, like laid paper. */
-  --paper-stripe: rgb(30 42 34 / 0.045);
+  /* Faint vertical rules, echoing the ribbed wall behind the flyer. */
+  --paper-stripe: rgb(38 35 30 / 0.05);
 
-  --shadow-card: 0 1px 2px rgb(30 42 34 / 0.05), 0 8px 24px -14px rgb(30 42 34 / 0.22);
+  --shadow-card: 0 1px 2px rgb(38 35 30 / 0.05), 0 8px 24px -14px rgb(38 35 30 / 0.22);
 }
 
 /* ---------------------------------------------------------------------------
@@ -85,34 +88,23 @@
   --color-danger: var(--danger);
   --color-info: var(--info);
 
-  /* Body text stays on system-ui: zero bytes, paints on the first frame, and
-     most visitors arrive on a mid-range Android over mobile data. */
+  /* The two faces closest to the flyer (DESIGN.md section 2.2): Jost for the
+     geometric sans of its labels, Playfair Display for its bold serif title.
+     app/layout.tsx loads both through next/font, which self-hosts the files
+     under /_next/static/media so the CSP's font-src 'self' holds. The system
+     fallbacks cover the swap period and any environment where the variables
+     are missing. */
   --font-sans:
-    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  /* Headings, the brand lockup and letter-spaced labels use Cormorant Garamond,
-     the one web font in the project (DESIGN.md section 2). app/layout.tsx
-     loads it through next/font, which self-hosts the files under
-     /_next/static/media so the CSP's font-src 'self' holds, and exposes the
-     family as --font-cormorant. The serif fallbacks cover the swap period and
-     any environment where the variable is missing.
-
-     `font-display italic` reaches the one italic face, 500. Font synthesis is
-     off, so a weight without an italic face falls to that one instead of a
-     slanted upright — a slanted Garamond is not an italic Garamond. */
-  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+    var(--font-jost), system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  /* Only the 700 weight is loaded, and there is no italic. */
+  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
   /* Digits that must not jitter: ticket number, rundown times.
      System monospace only — no web font. The fixed width actually comes from
      `tabular-nums` on the element, which Roboto and SF Pro both support, so a
      loaded face would have bought nothing for 39.5 KB. Courier New stays last
      in the stack as a floor for old devices. */
   --font-mono: ui-monospace, "SF Mono", "Roboto Mono", "Courier New", monospace;
-
-  /* Hero headline scales with the viewport: 2.5rem at 360px and grows from
-     there, so 360px never wraps awkwardly. Slightly larger than v1 because
-     Cormorant's small x-height reads smaller than a sans at the same size. */
-  --text-hero: clamp(2.5rem, 12vw, 4.5rem);
-  --text-hero--line-height: 1.02;
-  --text-hero--letter-spacing: 0.02em;
 
   /* Minimum touch target from docs/05-UX-FLOWS.md section 6: use min-h-tap
      and min-w-tap on anything tappable. */
@@ -125,32 +117,6 @@
   --radius-pill: 999px;
 
   --shadow-card: var(--shadow-card);
-
-  /* Cover entrance. Every element uses fill mode `both`, so under
-     prefers-reduced-motion — where the base layer collapses durations to
-     0.01ms — each one lands on its final state instead of disappearing. */
-  --animate-rise: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-fade: fade 1s ease-out both;
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(1.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @layer base {
@@ -166,8 +132,8 @@
     /* Participants read this outdoors, one-handed. */
     line-height: 1.6;
     text-rendering: optimizeLegibility;
-    /* Only 500, 600 and 700 of the serif are loaded. A heavier request must
-       fall to 700, not to a smeared synthetic bold. */
+    /* Only 700 of the serif is loaded. Any other weight asked of it must fall
+       to 700, not to a smeared synthetic bold. */
     font-synthesis: none;
   }
 
@@ -183,8 +149,8 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    /* Garamond wants no negative tracking; the sans-era -0.02em pinched it. */
-    letter-spacing: 0;
+    /* Playfair at display sizes is set a touch tight, as on the flyer. */
+    letter-spacing: -0.01em;
     line-height: 1.15;
   }
 
@@ -203,7 +169,7 @@
   }
 }
 
-/* Laid-paper texture behind the cover and the ticket (DESIGN.md section 3):
+/* Ribbed-wall texture behind every participant page (DESIGN.md section 2.3):
    faint vertical rules every 16px, drawn by CSS rather than shipped as an
    image. Apply on top of bg-canvas or bg-surface. */
 @utility paper-stripes {

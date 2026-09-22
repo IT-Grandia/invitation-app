@@ -14,12 +14,12 @@ type TicketDetailsProps = {
  */
 export function TicketDetails({ event }: TicketDetailsProps) {
   return (
-    <div className="flex flex-col gap-0.5 text-center">
-      <p className="font-display text-lg font-semibold md:text-xl">{formatWibDateLong(event.startsAt, "en")}</p>
-      <p className="font-mono text-sm tabular-nums md:text-base">
+    <div className="flex flex-col items-center gap-1 text-center">
+      <p className="font-display text-xl font-bold text-balance text-primary md:text-2xl">{formatWibDateLong(event.startsAt, "en")}</p>
+      <p className="font-sans text-base tabular-nums md:text-lg">
         {formatWibTime(event.startsAt)}–{formatWibTime(event.endsAt)} WIB
       </p>
-      <VenueMark venueName={event.venueName} mapUrl={event.venueMapUrl} className="mt-1" />
+      <VenueMark venueName={event.venueName} mapUrl={event.venueMapUrl} className="mt-2" />
     </div>
   );
 }

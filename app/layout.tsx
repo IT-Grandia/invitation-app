@@ -1,36 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond } from "next/font/google";
+import { Jost, Playfair_Display } from "next/font/google";
 import type { ReactNode } from "react";
 import { BRAND } from "@/lib/brand";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-// The one web font in the project (DESIGN.md section 2). next/font downloads
-// it at build time and serves it from /_next/static/media, so the CSP's
-// font-src 'self' holds and no request ever leaves for Google.
+// The faces closest to the organiser's flyer (DESIGN.md section 2.2). next/font
+// downloads them at build time and serves them from /_next/static/media, so the
+// CSP's font-src 'self' holds and no request ever leaves for Google.
 //
-// Two loaders instead of one: a single call with both styles would preload the
-// italic on every page, and only the 500 italic is ever used (tagline,
-// appreciation line). Both register faces under the same family name, so
-// `font-display italic` picks the italic up wherever it is rendered — and only
-// there is the file fetched.
-const cormorant = Cormorant_Garamond({
+// Jost is the variable file: body, labels and buttons use four weights of it.
+// Playfair Display is asked for 700 alone, which keeps it to one small file;
+// every heading uses that weight.
+const jost = Jost({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: "normal",
   display: "swap",
-  variable: "--font-cormorant",
+  variable: "--font-jost",
 });
 
-// Same family name as above, so no variable of its own is ever read; applying
-// `.variable` on <html> is what makes Next emit its @font-face rules.
-const cormorantItalic = Cormorant_Garamond({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  weight: "500",
-  style: "italic",
+  weight: "700",
   display: "swap",
-  preload: false,
-  variable: "--font-cormorant-italic",
+  variable: "--font-playfair",
 });
 
 // metadataBase only resolves relative Open Graph URLs, so the localhost
@@ -39,21 +31,21 @@ const cormorantItalic = Cormorant_Garamond({
 const metadataBaseUrl = siteUrl();
 
 // The brand, not the event: pages that know the event set their own title
-// through generateMetadata, and this template appends the lockup to it.
-const description = `Your invitation from ${BRAND.lockup}. Register once and your QR ticket is ready right away.`;
+// through generateMetadata, and this template appends the presenter to it.
+const description = `Your invitation from ${BRAND.presenter}. Register once and your QR ticket is ready right away.`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(metadataBaseUrl),
   title: {
-    default: BRAND.lockup,
-    template: `%s · ${BRAND.lockup}`,
+    default: BRAND.presenter,
+    template: `%s · ${BRAND.presenter}`,
   },
   description,
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: BRAND.lockup,
-    title: BRAND.lockup,
+    siteName: BRAND.presenter,
+    title: BRAND.presenter,
     description,
   },
 };
@@ -65,7 +57,7 @@ export const viewport: Viewport = {
   // still work at 200%.
   maximumScale: 5,
   // Keep in step with --canvas in globals.css.
-  themeColor: "#f3efe4",
+  themeColor: "#f4eee0",
 };
 
 export default function RootLayout({
@@ -79,7 +71,7 @@ export default function RootLayout({
     // with lang="id".
     <html
       lang="en"
-      className={`${cormorant.variable} ${cormorantItalic.variable} h-full antialiased`}
+      className={`${jost.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-canvas text-ink">{children}</body>
     </html>

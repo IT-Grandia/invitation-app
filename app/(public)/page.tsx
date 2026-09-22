@@ -59,6 +59,7 @@ export default async function InvitationPage() {
 
   return (
     <Cover
+      eventName={event.name}
       dateLabel={formatWibDateLong(event.startsAt, "en")}
       timeLabel={`${formatWibTime(event.startsAt)}–${formatWibTime(event.endsAt)} WIB`}
       venueName={event.venueName}
@@ -76,9 +77,11 @@ export default async function InvitationPage() {
 function NoEvent() {
   return (
     <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-6 sm:py-10">
-      <div className="my-auto w-full max-w-[26.25rem] rounded-card border-[3px] border-double border-line bg-surface px-6 py-8 text-center shadow-card md:max-w-[30rem] md:px-10">
+      <div className="my-auto w-full max-w-[26.25rem] rounded-card border border-line bg-surface px-6 py-8 text-center shadow-card md:max-w-[30rem] md:px-10">
         <BrandHeader />
-        <h1 className="mt-7 font-display text-2xl font-semibold">No event is open right now</h1>
+        <h1 className="mt-7 font-display text-2xl font-bold text-balance text-primary md:text-3xl">
+          No event is open right now
+        </h1>
         <p className="mt-3 text-ink-muted text-pretty">
           Check back soon — the invitation will appear here.
         </p>

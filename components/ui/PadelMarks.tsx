@@ -87,36 +87,3 @@ export function PadelPlayer({ className, style, title }: MarkProps) {
     />
   );
 }
-
-/**
- * A padel court seen from above, drawn to the real proportions: 20 m by 10 m,
- * net across the middle, service lines 6.95 m out from the net, and the centre
- * line splitting each pair of service boxes.
- *
- * Used as the hero backdrop at low opacity. It stands in for the venue photo
- * the committee has not supplied yet, and costs about two kilobytes inline
- * against roughly a hundred and fifty for a photograph.
- */
-export function PadelCourt({ className, style, title }: MarkProps) {
-  return (
-    <svg
-      viewBox="0 0 200 100"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.4}
-      vectorEffect="non-scaling-stroke"
-      className={className}
-      style={style}
-      {...markA11y(title)}
-    >
-      <rect x="0.7" y="0.7" width="198.6" height="98.6" rx="1.5" />
-      {/* Net */}
-      <line x1="100" y1="0" x2="100" y2="100" strokeWidth={2} />
-      {/* Service lines, 6.95 m either side of the net */}
-      <line x1="30.5" y1="0" x2="30.5" y2="100" />
-      <line x1="169.5" y1="0" x2="169.5" y2="100" />
-      {/* Centre line through both service boxes */}
-      <line x1="30.5" y1="50" x2="169.5" y2="50" />
-    </svg>
-  );
-}
