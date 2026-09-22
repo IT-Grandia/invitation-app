@@ -2,19 +2,23 @@ import Image from "next/image";
 import { VenueMark } from "@/components/ui/VenueMark";
 import { BRAND } from "@/lib/brand";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
+import { CoverFlyer } from "./CoverFlyer";
 
 /**
- * The cover — the whole of `/` — in the order DESIGN.md section 5.1 sets:
- * the organiser's flyer, then when and where with the one button, then the
- * sponsors. Each part is reached by scrolling; nothing is fixed or snapped.
+ * The cover — the whole of `/` — as DESIGN.md section 5.1 lays it out, in two
+ * layers. Behind: the organiser's flyer, pinned for the whole page. In front:
+ * a first screen that holds nothing but the hint to scroll, then the
+ * "When & where" card and the supporters' card, which rise over the flyer
+ * and blur it.
  *
  * The flyer carries the event's title and the presenter line, so the page has
  * no BrandHeader and its h1 is for screen readers only. The date, time and
  * venue come from the database: the flyer does not print them.
  */
 
-// As the flyer sets "Community Partners": regular weight, letter-spaced.
-const SPONSOR_CAPTION = "font-sans text-sm font-normal tracking-[0.12em] text-ink md:text-base";
+// Both cards are the same card, colour included.
+const CARD =
+  "mx-auto w-full max-w-[26.25rem] rounded-card border border-line bg-surface px-5 py-8 text-center shadow-card sm:px-8 md:max-w-[30rem] md:px-10";
 
 type CoverProps = {
   eventName: string;
@@ -35,41 +39,38 @@ export function Cover({
   venueMapUrl,
   action,
 }: CoverProps) {
-  const { flyer, sponsors } = BRAND;
+  const { sponsors } = BRAND;
 
   return (
-    <main className="paper-stripes flex flex-1 flex-col items-center pb-12">
+    <main className="paper-stripes relative flex flex-1 flex-col">
       <h1 className="sr-only">{eventName}</h1>
 
-      {/* Edge to edge on a phone: the flyer's own background matches the
-          canvas, so it needs no frame until there is room around it. */}
-      <figure className="w-full sm:mt-10 sm:max-w-[30rem] sm:overflow-hidden sm:rounded-card sm:shadow-card">
-        <Image
-          src={flyer.src}
-          alt={flyer.alt}
-          width={flyer.width}
-          height={flyer.height}
-          priority
-          sizes="(max-width: 639px) 100vw, 480px"
-          className="block h-auto w-full"
-        />
-      </figure>
+      {/* Screen-tall and pinned; the negative margin takes it out of the flow,
+          so everything after it scrolls over it. svh, not dvh: dvh follows the
+          address bar in and out, and the flyer would jump in size. */}
+      <div className="sticky top-0 -mb-[100svh] flex h-svh items-center justify-center overflow-hidden pt-4 pb-20 sm:px-6 sm:pt-8 sm:pb-24">
+        <CoverFlyer revealId="details" />
+      </div>
 
-      {/* On a phone the flyer fills most of the first screen and the button
-          sits below it; this is the hint that there is more. */}
-      <a
-        href="#details"
-        className="mt-2 inline-flex min-h-tap items-center gap-2 px-4 font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
-      >
-        Event details <span aria-hidden="true">↓</span>
-      </a>
+      {/* Exactly one screen tall, so no card peeks in when the page opens. */}
+      <div className="relative flex h-svh flex-col items-center justify-end pb-4 sm:pb-6">
+        <a
+          href="#details"
+          className="inline-flex min-h-tap items-center gap-2 px-4 font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
+        >
+          Event details{" "}
+          <span aria-hidden="true" className="inline-block animate-nudge">
+            ↓
+          </span>
+        </a>
+      </div>
 
       <section
         id="details"
         aria-labelledby="details-title"
-        className="w-full scroll-mt-4 px-4 pt-6 sm:pt-10"
+        className="relative z-10 scroll-mt-6 px-4"
       >
-        <div className="mx-auto w-full max-w-[26.25rem] rounded-card border border-line bg-surface px-5 py-8 text-center shadow-card sm:px-8 md:max-w-[30rem] md:px-10">
+        <div className={CARD}>
           <h2
             id="details-title"
             className="font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
@@ -91,32 +92,23 @@ export function Cover({
         </div>
       </section>
 
-      {/* White, not canvas: the sponsor board was drawn on white, and two of
-          its logos sit on white boxes of their own. */}
-      <section aria-label="Sponsors and community partners" className="mt-12 w-full px-4">
-        <div className="mx-auto flex w-full max-w-[26.25rem] flex-col items-center gap-10 rounded-card border border-line bg-white px-5 py-8 text-center shadow-card md:max-w-[30rem] md:px-8">
-          <div className="flex w-full flex-col items-center gap-4">
-            <h2 className={SPONSOR_CAPTION}>Supported by</h2>
-            <Image
-              src={sponsors.supported.src}
-              alt={sponsors.supported.alt}
-              width={sponsors.supported.width}
-              height={sponsors.supported.height}
-              sizes="(max-width: 480px) calc(100vw - 4.5rem), 416px"
-              className="h-auto w-full"
-            />
-          </div>
-          <div className="flex w-full flex-col items-center gap-4">
-            <h2 className={SPONSOR_CAPTION}>Community Partners</h2>
-            <Image
-              src={sponsors.community.src}
-              alt={sponsors.community.alt}
-              width={sponsors.community.width}
-              height={sponsors.community.height}
-              sizes="208px"
-              className="h-auto w-1/2 max-w-52"
-            />
-          </div>
+      <section aria-labelledby="sponsors-title" className="relative z-10 mt-6 px-4 pb-12">
+        <div className={`${CARD} flex flex-col items-center gap-4`}>
+          {/* As the flyer sets "Community Partners": regular weight, letter-spaced. */}
+          <h2
+            id="sponsors-title"
+            className="font-sans text-sm font-normal tracking-[0.12em] text-ink md:text-base"
+          >
+            Supported by
+          </h2>
+          <Image
+            src={sponsors.src}
+            alt={sponsors.alt}
+            width={sponsors.width}
+            height={sponsors.height}
+            sizes="(max-width: 480px) calc(100vw - 4.5rem), 416px"
+            className="h-auto w-full"
+          />
         </div>
       </section>
     </main>
