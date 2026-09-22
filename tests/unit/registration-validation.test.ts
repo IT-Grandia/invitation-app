@@ -15,6 +15,8 @@ import {
   registrationFormSchema,
   revisedRegistrationFormSchema,
   singleCommunitySchema,
+  toEnglishError,
+  toEnglishServerApiError,
 } from '@/lib/validation/registration'
 
 describe('fullNameSchema', () => {
@@ -554,6 +556,75 @@ describe('revisedRegistrationFormSchema', () => {
       )
       expect(fieldErrors.attending).toBeDefined()
     }
+  })
+})
+
+describe('toEnglishError', () => {
+  it('translates Indonesian field validation errors to English', () => {
+    expect(toEnglishError('Nama lengkap wajib diisi.')).toBe('Full name is required.')
+    expect(toEnglishError('Nama minimal 3 karakter.')).toBe('Name must be at least 3 characters.')
+    expect(toEnglishError('Nama maksimal 80 karakter.')).toBe('Name must be at most 80 characters.')
+    expect(toEnglishError('Nomor WhatsApp wajib diisi.')).toBe('WhatsApp number is required.')
+    expect(toEnglishError('Nomor WhatsApp tidak valid. Contoh: 08123456789')).toBe(
+      'Invalid WhatsApp number. Example: 08123456789',
+    )
+    expect(toEnglishError('Pilih minimal 1 komunitas.')).toBe('Please select 1 community.')
+    expect(toEnglishError('Pilih salah satu komunitas.')).toBe('Please select 1 community.')
+    expect(toEnglishError('Pilih maksimal 1 komunitas.')).toBe('Please select at most 1 community.')
+    expect(toEnglishError('Pilih minimal 1 instrumen investasi.')).toBe(
+      'Please select at least 1 investment instrument.',
+    )
+    expect(toEnglishError('Pilih maksimal 2 instrumen investasi.')).toBe(
+      'You can select a maximum of 2 investment instruments.',
+    )
+    expect(toEnglishError('Instrumen investasi tidak boleh dipilih dua kali.')).toBe(
+      'Investment instruments cannot be selected more than once.',
+    )
+    expect(toEnglishError('Pilihan minat investasi tidak dikenali.')).toBe(
+      'Invalid investment instrument selection.',
+    )
+    expect(toEnglishError('Pilih konfirmasi kehadiran Anda (Yes atau No).')).toBe(
+      'Please confirm your attendance (Yes or No).',
+    )
+    expect(toEnglishError('Centang persetujuan untuk melanjutkan.')).toBe(
+      'Please accept the consent to continue.',
+    )
+  })
+
+  it('preserves unknown strings if not in the translation map', () => {
+    expect(toEnglishError('Some custom English message')).toBe('Some custom English message')
+  })
+})
+
+describe('toEnglishServerApiError', () => {
+  it('maps server API error codes to appropriate English copy', () => {
+    expect(toEnglishServerApiError('PHONE_ALREADY_REGISTERED')).toBe(
+      'This phone number is already registered. Check your WhatsApp for your ticket link, or contact the organizers.',
+    )
+    expect(toEnglishServerApiError('RATE_LIMITED')).toBe(
+      'Too many registration attempts from this device. Please wait a few moments and try again.',
+    )
+    expect(toEnglishServerApiError('EVENT_FULL')).toBe(
+      'Event quota is currently full. Please contact organizers for the waitlist.',
+    )
+    expect(toEnglishServerApiError('REGISTRATION_CLOSED')).toBe(
+      'Registration is currently closed.',
+    )
+    expect(toEnglishServerApiError('REGISTRATION_CLOSED', 'Pendaftaran belum dibuka.')).toBe(
+      'Registration has not opened yet.',
+    )
+    expect(toEnglishServerApiError('TURNSTILE_FAILED')).toBe(
+      'Anti-bot verification failed. Please reload the page.',
+    )
+    expect(toEnglishServerApiError('VALIDATION_ERROR')).toBe(
+      'Invalid registration data. Please review the highlighted fields.',
+    )
+    expect(toEnglishServerApiError('INTERNAL_ERROR')).toBe(
+      'System issue encountered. Please try again or contact organizers.',
+    )
+    expect(toEnglishServerApiError(undefined)).toBe(
+      'System issue encountered. Please try again or contact organizers.',
+    )
   })
 })
 

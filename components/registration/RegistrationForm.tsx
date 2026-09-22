@@ -14,11 +14,12 @@ import {
   phoneSchema,
   revisedRegistrationFormSchema,
   singleCommunitySchema,
+  toEnglishError,
+  toEnglishServerApiError,
   type CommunityOption,
   type InvestmentOption,
   type RevisedRegistrationFormValues,
 } from '@/lib/validation/registration'
-
 type FormField = 'fullName' | 'phone' | 'community' | 'investmentInstruments' | 'attending'
 
 type FormValues = {
@@ -59,34 +60,6 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
   const [turnstileToken, setTurnstileToken] = useState<string>('')
   const [turnstileError, setTurnstileError] = useState<string | null>(null)
   const [turnstileResetTrigger, setTurnstileResetTrigger] = useState(0)
-
-  const toEnglishError = (message: string): string => {
-    switch (message) {
-      case 'Nama lengkap wajib diisi.':
-        return 'Full name is required.'
-      case 'Nama minimal 3 karakter.':
-        return 'Name must be at least 3 characters.'
-      case 'Nama maksimal 80 karakter.':
-        return 'Name must be at most 80 characters.'
-      case 'Nomor WhatsApp wajib diisi.':
-        return 'WhatsApp number is required.'
-      case 'Nomor WhatsApp tidak valid. Contoh: 08123456789':
-        return 'Invalid WhatsApp number. Example: 08123456789'
-      case 'Pilih minimal 1 komunitas.':
-      case 'Pilih salah satu komunitas.':
-        return 'Please select 1 community.'
-      case 'Pilih minimal 1 instrumen investasi.':
-        return 'Please select at least 1 investment instrument.'
-      case 'Pilih maksimal 2 instrumen investasi.':
-        return 'You can select a maximum of 2 investment instruments.'
-      case 'Pilih konfirmasi kehadiran Anda (Yes atau No).':
-        return 'Please confirm your attendance (Yes or No).'
-      case 'Centang persetujuan untuk melanjutkan.':
-        return 'Please accept the consent to continue.'
-      default:
-        return message
-    }
-  }
 
   /**
    * Validates a single field when it loses focus (onBlur).
@@ -264,28 +237,41 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         const errorCode = data?.error?.code
         const errorMessage = data?.error?.message
 
-        if (errorCode === 'PHONE_ALREADY_REGISTERED') {
-          setFormError(
-            errorMessage ||
-              'This phone number is already registered. Check your WhatsApp for your ticket link, or contact the organizers.',
-          )
-        } else if (errorCode === 'EVENT_FULL') {
-          setFormError(
-            errorMessage ||
-              'Event quota is currently full. Please contact organizers for the waitlist.',
-          )
-        } else if (errorCode === 'REGISTRATION_CLOSED') {
-          setFormError(errorMessage || 'Registration is currently closed.')
-        } else if (errorCode === 'TURNSTILE_FAILED') {
+        if (errorCode === 'TURNSTILE_FAILED') {
           setTurnstileToken('')
           setTurnstileResetTrigger((prev) => prev + 1)
-          setFormError(errorMessage || 'Anti-bot verification failed. Please reload the page.')
-        } else {
-          setFormError(
-            errorMessage ||
-              'System issue encountered. Please try again or contact organizers.',
-          )
+        } else if (errorCode === 'VALIDATION_ERROR') {
+          if (data?.error?.details && typeof data.error.details === 'object') {
+            const serverFieldErrors = data.error.details as Record<
+              string,
+              string[] | string | undefined
+            >
+            const mappedErrors: FormErrors = {}
+            for (const [key, val] of Object.entries(serverFieldErrors)) {
+              const msg = Array.isArray(val) ? val[0] : val
+              if (typeof msg === 'string') {
+                if (key === 'fullName') mappedErrors.fullName = toEnglishError(msg)
+                else if (key === 'phone') mappedErrors.phone = toEnglishError(msg)
+                else if (key === 'community') mappedErrors.community = toEnglishError(msg)
+                else if (key === 'investmentInstruments' || key === 'investmentInterests') {
+                  mappedErrors.investmentInstruments = toEnglishError(msg)
+                } else if (key === 'attending') mappedErrors.attending = toEnglishError(msg)
+              }
+            }
+            if (Object.keys(mappedErrors).length > 0) {
+              setErrors((prev) => ({ ...prev, ...mappedErrors }))
+              setTouched({
+                fullName: true,
+                phone: true,
+                community: true,
+                investmentInstruments: true,
+                attending: true,
+              })
+            }
+          }
         }
+
+        setFormError(toEnglishServerApiError(errorCode, errorMessage))
         return
       }
 
@@ -308,38 +294,28 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 font-['Plus_Jakarta_Sans',sans-serif]">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5 text-left">
       {/* Important Notes Callout Banner */}
-      <div className="rounded-[12px] border border-[#DDD6C5] bg-[#F2EDE1]/90 p-4 shadow-xs">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#4E644D]/15 text-[#4E644D]">
-            <svg
-              className="w-3.5 h-3.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="16" x2="12" y2="12" />
-              <line x1="12" y1="8" x2="12.01" y2="8" />
-            </svg>
-          </div>
-          <div className="space-y-1.5 text-xs text-[#2E3B2E]">
-            <span className="font-['Cinzel',serif] text-[10px] sm:text-[11px] font-bold tracking-[0.16em] text-[#4E644D] uppercase block">
+      <div className="rounded-md border border-line bg-surface-2 p-3.5 text-xs text-ink">
+        <div className="flex items-start gap-2.5">
+          <span
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold text-primary"
+            aria-hidden="true"
+          >
+            i
+          </span>
+          <div className="space-y-1">
+            <p className="font-sans text-xs font-bold tracking-[0.08em] text-ink uppercase">
               Important Notes
-            </span>
-            <ul className="space-y-1 text-xs text-[#2E3B2E] font-medium leading-relaxed">
-              <li className="flex items-start gap-2">
-                <span className="text-[#4E644D] font-bold select-none">•</span>
-                <span>This invitation is only for 1 padel player.</span>
+            </p>
+            <ul className="space-y-1 text-ink-muted leading-relaxed">
+              <li className="flex items-start gap-1.5">
+                <span className="text-primary font-bold select-none">•</span>
+                <span>This invitation is valid for 1 padel player.</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#4E644D] font-bold select-none">•</span>
-                <span>You are allowed to bring a supporter.</span>
+              <li className="flex items-start gap-1.5">
+                <span className="text-primary font-bold select-none">•</span>
+                <span>You are welcome to bring a supporter.</span>
               </li>
             </ul>
           </div>
@@ -365,8 +341,11 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 1: Full Name */}
       <div className="flex flex-col">
-        <label htmlFor="fullName" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
-          Full Name <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
+        <label
+          htmlFor="fullName"
+          className="font-sans text-xs font-semibold tracking-[0.08em] text-ink uppercase mb-1.5 flex items-center gap-1"
+        >
+          Full Name <span className="text-danger" aria-hidden="true">*</span>
         </label>
         <input
           id="fullName"
@@ -379,14 +358,14 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           onBlur={() => handleBlur('fullName')}
           aria-invalid={Boolean(errors.fullName && touched.fullName)}
           aria-describedby={errors.fullName && touched.fullName ? 'fullName-error' : undefined}
-          className={`min-h-[44px] w-full rounded-[8px] border bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] ${
+          className={`min-h-tap w-full rounded-md border bg-surface px-4 py-2.5 font-sans text-sm text-ink placeholder:text-ink-muted/60 transition-colors focus:outline-none focus:ring-2 ${
             errors.fullName && touched.fullName
-              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
-              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
+              ? 'border-danger focus:border-danger focus:ring-danger/20'
+              : 'border-line-input hover:border-ink focus:border-primary focus:ring-primary/20'
           }`}
         />
         {errors.fullName && touched.fullName && (
-          <p id="fullName-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
+          <p id="fullName-error" role="alert" className="mt-1.5 text-xs font-medium text-danger">
             {errors.fullName}
           </p>
         )}
@@ -394,8 +373,11 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
 
       {/* Field 2: WhatsApp Number */}
       <div className="flex flex-col">
-        <label htmlFor="phone" className="text-xs sm:text-sm font-semibold text-[#4E644D] mb-1.5">
-          WhatsApp Number <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
+        <label
+          htmlFor="phone"
+          className="font-sans text-xs font-semibold tracking-[0.08em] text-ink uppercase mb-1.5 flex items-center gap-1"
+        >
+          WhatsApp Number <span className="text-danger" aria-hidden="true">*</span>
         </label>
         <input
           id="phone"
@@ -409,26 +391,26 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           onBlur={() => handleBlur('phone')}
           aria-invalid={Boolean(errors.phone && touched.phone)}
           aria-describedby={errors.phone && touched.phone ? 'phone-error' : undefined}
-          className={`min-h-[44px] w-full rounded-[8px] border bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#243024] placeholder:text-[#A6A192] transition-all focus:outline-none focus:ring-2 focus:ring-[#4E644D]/30 focus:border-[#4E644D] ${
+          className={`min-h-tap w-full rounded-md border bg-surface px-4 py-2.5 font-sans text-sm text-ink placeholder:text-ink-muted/60 transition-colors focus:outline-none focus:ring-2 ${
             errors.phone && touched.phone
-              ? 'border-[#9E2A2B] focus:ring-[#9E2A2B]/40 focus:border-[#9E2A2B]'
-              : 'border-[#D6D1C2] hover:border-[#B3AC9B]'
+              ? 'border-danger focus:border-danger focus:ring-danger/20'
+              : 'border-line-input hover:border-ink focus:border-primary focus:ring-primary/20'
           }`}
         />
         {errors.phone && touched.phone && (
-          <p id="phone-error" role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
+          <p id="phone-error" role="alert" className="mt-1.5 text-xs font-medium text-danger">
             {errors.phone}
           </p>
         )}
       </div>
 
-      {/* Field 3: Community (Club 79 & Womenpreneur Hipmi Jateng) */}
+      {/* Field 3: Community */}
       <div className="flex flex-col">
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs sm:text-sm font-semibold text-[#4E644D]">
-            Community <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
-          </label>
-          <span className="text-[11px] text-[#7F836A]">Select your community</span>
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="font-sans text-xs font-semibold tracking-[0.08em] text-ink uppercase">
+            Community <span className="text-danger" aria-hidden="true">*</span>
+          </span>
+          <span className="text-xs text-ink-muted">Select one</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {COMMUNITY_OPTIONS.map((option) => {
@@ -436,18 +418,27 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
             return (
               <label
                 key={option}
+                tabIndex={0}
+                role="radio"
+                aria-checked={isChecked}
                 onClick={() => handleCommunitySelect(option)}
-                className={`flex items-center gap-3 p-3 rounded-[8px] border transition-all cursor-pointer select-none text-left ${
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault()
+                    handleCommunitySelect(option)
+                  }
+                }}
+                className={`min-h-tap flex items-center gap-3 p-3 rounded-md border transition-colors cursor-pointer select-none text-left ${
                   isChecked
-                    ? 'bg-[#FAF7F0] border-[#4E644D] shadow-xs ring-1 ring-[#4E644D]'
-                    : 'bg-white border-[#D6D1C2] hover:border-[#4E644D]/50 hover:bg-[#FAF9F5]'
+                    ? 'border-primary bg-surface-2 ring-1 ring-primary shadow-xs'
+                    : 'border-line-input bg-surface hover:bg-surface-2/60'
                 }`}
               >
                 <div
-                  className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+                  className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
                     isChecked
-                      ? 'border-[#4E644D] bg-[#4E644D] text-white'
-                      : 'border-[#B8AF9C] bg-white'
+                      ? 'border-primary bg-primary text-on-primary'
+                      : 'border-line-input bg-surface'
                   }`}
                   aria-hidden="true"
                 >
@@ -464,7 +455,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
                     </svg>
                   )}
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-[#243024]">
+                <span className="font-sans text-sm font-medium text-ink">
                   {option}
                 </span>
               </label>
@@ -472,20 +463,20 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           })}
         </div>
         {errors.community && touched.community && (
-          <p role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
+          <p role="alert" className="mt-1.5 text-xs font-medium text-danger">
             {errors.community}
           </p>
         )}
       </div>
 
-      {/* Field 4: Investment Instruments You're Most Interested in (max 2) */}
+      {/* Field 4: Investment Instruments */}
       <div className="flex flex-col">
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between mb-1.5 gap-0.5">
-          <label className="text-xs sm:text-sm font-semibold text-[#4E644D]">
-            Investment Instruments <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
-          </label>
-          <span className="text-[11px] font-normal text-[#7F836A]">
-            You&apos;re Most Interested in (min 1, max 2)
+          <span className="font-sans text-xs font-semibold tracking-[0.08em] text-ink uppercase">
+            Investment Interests <span className="text-danger" aria-hidden="true">*</span>
+          </span>
+          <span className="text-xs text-ink-muted">
+            Choose 1 to 2
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2.5">
@@ -494,18 +485,27 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
             return (
               <label
                 key={item}
+                tabIndex={0}
+                role="checkbox"
+                aria-checked={isChecked}
                 onClick={() => handleInvestmentToggle(item)}
-                className={`flex items-center gap-3 p-3 rounded-[8px] border transition-all cursor-pointer select-none text-left ${
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault()
+                    handleInvestmentToggle(item)
+                  }
+                }}
+                className={`min-h-tap flex items-center gap-3 p-3 rounded-md border transition-colors cursor-pointer select-none text-left ${
                   isChecked
-                    ? 'bg-[#FAF7F0] border-[#4E644D] shadow-xs ring-1 ring-[#4E644D]'
-                    : 'bg-white border-[#D6D1C2] hover:border-[#4E644D]/50 hover:bg-[#FAF9F5]'
+                    ? 'border-primary bg-surface-2 ring-1 ring-primary shadow-xs'
+                    : 'border-line-input bg-surface hover:bg-surface-2/60'
                 }`}
               >
                 <div
-                  className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+                  className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
                     isChecked
-                      ? 'border-[#4E644D] bg-[#4E644D] text-white'
-                      : 'border-[#B8AF9C] bg-white'
+                      ? 'border-primary bg-primary text-on-primary'
+                      : 'border-line-input bg-surface'
                   }`}
                   aria-hidden="true"
                 >
@@ -522,7 +522,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
                     </svg>
                   )}
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-[#243024]">
+                <span className="font-sans text-sm font-medium text-ink">
                   {item}
                 </span>
               </label>
@@ -530,34 +530,43 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           })}
         </div>
         {errors.investmentInstruments && touched.investmentInstruments && (
-          <p role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
+          <p role="alert" className="mt-1.5 text-xs font-medium text-danger">
             {errors.investmentInstruments}
           </p>
         )}
       </div>
 
-      {/* Field 5: Will you be attending the event? (Yes / No) */}
+      {/* Field 5: Attendance Confirmation */}
       <div className="flex flex-col">
-        <div className="flex items-center justify-between mb-1.5">
-          <label className="text-xs sm:text-sm font-semibold text-[#4E644D]">
-            Will you be attending the event? <span className="text-[#9E2A2B]" aria-hidden="true">*</span>
-          </label>
-          <span className="text-[11px] text-[#7F836A]">Attendance confirmation</span>
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="font-sans text-xs font-semibold tracking-[0.08em] text-ink uppercase">
+            Attendance Confirmation <span className="text-danger" aria-hidden="true">*</span>
+          </span>
+          <span className="text-xs text-ink-muted">Will you attend?</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <label
+            tabIndex={0}
+            role="radio"
+            aria-checked={values.attending === 'yes'}
             onClick={() => handleAttendingChange('yes')}
-            className={`flex items-center gap-3 p-3 rounded-[8px] border transition-all cursor-pointer select-none text-left ${
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault()
+                handleAttendingChange('yes')
+              }
+            }}
+            className={`min-h-tap flex items-center gap-3 p-3 rounded-md border transition-colors cursor-pointer select-none text-left ${
               values.attending === 'yes'
-                ? 'bg-[#FAF7F0] border-[#4E644D] shadow-xs ring-1 ring-[#4E644D]'
-                : 'bg-white border-[#D6D1C2] hover:border-[#4E644D]/50 hover:bg-[#FAF9F5]'
+                ? 'border-primary bg-surface-2 ring-1 ring-primary shadow-xs'
+                : 'border-line-input bg-surface hover:bg-surface-2/60'
             }`}
           >
             <div
-              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
                 values.attending === 'yes'
-                  ? 'border-[#4E644D] bg-[#4E644D] text-white'
-                  : 'border-[#B8AF9C] bg-white'
+                  ? 'border-primary bg-primary text-on-primary'
+                  : 'border-line-input bg-surface'
               }`}
               aria-hidden="true"
             >
@@ -575,24 +584,33 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs sm:text-sm font-bold text-[#243024]">Yes</span>
-              <span className="text-[10.5px] text-[#7F836A]">I will attend</span>
+              <span className="font-sans text-sm font-bold text-ink">Yes</span>
+              <span className="text-[11px] text-ink-muted">I will attend</span>
             </div>
           </label>
 
           <label
+            tabIndex={0}
+            role="radio"
+            aria-checked={values.attending === 'no'}
             onClick={() => handleAttendingChange('no')}
-            className={`flex items-center gap-3 p-3 rounded-[8px] border transition-all cursor-pointer select-none text-left ${
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault()
+                handleAttendingChange('no')
+              }
+            }}
+            className={`min-h-tap flex items-center gap-3 p-3 rounded-md border transition-colors cursor-pointer select-none text-left ${
               values.attending === 'no'
-                ? 'bg-[#FAF7F0] border-[#4E644D] shadow-xs ring-1 ring-[#4E644D]'
-                : 'bg-white border-[#D6D1C2] hover:border-[#4E644D]/50 hover:bg-[#FAF9F5]'
+                ? 'border-primary bg-surface-2 ring-1 ring-primary shadow-xs'
+                : 'border-line-input bg-surface hover:bg-surface-2/60'
             }`}
           >
             <div
-              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[4px] border transition-colors ${
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-sm border transition-colors ${
                 values.attending === 'no'
-                  ? 'border-[#4E644D] bg-[#4E644D] text-white'
-                  : 'border-[#B8AF9C] bg-white'
+                  ? 'border-primary bg-primary text-on-primary'
+                  : 'border-line-input bg-surface'
               }`}
               aria-hidden="true"
             >
@@ -610,13 +628,13 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs sm:text-sm font-bold text-[#243024]">No</span>
-              <span className="text-[10.5px] text-[#7F836A]">Unable to attend</span>
+              <span className="font-sans text-sm font-bold text-ink">No</span>
+              <span className="text-[11px] text-ink-muted">Unable to attend</span>
             </div>
           </label>
         </div>
         {errors.attending && touched.attending && (
-          <p role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B]">
+          <p role="alert" className="mt-1.5 text-xs font-medium text-danger">
             {errors.attending}
           </p>
         )}
@@ -639,7 +657,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
           resetTrigger={turnstileResetTrigger}
         />
         {turnstileError && (
-          <p role="alert" className="mt-1 text-xs font-medium text-[#9E2A2B] text-center">
+          <p role="alert" className="mt-1.5 text-xs font-medium text-danger text-center">
             {turnstileError}
           </p>
         )}
@@ -650,17 +668,17 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         <div
           role="alert"
           aria-live="polite"
-          className="rounded-[8px] border border-[#9E2A2B]/30 bg-[#9E2A2B]/10 p-3.5 text-xs text-[#9E2A2B] flex flex-col gap-1.5"
+          className="rounded-md border border-danger/30 bg-danger/10 p-3.5 text-xs text-danger flex flex-col gap-1.5 text-left"
         >
           <p className="font-semibold">{formError}</p>
           {contactWhatsapp && (
-            <p className="text-[11px] text-[#243024]/70">
+            <p className="text-ink-muted">
               Contact organizers via{' '}
               <a
                 href={`https://wa.me/${contactWhatsapp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noreferrer"
-                className="underline font-bold text-[#4E644D]"
+                className="font-semibold text-primary underline underline-offset-2 hover:opacity-90"
               >
                 WhatsApp Organizers
               </a>
@@ -669,17 +687,17 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
         </div>
       )}
 
-      {/* Submit Button: Pill-shaped RSVP button in secondary #4E644D */}
-      <div className="mt-2">
+      {/* Submit Button */}
+      <div className="mt-2 flex flex-col items-center gap-2">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="min-h-[48px] w-full rounded-full bg-[#4E644D] hover:bg-[#3E523D] active:translate-y-[1px] px-8 py-3.5 font-['Plus_Jakarta_Sans',sans-serif] text-sm sm:text-base font-bold tracking-[0.2em] text-white shadow-[0_4px_16px_rgba(78,100,77,0.28)] transition-all flex items-center justify-center gap-2 uppercase disabled:opacity-60 cursor-pointer"
+          className="min-h-tap flex w-full items-center justify-center gap-2 rounded-pill bg-primary px-8 font-sans text-base font-semibold py-2 text-center leading-tight tracking-[0.1em] text-balance uppercase text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-14 md:text-lg cursor-pointer"
         >
           {isSubmitting ? (
             <>
               <svg
-                className="h-5 w-5 animate-spin text-white"
+                className="h-5 w-5 animate-spin text-on-primary"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -699,7 +717,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
                   d="M4 12a8 8 0 018-8v8H4z"
                 />
               </svg>
-              <span>Processing...</span>
+              <span>Processing…</span>
             </>
           ) : values.attending === 'no' ? (
             'SUBMIT CONFIRMATION'
@@ -707,7 +725,7 @@ export function RegistrationForm({ contactWhatsapp, onSuccess, onSubmit }: Props
             'RSVP'
           )}
         </button>
-        <p className="mt-2 text-center text-[11px] text-[#4E644D]/75">
+        <p className="text-center text-xs text-ink-muted text-pretty">
           {values.attending === 'no'
             ? 'Your absence confirmation will be recorded in the system.'
             : 'Your QR ticket will be issued immediately once submitted.'}

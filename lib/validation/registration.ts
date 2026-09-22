@@ -224,4 +224,86 @@ export type RegistrationFormValues = z.output<typeof registrationFormSchema>
 export type RegisterApiInput = z.input<typeof registerApiSchema>
 export type RegisterApiValues = z.output<typeof registerApiSchema>
 
+/**
+ * Maps Indonesian validation messages produced by shared Zod schemas to English
+ * for the participant-facing registration UI.
+ */
+export function toEnglishError(message: string): string {
+  switch (message) {
+    case 'Nama lengkap wajib diisi.':
+      return 'Full name is required.'
+    case 'Nama minimal 3 karakter.':
+      return 'Name must be at least 3 characters.'
+    case 'Nama maksimal 80 karakter.':
+      return 'Name must be at most 80 characters.'
+    case 'Nomor WhatsApp wajib diisi.':
+      return 'WhatsApp number is required.'
+    case 'Nomor WhatsApp tidak valid. Contoh: 08123456789':
+      return 'Invalid WhatsApp number. Example: 08123456789'
+    case 'Pilih minimal 1 komunitas.':
+    case 'Pilih salah satu komunitas.':
+      return 'Please select 1 community.'
+    case 'Pilih maksimal 1 komunitas.':
+      return 'Please select at most 1 community.'
+    case 'Pilih minimal 1 instrumen investasi.':
+    case 'Pilih minimal satu minat investasi.':
+      return 'Please select at least 1 investment instrument.'
+    case 'Pilih maksimal 2 instrumen investasi.':
+    case 'Pilih paling banyak dua minat investasi.':
+      return 'You can select a maximum of 2 investment instruments.'
+    case 'Instrumen investasi tidak boleh dipilih dua kali.':
+    case 'Minat investasi tidak boleh dipilih dua kali.':
+      return 'Investment instruments cannot be selected more than once.'
+    case 'Pilihan minat investasi tidak dikenali.':
+      return 'Invalid investment instrument selection.'
+    case 'Pilih konfirmasi kehadiran Anda (Yes atau No).':
+      return 'Please confirm your attendance (Yes or No).'
+    case 'Centang persetujuan untuk melanjutkan.':
+      return 'Please accept the consent to continue.'
+    case 'Format email tidak valid.':
+      return 'Invalid email format.'
+    case 'Catatan maksimal 300 karakter.':
+      return 'Notes cannot exceed 300 characters.'
+    case 'Verifikasi anti-bot wajib diselesaikan.':
+      return 'Please complete the anti-bot verification.'
+    case 'Spam terdeteksi.':
+      return 'Spam detected. Submission canceled.'
+    case 'Format request harus berupa JSON valid.':
+      return 'Invalid request format.'
+    case 'Data pendaftaran tidak valid.':
+      return 'Invalid registration data.'
+    default:
+      return message
+  }
+}
+
+/**
+ * Maps server-side API error codes from POST /api/register to participant-facing English messages.
+ * Prevents Indonesian server messages from overriding English UI copy.
+ */
+export function toEnglishServerApiError(
+  code: string | undefined,
+  message?: string,
+): string {
+  switch (code) {
+    case 'PHONE_ALREADY_REGISTERED':
+      return 'This phone number is already registered. Check your WhatsApp for your ticket link, or contact the organizers.'
+    case 'RATE_LIMITED':
+      return 'Too many registration attempts from this device. Please wait a few moments and try again.'
+    case 'EVENT_FULL':
+      return 'Event quota is currently full. Please contact organizers for the waitlist.'
+    case 'REGISTRATION_CLOSED':
+      if (typeof message === 'string' && message.toLowerCase().includes('belum')) {
+        return 'Registration has not opened yet.'
+      }
+      return 'Registration is currently closed.'
+    case 'TURNSTILE_FAILED':
+      return 'Anti-bot verification failed. Please reload the page.'
+    case 'VALIDATION_ERROR':
+      return 'Invalid registration data. Please review the highlighted fields.'
+    default:
+      return 'System issue encountered. Please try again or contact organizers.'
+  }
+}
+
 
