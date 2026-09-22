@@ -2,14 +2,14 @@ import Image from "next/image";
 import { VenueMark } from "@/components/ui/VenueMark";
 import { BRAND } from "@/lib/brand";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
-import { CoverFlyer } from "./CoverFlyer";
+import { CoverBackdrop } from "./CoverBackdrop";
 
 /**
  * The cover — the whole of `/` — as DESIGN.md section 5.1 lays it out, in two
- * layers. Behind: the organiser's flyer, pinned for the whole page. In front:
- * a first screen that holds nothing but the hint to scroll, then the
- * "When & where" card and the supporters' card, which rise over the flyer
- * and blur it.
+ * layers. Behind: the striped wall and the organiser's flyer, pinned for the
+ * whole page. In front: a first screen that holds nothing but the hint to
+ * scroll, then the "When & where" card and the supporters' card, which rise
+ * over the flyer and blur it.
  *
  * The flyer carries the event's title and the presenter line, so the page has
  * no BrandHeader and its h1 is for screen readers only. The date, time and
@@ -42,26 +42,19 @@ export function Cover({
   const { sponsors } = BRAND;
 
   return (
-    <main className="paper-stripes relative flex flex-1 flex-col">
+    <main className="relative flex flex-1 flex-col">
       <h1 className="sr-only">{eventName}</h1>
 
-      {/* Screen-tall and pinned; the negative margin takes it out of the flow,
-          so everything after it scrolls over it. svh, not dvh: dvh follows the
-          address bar in and out, and the flyer would jump in size. */}
-      <div className="sticky top-0 -mb-[100svh] flex h-svh items-center justify-center overflow-hidden pt-4 pb-20 sm:px-6 sm:pt-8 sm:pb-24">
-        <CoverFlyer revealId="details" />
-      </div>
+      <CoverBackdrop revealId="details" />
 
       {/* Exactly one screen tall, so no card peeks in when the page opens. */}
-      <div className="relative flex h-svh flex-col items-center justify-end pb-4 sm:pb-6">
+      <div className="relative flex h-svh flex-col items-center justify-end pb-3 sm:pb-5">
         <a
           href="#details"
-          className="inline-flex min-h-tap items-center gap-2 px-4 font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
+          className="flex min-h-tap flex-col items-center gap-1 px-4 py-1 font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
         >
-          Event details{" "}
-          <span aria-hidden="true" className="inline-block animate-nudge">
-            ↓
-          </span>
+          Event details
+          <ChevronDown className="h-6 w-6 animate-nudge text-primary md:h-7 md:w-7" />
         </a>
       </div>
 
@@ -112,5 +105,23 @@ export function Cover({
         </div>
       </section>
     </main>
+  );
+}
+
+/** Lucide `chevron-down`, drawn heavier than the default so it reads at a glance. */
+function ChevronDown({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
   );
 }

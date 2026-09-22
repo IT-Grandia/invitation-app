@@ -181,6 +181,14 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+
+    /* A fade is not motion, and cutting it makes a change blink instead. An
+       element marked keep-fade keeps its transition; the class beats the
+       universal rule above within this layer. Never put it on anything that
+       moves or scales (DESIGN.md section 8, rule 15). */
+    .keep-fade {
+      transition-duration: 500ms !important;
+    }
   }
 }
 
