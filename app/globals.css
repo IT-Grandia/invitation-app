@@ -117,6 +117,21 @@
   --radius-pill: 999px;
 
   --shadow-card: var(--shadow-card);
+
+  /* The arrow under the cover's flyer, asking for a scroll. Transform only, so
+     it never holds back the first paint; under prefers-reduced-motion the base
+     layer stops it on its resting frame. */
+  --animate-nudge: nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(3px);
+  }
 }
 
 @layer base {

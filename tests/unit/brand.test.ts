@@ -50,13 +50,12 @@ function webpSize(path: string) {
 describe('BRAND', () => {
   it('names the presenter as the flyer does', () => {
     expect(BRAND.presenter).toBe('The Grandia Group')
-    expect(BRAND.presents).toBe('Presents')
   })
 
   // next/image reserves space from these numbers. When the organiser sends a
   // new file, a size left stale would stretch the artwork.
   it('records the real size of every brand image', () => {
-    for (const image of [BRAND.flyer, BRAND.sponsors.supported, BRAND.sponsors.community]) {
+    for (const image of [BRAND.flyer, BRAND.sponsors]) {
       expect(webpSize(image.src), image.src).toEqual({ width: image.width, height: image.height })
     }
   })

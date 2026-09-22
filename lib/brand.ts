@@ -52,7 +52,6 @@ export function venueLogoFor(venueName: string): typeof VENUE_LOGO | null {
 export const BRAND = {
   /** Rendered uppercase by CSS, as on the flyer. Also the site name in titles. */
   presenter: "The Grandia Group",
-  presents: "Presents",
   /** The organiser's flyer, 3:4. It heads the cover in place of any headline. */
   flyer: {
     src: "/brand/flyer.webp",
@@ -61,28 +60,17 @@ export const BRAND = {
     alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic. With the logos of The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
   },
   /**
-   * The organiser's sponsor board, cut in two at its divider and without its
-   * two captions, which the cover sets as text. Whole, it is 2000px wide and
-   * its logos shrink past reading on a phone; stacked, each half gets the
-   * full width of the column.
+   * The supporters' logos, prepared for the cream card and used whole. The
+   * community partners are left out: the flyer already shows them.
    */
   sponsors: {
-    supported: {
-      src: "/brand/sponsors-supported.webp",
-      width: 1403,
-      height: 410,
-      alt: "Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel.",
-    },
-    community: {
-      src: "/brand/sponsors-community.webp",
-      width: 252,
-      height: 229,
-      alt: "Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
-    },
+    src: "/brand/sponsors-supported.webp",
+    width: 1927,
+    height: 545,
+    alt: "Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel.",
   },
 } as const satisfies {
   presenter: string;
-  presents: string;
   flyer: BrandImage;
-  sponsors: Record<"supported" | "community", BrandImage>;
+  sponsors: BrandImage;
 };
