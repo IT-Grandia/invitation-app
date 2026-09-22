@@ -43,7 +43,7 @@ test('a participant who will not attend is recorded without a QR code', async ({
   await page.getByRole('link', { name: 'View Your Ticket' }).click()
 
   await expect(
-    page.getByRole('heading', { name: 'You have not confirmed your attendance' }),
+    page.getByRole('heading', { name: 'Thank you for letting us know' }),
   ).toBeVisible()
   await expect(page.getByRole('img', { name: /^QR code/ })).toHaveCount(0)
 })

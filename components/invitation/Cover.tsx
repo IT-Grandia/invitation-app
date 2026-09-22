@@ -1,26 +1,23 @@
-import { BrandHeader } from "@/components/ui/BrandHeader";
-import { PadelCourt } from "@/components/ui/PadelMarks";
+import Image from "next/image";
 import { VenueMark } from "@/components/ui/VenueMark";
 import { BRAND } from "@/lib/brand";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
-import { SupportedBy } from "./SupportedBy";
 
 /**
- * The cover — the whole of `/` — as the organiser's mockup lays it out and
- * DESIGN.md section 5.1 specifies it: header, headline, tagline, flyer,
- * when and where, sponsors, one button. The button leads to the registration
- * form; there is no invitation body underneath any more.
+ * The cover — the whole of `/` — in the order DESIGN.md section 5.1 sets:
+ * the organiser's flyer, then when and where with the one button, then the
+ * sponsors. Each part is reached by scrolling; nothing is fixed or snapped.
  *
- * An ordinary scrolling page, not a fixed overlay: on a 360×740 phone every
- * element fits without scrolling, on a shorter one the page scrolls and the
- * button stays in the flow where a thumb expects it.
- *
- * The date, time and venue come from the database. The headline, tagline
- * and sponsors are brand lines (lib/brand.ts); the event's own name is used
- * in the page title and the ticket, not here.
+ * The flyer carries the event's title and the presenter line, so the page has
+ * no BrandHeader and its h1 is for screen readers only. The date, time and
+ * venue come from the database: the flyer does not print them.
  */
 
+// As the flyer sets "Community Partners": regular weight, letter-spaced.
+const SPONSOR_CAPTION = "font-sans text-sm font-normal tracking-[0.12em] text-ink md:text-base";
+
 type CoverProps = {
+  eventName: string;
   /** `Saturday, 26 September 2026` */
   dateLabel: string;
   /** `16:00–20:00 WIB` */
@@ -30,78 +27,98 @@ type CoverProps = {
   action: CoverActionProps;
 };
 
-// Six elements rise in turn beneath the header — DESIGN.md section 4.8. The
-// header is step 0 and stays still: when everything starts transparent,
-// Chrome often records no first contentful paint for the page at all. Under
-// prefers-reduced-motion the base layer collapses the durations and each
-// element simply lands in place.
-function rise(step: number) {
-  return { animationDelay: `${step * 80}ms` };
-}
+export function Cover({
+  eventName,
+  dateLabel,
+  timeLabel,
+  venueName,
+  venueMapUrl,
+  action,
+}: CoverProps) {
+  const { flyer, sponsors } = BRAND;
 
-export function Cover({ dateLabel, timeLabel, venueName, venueMapUrl, action }: CoverProps) {
   return (
-    <main className="paper-stripes flex flex-1 flex-col items-center px-4 py-3 sm:py-10">
-      {/* my-auto, not justify-center: auto margins centre the card on a tall
-          screen but never push its top out of reach on a short one. */}
-      <article className="my-auto w-full max-w-[26.25rem] rounded-card border-[3px] border-double border-line bg-surface px-5 py-6 text-center shadow-card sm:px-8 sm:py-8 md:max-w-[30rem] md:px-10 md:py-10">
-        <BrandHeader />
+    <main className="paper-stripes flex flex-1 flex-col items-center pb-12">
+      <h1 className="sr-only">{eventName}</h1>
 
-        {/* Not text-hero: the headline is a full sentence in capitals. At
-            this size it sits on two lines at 360px; at hero size it would take
-            five. */}
-        <h1
-          className="animate-rise mt-5 font-display text-xl leading-tight font-semibold tracking-[0.04em] text-balance uppercase sm:text-2xl md:text-3xl"
-          style={rise(1)}
-        >
-          {BRAND.headline}
-        </h1>
+      {/* Edge to edge on a phone: the flyer's own background matches the
+          canvas, so it needs no frame until there is room around it. */}
+      <figure className="w-full sm:mt-10 sm:max-w-[30rem] sm:overflow-hidden sm:rounded-card sm:shadow-card">
+        <Image
+          src={flyer.src}
+          alt={flyer.alt}
+          width={flyer.width}
+          height={flyer.height}
+          priority
+          sizes="(max-width: 639px) 100vw, 480px"
+          className="block h-auto w-full"
+        />
+      </figure>
 
-        <p className="animate-rise mt-2 font-display text-lg text-ink-muted italic md:text-xl" style={rise(2)}>
-          {BRAND.tagline}
-        </p>
+      {/* On a phone the flyer fills most of the first screen and the button
+          sits below it; this is the hint that there is more. */}
+      <a
+        href="#details"
+        className="mt-2 inline-flex min-h-tap items-center gap-2 px-4 font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
+      >
+        Event details <span aria-hidden="true">↓</span>
+      </a>
 
-        <div className="animate-rise mt-5" style={rise(3)}>
-          <FlyerPlaceholder />
+      <section
+        id="details"
+        aria-labelledby="details-title"
+        className="w-full scroll-mt-4 px-4 pt-6 sm:pt-10"
+      >
+        <div className="mx-auto w-full max-w-[26.25rem] rounded-card border border-line bg-surface px-5 py-8 text-center shadow-card sm:px-8 md:max-w-[30rem] md:px-10">
+          <h2
+            id="details-title"
+            className="font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm"
+          >
+            When &amp; where
+          </h2>
+
+          <div className="mt-4 flex flex-col items-center gap-1">
+            <p className="font-display text-xl font-bold text-balance text-primary md:text-2xl">
+              {dateLabel}
+            </p>
+            <p className="font-sans text-base tabular-nums md:text-lg">{timeLabel}</p>
+            <VenueMark venueName={venueName} mapUrl={venueMapUrl} className="mt-2" />
+          </div>
+
+          <div className="mt-8">
+            <CoverAction {...action} />
+          </div>
         </div>
+      </section>
 
-        <div className="animate-rise mt-5 flex flex-col gap-0.5" style={rise(4)}>
-          <p className="font-display text-lg font-semibold md:text-xl">{dateLabel}</p>
-          <p className="font-mono text-sm tabular-nums md:text-base">{timeLabel}</p>
-          <VenueMark venueName={venueName} mapUrl={venueMapUrl} className="mt-1" />
+      {/* White, not canvas: the sponsor board was drawn on white, and two of
+          its logos sit on white boxes of their own. */}
+      <section aria-label="Sponsors and community partners" className="mt-12 w-full px-4">
+        <div className="mx-auto flex w-full max-w-[26.25rem] flex-col items-center gap-10 rounded-card border border-line bg-white px-5 py-8 text-center shadow-card md:max-w-[30rem] md:px-8">
+          <div className="flex w-full flex-col items-center gap-4">
+            <h2 className={SPONSOR_CAPTION}>Supported by</h2>
+            <Image
+              src={sponsors.supported.src}
+              alt={sponsors.supported.alt}
+              width={sponsors.supported.width}
+              height={sponsors.supported.height}
+              sizes="(max-width: 480px) calc(100vw - 4.5rem), 416px"
+              className="h-auto w-full"
+            />
+          </div>
+          <div className="flex w-full flex-col items-center gap-4">
+            <h2 className={SPONSOR_CAPTION}>Community Partners</h2>
+            <Image
+              src={sponsors.community.src}
+              alt={sponsors.community.alt}
+              width={sponsors.community.width}
+              height={sponsors.community.height}
+              sizes="208px"
+              className="h-auto w-1/2 max-w-52"
+            />
+          </div>
         </div>
-
-        <div className="animate-rise mt-5" style={rise(5)}>
-          <SupportedBy />
-        </div>
-
-        <div className="animate-rise mt-6" style={rise(6)}>
-          <CoverAction {...action} />
-        </div>
-      </article>
+      </section>
     </main>
-  );
-}
-
-/**
- * Stands where the flyer will go, at the flyer's own 4:5 ratio, so the real
- * file drops in without moving anything (DESIGN.md section 7). Capped at
- * 32dvh tall so that the button is still on screen on a 360×740 phone with
- * the two-line headline; a taller screen gets a larger frame. Never
- * narrower than 9rem, so a landscape phone still shows a frame rather than
- * a stamp. The court mark is the project's own drawing — nothing borrowed,
- * nothing generated.
- */
-function FlyerPlaceholder() {
-  return (
-    <div
-      aria-hidden="true"
-      className="mx-auto flex aspect-[4/5] w-[clamp(9rem,25.6dvh,100%)] items-center justify-center overflow-hidden rounded-md border-[3px] border-double border-line bg-surface-2 md:w-[clamp(9rem,27dvh,100%)]"
-    >
-      {/* 2:1 court turned upright: at 110% of the frame's width it stands
-          1.1× the width tall, inside a frame 1.25× tall — whole, not cropped.
-          A court cropped past its edges reads as stray lines, not a court. */}
-      <PadelCourt className="w-[110%] shrink-0 rotate-90 text-line-input/70" />
-    </div>
   );
 }

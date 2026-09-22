@@ -21,7 +21,7 @@ type QrCardProps = {
  */
 export function QrCard({ token, ticketNumber, presentation }: QrCardProps) {
   return (
-    <div className="mx-auto w-full max-w-72 rounded-card border-[3px] border-double border-line bg-white p-4 shadow-card">
+    <div className="mx-auto w-full max-w-72 rounded-card border border-line bg-white p-4 shadow-card">
       <div className="relative">
         <Image
           src={`/api/qr/${token}`}

@@ -24,22 +24,22 @@ export function CheckedIn({ token, ticketNumber, fullName, community, checkedInA
 
   return (
     <div className="flex flex-col items-center gap-5 text-center">
-      <p className="font-display text-sm font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-base">
+      <p className="font-sans text-xs font-semibold tracking-[0.2em] text-ink-muted uppercase md:text-sm">
         Check-in
       </p>
 
       <QrCard token={token} ticketNumber={ticketNumber} presentation="spent" />
 
       <div>
-        <h1 className="font-display text-3xl font-semibold text-primary">Checked In</h1>
-        <p className="mt-1 font-display text-lg text-ink-muted italic md:text-xl">Welcome!</p>
+        <h1 className="font-display text-3xl font-bold text-primary md:text-4xl">Checked In</h1>
+        <p className="mt-1 font-sans text-lg tracking-[0.04em] text-ink-muted md:text-xl">Welcome!</p>
       </div>
 
       <div className="flex flex-col gap-0.5">
-        <p className="font-display text-xl font-semibold text-balance md:text-2xl">{fullName}</p>
+        <p className="font-display text-xl font-bold text-balance md:text-2xl">{fullName}</p>
         {/* Hidden, not blank, when the row predates the survey. */}
         {communityCode && <p className="text-ink-muted">{COMMUNITY_LABELS[communityCode]}</p>}
-        <p className="font-mono text-sm tabular-nums">{formatWibTime(checkedInAt)} WIB</p>
+        <p className="font-sans text-sm tabular-nums">{formatWibTime(checkedInAt)} WIB</p>
       </div>
     </div>
   );

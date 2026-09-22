@@ -85,7 +85,7 @@ export function SaveTicketButton({ token, ticketNumber, ticketUrl, eventName }: 
         onClick={save}
         disabled={phase === "preparing"}
         aria-busy={phase === "preparing"}
-        className="min-h-tap flex w-full items-center justify-center gap-2 rounded-pill bg-primary px-8 font-display text-lg font-semibold tracking-[0.06em] text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-14 md:text-xl"
+        className="min-h-tap flex w-full items-center justify-center gap-2 rounded-pill bg-primary px-8 font-sans text-base font-semibold py-2 text-center leading-tight tracking-[0.1em] text-balance uppercase text-on-primary shadow-card transition-all hover:opacity-95 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 md:min-h-14 md:text-lg"
       >
         {phase === "done" && <span aria-hidden="true">✓ </span>}
         {LABEL[phase]}

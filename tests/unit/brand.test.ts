@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import { BRAND, VENUE_LOGO, venueLogoFor } from '@/lib/brand'
@@ -26,11 +29,35 @@ describe('venueLogoFor', () => {
   })
 })
 
+/** Width and height from a WebP header: lossy (VP8), lossless (VP8L) or extended (VP8X). */
+function webpSize(path: string) {
+  const file = readFileSync(join(process.cwd(), 'public', path))
+  const chunk = file.toString('ascii', 12, 16)
+
+  if (chunk === 'VP8X') {
+    return { width: file.readUIntLE(24, 3) + 1, height: file.readUIntLE(27, 3) + 1 }
+  }
+  if (chunk === 'VP8 ') {
+    return { width: file.readUInt16LE(26) & 0x3fff, height: file.readUInt16LE(28) & 0x3fff }
+  }
+  if (chunk === 'VP8L') {
+    const bits = file.readUInt32LE(21)
+    return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 }
+  }
+  throw new Error(`${path} is not a WebP file`)
+}
+
 describe('BRAND', () => {
-  it('spells the brand lines as the organiser wrote them', () => {
-    expect(BRAND.lockup).toBe('Grandia × Folkafe')
-    expect(BRAND.headline).toBe('Padel, Coffee, & Business Networking')
-    expect(BRAND.tagline).toBe('Play. Connect. Build.')
-    expect(BRAND.sponsors.map((sponsor) => sponsor.name)).toEqual(['Grandia', 'Folkafe', 'Padel79'])
+  it('names the presenter as the flyer does', () => {
+    expect(BRAND.presenter).toBe('The Grandia Group')
+    expect(BRAND.presents).toBe('Presents')
+  })
+
+  // next/image reserves space from these numbers. When the organiser sends a
+  // new file, a size left stale would stretch the artwork.
+  it('records the real size of every brand image', () => {
+    for (const image of [BRAND.flyer, BRAND.sponsors.supported, BRAND.sponsors.community]) {
+      expect(webpSize(image.src), image.src).toEqual({ width: image.width, height: image.height })
+    }
   })
 })
