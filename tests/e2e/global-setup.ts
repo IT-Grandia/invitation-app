@@ -3,12 +3,11 @@ import { eq, like } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
+import { assertLocalDatabase } from '../../lib/db/local-only'
 import { events } from '../../lib/db/schema'
 import { E2E_EVENT, E2E_SLUG_PREFIX } from './event'
 
 config({ path: '.env.local' })
-
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1'])
 
 export default async function globalSetup() {
   const url = process.env.DATABASE_URL
@@ -17,12 +16,8 @@ export default async function globalSetup() {
     throw new Error('DATABASE_URL is not set')
   }
 
-  // The suite inserts and deletes events, so it only ever runs against a
-  // database on this machine.
-  const { hostname } = new URL(url)
-  if (!LOCAL_HOSTS.has(hostname)) {
-    throw new Error(`Refusing to run end-to-end tests against ${hostname}`)
-  }
+  // The suite inserts and deletes events.
+  assertLocalDatabase(url, 'run end-to-end tests')
 
   const client = postgres(url, { prepare: false, max: 1 })
   const db = drizzle(client)
