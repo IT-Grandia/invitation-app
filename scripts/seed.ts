@@ -2,6 +2,7 @@ import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
+import { assertLocalDatabase } from '../lib/db/local-only'
 import * as schema from '../lib/db/schema'
 import { checkInLogs, events, registrations } from '../lib/db/schema'
 
@@ -16,6 +17,8 @@ const url = process.env.DATABASE_URL
 if (!url) {
   throw new Error('DATABASE_URL is not set')
 }
+
+assertLocalDatabase(url, 'seed')
 
 const TOKEN_LENGTH = 24
 const TOKEN_PREFIX = 'SEED'
