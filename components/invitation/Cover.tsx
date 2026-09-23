@@ -1,8 +1,10 @@
 import Image from "next/image";
 import { VenueMark } from "@/components/ui/VenueMark";
 import { BRAND } from "@/lib/brand";
+import type { EventDetail } from "@/lib/validation/event-content";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
 import { CoverBackdrop } from "./CoverBackdrop";
+import { EventNotes } from "./EventNotes";
 
 /**
  * The cover — the whole of `/` — as DESIGN.md section 5.1 lays it out, in two
@@ -28,6 +30,8 @@ type CoverProps = {
   timeLabel: string;
   venueName: string;
   venueMapUrl: string | null;
+  /** The committee's important notes, from events.details. */
+  notes: EventDetail[];
   action: CoverActionProps;
 };
 
@@ -37,6 +41,7 @@ export function Cover({
   timeLabel,
   venueName,
   venueMapUrl,
+  notes,
   action,
 }: CoverProps) {
   const { sponsors } = BRAND;
@@ -78,6 +83,8 @@ export function Cover({
             <p className="font-sans text-base tabular-nums md:text-lg">{timeLabel}</p>
             <VenueMark venueName={venueName} mapUrl={venueMapUrl} className="mt-2" />
           </div>
+
+          <EventNotes details={notes} className="mt-6" />
 
           <div className="mt-8">
             <CoverAction {...action} />

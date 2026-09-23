@@ -49,30 +49,19 @@ async function main() {
         venueName: 'Padel Ground, Semarang',
         venueAddress: 'TBA',
         venueMapUrl: 'https://maps.app.goo.gl/CK3wvJjnjSMQmDNW7',
-        startsAt: new Date('2026-09-26T01:00:00.000Z'),
-        endsAt: new Date('2026-09-26T10:00:00.000Z'),
+        // 16.00–20.00 WIB, sama dengan produksi.
+        startsAt: new Date('2026-09-26T09:00:00.000Z'),
+        endsAt: new Date('2026-09-26T13:00:00.000Z'),
         registrationOpensAt: new Date('2026-09-09T00:00:00.000Z'),
-        registrationClosesAt: new Date('2026-09-25T14:00:00.000Z'),
+        registrationClosesAt: new Date('2026-09-25T16:59:59.000Z'),
         capacity: null,
         status: 'published',
         contactWhatsapp: '628123456789',
+        // Catatan penting acara, sama dengan produksi (DESIGN.md section 5.1).
         details: [
           {
-            label: 'Format',
-            value: 'Main santai dengan rotasi pasangan. Bukan turnamen, tidak ada babak gugur.',
-          },
-          {
-            label: 'Level',
-            value: 'Terbuka untuk semua. Belum pernah main padel sama sekali juga boleh ikut.',
-          },
-          {
-            label: 'Bawa apa',
-            value:
-              'Sepatu non-marking, botol minum, dan handuk kecil. Raket ada pinjaman kalau kamu belum punya.',
-          },
-          {
-            label: 'Dress code',
-            value: 'Baju olahraga bebas. Yang penting nyaman buat gerak.',
+            label: 'Women guests',
+            value: 'Please arrive at 15:30 sharp for hairdo by Liekuang & Co.',
           },
         ],
         rundown: [

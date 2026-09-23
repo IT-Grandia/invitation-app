@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
+import { E2E_NOTE } from './event'
+
 // Unique per call, so a rerun against the same event is never refused as a
 // duplicate number.
 function uniquePhone() {
@@ -25,6 +27,7 @@ test('a participant who will attend gets a ticket with a QR code', async ({ page
   await expect(page).toHaveURL(/\/t\/[A-Za-z0-9_-]{24}$/)
   await expect(page.getByRole('heading', { name: 'Thank you for your registration' })).toBeVisible()
   await expect(page.getByRole('img', { name: /^QR code for ticket/ })).toBeVisible()
+  await expect(page.getByText(E2E_NOTE.value)).toBeVisible()
 
   // The button saves the image straight away, with no share sheet in between.
   const [download] = await Promise.all([
