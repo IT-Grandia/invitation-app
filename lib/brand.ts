@@ -8,11 +8,13 @@
  * `events`.
  */
 
-/** A file under /public/brand with its intrinsic size. */
-export type ImageFile = {
+/** A file under /public/brand with its intrinsic size, for next/image. */
+export type BrandImage = {
   src: string;
   width: number;
   height: number;
+  /** The artwork is mostly text, so the alt text reads it out in full. */
+  alt: string;
 };
 
 /**
@@ -51,21 +53,25 @@ export const BRAND = {
   /** Rendered uppercase by CSS, as on the flyer. Also the site name in titles. */
   presenter: "The Grandia Group",
   /**
-   * The organiser's flyer, which carries every logo: the presenters, the
-   * supporters, and the community partners. It comes in two crops of the same
-   * file. A phone gets the middle column, all the content without the balls at
-   * the sides, because the whole picture shrinks to a strip there; anything
-   * from 640px up gets the whole picture.
-   *
-   * The flyer is the only place the supporters appear, so the alt text names
-   * every one of them.
+   * The organiser's flyer, 3:4: the presenters' logos, the title, and the
+   * community partners, but not the supporters, who have their own card. One
+   * file for every screen.
    */
   flyer: {
-    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic, with Bank Jateng. Supported by Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
-    portrait: { src: "/brand/flyer-portrait.webp", width: 640, height: 896 },
-    wide: { src: "/brand/flyer-wide.webp", width: 1345, height: 896 },
+    src: "/brand/flyer.webp",
+    width: 1086,
+    height: 1448,
+    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic. With the logos of The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
+  },
+  /** The supporters' logos, prepared for the cream card and used whole. */
+  sponsors: {
+    src: "/brand/sponsors-supported.webp",
+    width: 1927,
+    height: 545,
+    alt: "Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel.",
   },
 } as const satisfies {
   presenter: string;
-  flyer: { alt: string; portrait: ImageFile; wide: ImageFile };
+  flyer: BrandImage;
+  sponsors: BrandImage;
 };
