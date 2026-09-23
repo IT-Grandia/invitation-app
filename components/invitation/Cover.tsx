@@ -1,4 +1,6 @@
+import Image from "next/image";
 import { VenueMark } from "@/components/ui/VenueMark";
+import { BRAND } from "@/lib/brand";
 import type { EventDetail } from "@/lib/validation/event-content";
 import { CoverAction, type CoverActionProps } from "./CoverAction";
 import { CoverBackdrop } from "./CoverBackdrop";
@@ -8,15 +10,16 @@ import { EventNotes } from "./EventNotes";
  * The cover — the whole of `/` — as DESIGN.md section 5.1 lays it out, in two
  * layers. Behind: the striped wall and the organiser's flyer, pinned for the
  * whole page. In front: a first screen that holds nothing but the hint to
- * scroll, then the "When & where" card, which rises over the flyer and blurs
- * it.
+ * scroll, then the "When & where" card and the supporters' card, which rise
+ * over the flyer and blur it.
  *
- * The flyer carries the title, the presenters, the supporters and the
- * community partners, so the page has no BrandHeader, no sponsor card, and an
- * h1 for screen readers only. The date, time and venue come from the
- * database: the flyer does not print them.
+ * The flyer carries the title, the presenters and the community partners, so
+ * the page has no BrandHeader and an h1 for screen readers only. The
+ * supporters are not on it, hence their card. The date, time and venue come
+ * from the database: the flyer does not print them.
  */
 
+// Both cards are the same card, colour included.
 const CARD =
   "mx-auto w-full max-w-[26.25rem] rounded-card border border-line bg-surface px-5 py-8 text-center shadow-card sm:px-8 md:max-w-[30rem] md:px-10";
 
@@ -42,6 +45,8 @@ export function Cover({
   notes,
   action,
 }: CoverProps) {
+  const { sponsors } = BRAND;
+
   return (
     <main className="relative flex flex-1 flex-col">
       <h1 className="sr-only">{eventName}</h1>
@@ -62,7 +67,7 @@ export function Cover({
       <section
         id="details"
         aria-labelledby="details-title"
-        className="relative z-10 scroll-mt-6 px-4 pb-12"
+        className="relative z-10 scroll-mt-6 px-4"
       >
         <div className={CARD}>
           <h2
@@ -85,6 +90,27 @@ export function Cover({
           <div className="mt-8">
             <CoverAction {...action} />
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="sponsors-title" className="relative z-10 mt-6 px-4 pb-12">
+        <div className={`${CARD} flex flex-col items-center gap-4`}>
+          {/* As the flyer sets "Community Partners": regular weight, letter-spaced. */}
+          <h2
+            id="sponsors-title"
+            className="font-sans text-sm font-normal tracking-[0.12em] text-ink md:text-base"
+          >
+            Supported by
+          </h2>
+          <Image
+            src={sponsors.src}
+            alt={sponsors.alt}
+            width={sponsors.width}
+            height={sponsors.height}
+            sizes="(max-width: 480px) calc(100vw - 4.5rem), 416px"
+            quality={60}
+            className="h-auto w-full"
+          />
         </div>
       </section>
     </main>

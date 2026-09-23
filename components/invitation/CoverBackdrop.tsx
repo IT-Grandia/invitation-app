@@ -1,18 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BRAND } from "@/lib/brand";
 
 /**
  * The layer behind the cover — DESIGN.md section 5.1: the striped wall and the
- * organiser's flyer on it, pinned while the page scrolls. The flyer carries
- * every logo, the supporters and the community partners included, so nothing
- * else is set around it.
- *
- * Once the card named by `revealId` has risen past the lower fifth of the
- * screen, the whole layer blurs and fades back so the eye moves to the card,
- * and it sharpens again when the visitor scrolls back up. Blurring the stripes
- * with the flyer keeps its edge from standing out against a sharp background.
+ * organiser's flyer on it, pinned while the page scrolls. Once the card named
+ * by `revealId` has risen past the lower fifth of the screen, the whole layer
+ * blurs and fades back so the eye moves to the card, and it sharpens again
+ * when the visitor scrolls back up. Blurring the stripes with the flyer keeps
+ * its edge from standing out against a sharp background.
  *
  * The blur is switched, not scrubbed: a filter recomputed on every scroll
  * frame stutters on a cheap phone, a single transition does not. Without
@@ -54,22 +52,22 @@ export function CoverBackdrop({ revealId }: CoverBackdropProps) {
         {/* Placed within svh, not dvh: dvh follows the address bar in and out,
             and the flyer would jump in size. */}
         <div className="flex h-svh items-center justify-center pt-4 pb-24 sm:px-6 sm:pt-8 sm:pb-28">
-          {/* One file is fetched, not two: a second <Image> hidden with CSS
-              would still be downloaded. Edge to edge on a phone, framed from
-              640px up. The height cap keeps the whole flyer on a short screen,
-              a phone held sideways among them. */}
-          <picture className="transition-[scale] duration-500 ease-out motion-safe:group-data-blurred:scale-105">
-            <source media="(min-width: 640px)" srcSet={flyer.wide.src} />
-            <img
-              src={flyer.portrait.src}
+          {/* The width is bounded by the screen's width and, through the
+              flyer's 3:4, by its height, so the whole flyer is always in view:
+              edge to edge on a phone, framed from 640px up. It is set here
+              rather than left to the image, whose own width changes with the
+              candidate the browser picks. */}
+          <div className="w-[min(100%,calc((100svh-7rem)*3/4))] overflow-hidden transition-[scale] duration-500 ease-out motion-safe:group-data-blurred:scale-105 sm:w-[min(100%,calc((100svh-9rem)*3/4))] sm:rounded-card sm:shadow-card">
+            <Image
+              src={flyer.src}
               alt={flyer.alt}
-              width={flyer.portrait.width}
-              height={flyer.portrait.height}
-              fetchPriority="high"
-              decoding="async"
-              className="block h-auto max-h-[calc(100svh-8rem)] w-auto max-w-full sm:max-h-[calc(100svh-10rem)] sm:max-w-[42rem] sm:rounded-card sm:shadow-card lg:max-w-[56rem]"
+              width={flyer.width}
+              height={flyer.height}
+              priority
+              sizes="(max-width: 639px) 100vw, 600px"
+              className="block h-auto w-full"
             />
-          </picture>
+          </div>
         </div>
       </div>
       <div
