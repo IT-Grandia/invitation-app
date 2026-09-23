@@ -38,12 +38,7 @@ export function TicketActions({
 
   return (
     <div className="flex flex-col gap-3">
-      <SaveTicketButton
-        token={token}
-        ticketNumber={ticketNumber}
-        ticketUrl={ticketUrl}
-        eventName={eventName}
-      />
+      <SaveTicketButton token={token} ticketNumber={ticketNumber} />
 
       <a
         href={`https://wa.me/${phone.replace(/\D/g, "")}?text=${encodeURIComponent(whatsappText)}`}

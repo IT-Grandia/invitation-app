@@ -26,6 +26,13 @@ test('a participant who will attend gets a ticket with a QR code', async ({ page
   await expect(page.getByRole('heading', { name: 'Thank you for your registration' })).toBeVisible()
   await expect(page.getByRole('img', { name: /^QR code for ticket/ })).toBeVisible()
 
+  // The button saves the image straight away, with no share sheet in between.
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('link', { name: 'Download QR Code' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^ticket-[A-Z0-9_-]{8}\.png$/)
+
   // The ticket cookie turns the cover's button into a way back to the ticket.
   await page.goto('/')
   await page.getByRole('link', { name: 'View Your Ticket' }).click()
