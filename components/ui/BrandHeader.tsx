@@ -9,12 +9,13 @@ import { BRAND } from "@/lib/brand";
 
 type BrandHeaderProps = {
   className?: string;
+  hideBorder?: boolean;
 };
 
-export function BrandHeader({ className = "" }: BrandHeaderProps) {
+export function BrandHeader({ className = "", hideBorder = false }: BrandHeaderProps) {
   return (
     <div
-      className={`flex flex-col items-center gap-3 border-b border-line pb-4 text-center ${className}`}
+      className={`flex flex-col items-center text-center ${hideBorder ? "" : "gap-3 border-b border-line pb-4"} ${className}`}
     >
       <p className="font-sans text-sm font-bold tracking-[0.08em] text-ink uppercase md:text-base">
         {BRAND.presenter}
