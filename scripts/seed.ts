@@ -53,7 +53,8 @@ async function main() {
         startsAt: new Date('2026-09-26T09:00:00.000Z'),
         endsAt: new Date('2026-09-26T13:00:00.000Z'),
         registrationOpensAt: new Date('2026-09-09T00:00:00.000Z'),
-        registrationClosesAt: new Date('2026-09-25T16:59:59.000Z'),
+        // Tutup 25 Sep 20.00 WIB (H-1), sama dengan produksi.
+        registrationClosesAt: new Date('2026-09-25T13:00:00.000Z'),
         capacity: null,
         status: 'published',
         contactWhatsapp: '628123456789',
