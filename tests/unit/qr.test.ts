@@ -11,8 +11,8 @@ function pngDimensions(png: Buffer): { width: number; height: number } {
   return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) }
 }
 
-function callRoute(token: string, ip = '203.0.113.10') {
-  const request = new Request(`http://localhost/api/qr/${token}`, {
+function callRoute(token: string, ip = '203.0.113.10', query = '') {
+  const request = new Request(`http://localhost/api/qr/${token}${query}`, {
     headers: { 'x-forwarded-for': ip },
   })
   return qrHandler(request, { params: Promise.resolve({ token }) })
@@ -98,10 +98,23 @@ describe('GET /api/qr/[token]', () => {
     expect(response.headers.get('content-type')).toBe('image/png')
     expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
     expect(response.headers.get('content-disposition')).toBe(
-      `inline; filename="tiket-padel-${ticketNumber(token)}.png"`,
+      `inline; filename="ticket-${ticketNumber(token)}.png"`,
     )
     expect(response.headers.get('content-length')).toBe(String(body.byteLength))
     expect(body.subarray(0, 8).equals(PNG_SIGNATURE)).toBe(true)
+  })
+
+  // What the ticket's download button links to. The header is what saves the
+  // file in the in-app browsers that ignore the anchor's download attribute.
+  it('sends the same image as an attachment with download=1', async () => {
+    const token = generateToken()
+    const response = await callRoute(token, '203.0.113.10', '?download=1')
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toBe('image/png')
+    expect(response.headers.get('content-disposition')).toBe(
+      `attachment; filename="ticket-${ticketNumber(token)}.png"`,
+    )
   })
 
   // Budgets are per ticket first: at the venue every phone shares the

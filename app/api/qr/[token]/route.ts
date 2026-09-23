@@ -15,7 +15,11 @@ const PER_TOKEN_LIMIT = 20
 const PER_IP_LIMIT = 600
 
 /**
- * GET /api/qr/[token] — the ticket QR as a PNG.
+ * GET /api/qr/[token] — the ticket QR as a PNG. With `?download=1` the same
+ * image is sent as an attachment, which is what the ticket's download button
+ * links to: the header makes the browser save the file even where the anchor's
+ * `download` attribute is ignored, as in the in-app browsers people open the
+ * link from.
  *
  * No database lookup on purpose (docs/04-API-SPEC.md section 3): the image
  * carries no secret, only the ticket URL, and the page behind that URL is what
@@ -45,6 +49,8 @@ export async function GET(
   }
 
   const png = await renderTicketQr(token)
+  const attachment = new URL(request.url).searchParams.get('download') === '1'
+  const fileName = `ticket-${ticketNumber(token)}.png`
 
   return new Response(new Uint8Array(png), {
     status: 200,
@@ -54,7 +60,7 @@ export async function GET(
       // The image for a given token never changes, so it can live in the CDN
       // for as long as the browser cares to keep it.
       'Cache-Control': 'public, max-age=31536000, immutable',
-      'Content-Disposition': `inline; filename="tiket-padel-${ticketNumber(token)}.png"`,
+      'Content-Disposition': `${attachment ? 'attachment' : 'inline'}; filename="${fileName}"`,
     },
   })
 }
