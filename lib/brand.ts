@@ -8,11 +8,15 @@
  * `events`.
  */
 
-/** A file under /public/brand with its intrinsic size, for next/image. */
-export type BrandImage = {
+/** A file under /public/brand with its intrinsic size. */
+export type ImageFile = {
   src: string;
   width: number;
   height: number;
+};
+
+/** An image that stands on its own, so it carries its own alt text. */
+export type BrandImage = ImageFile & {
   /** The artwork is mostly text, so the alt text reads it out in full. */
   alt: string;
 };
@@ -52,16 +56,42 @@ export function venueLogoFor(venueName: string): typeof VENUE_LOGO | null {
 export const BRAND = {
   /** Rendered uppercase by CSS, as on the flyer. Also the site name in titles. */
   presenter: "The Grandia Group",
-  /** The organiser's flyer, 3:4. It heads the cover in place of any headline. */
+  /** The logos printed above the flyer until the organiser sent it without them. */
+  presenters: {
+    src: "/brand/presenters.webp",
+    width: 1855,
+    height: 228,
+    alt: "The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng.",
+  },
+  /**
+   * The organiser's flyer, in two crops of the same file. A phone gets the
+   * square middle — the title and the two rackets — because the wide version
+   * shrinks to a strip there; anything from 640px up gets the whole picture,
+   * balls and all.
+   */
   flyer: {
-    src: "/brand/flyer.webp",
-    width: 1086,
-    height: 1448,
-    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic. With the logos of The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
+    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic.",
+    square: { src: "/brand/flyer-square.webp", width: 780, height: 780 },
+    wide: { src: "/brand/flyer-wide.webp", width: 1536, height: 1024 },
+  },
+  /** Printed at the foot of the flyer until the organiser sent it without them. */
+  communities: {
+    womenpreneur: {
+      src: "/brand/community-womenpreneur.webp",
+      width: 1497,
+      height: 696,
+      alt: "Womenpreneur BPD HIPMI Jawa Tengah",
+    },
+    club79: {
+      src: "/brand/community-club79.webp",
+      width: 593,
+      height: 121,
+      alt: "Club 79",
+    },
   },
   /**
    * The supporters' logos, prepared for the cream card and used whole. The
-   * community partners are left out: the flyer already shows them.
+   * community partners are left out: they have their own place on the cover.
    */
   sponsors: {
     src: "/brand/sponsors-supported.webp",
@@ -71,6 +101,8 @@ export const BRAND = {
   },
 } as const satisfies {
   presenter: string;
-  flyer: BrandImage;
+  presenters: BrandImage;
+  flyer: { alt: string; square: ImageFile; wide: ImageFile };
+  communities: Record<"womenpreneur" | "club79", BrandImage>;
   sponsors: BrandImage;
 };

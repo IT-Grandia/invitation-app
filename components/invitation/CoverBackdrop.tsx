@@ -5,12 +5,17 @@ import { useEffect, useState } from "react";
 import { BRAND } from "@/lib/brand";
 
 /**
- * The layer behind the cover — DESIGN.md section 5.1: the striped wall and
- * the flyer on it, pinned for the whole page. Once the card named by
- * `revealId` has risen past the lower fifth of the screen, the whole layer
- * blurs and fades back so the eye moves to the card; it sharpens again when
- * the visitor scrolls back up. Blurring the stripes with the flyer keeps the
- * flyer's edge from standing out against a sharp background.
+ * The layer behind the cover — DESIGN.md section 5.1: the striped wall, the
+ * presenters' logos, the flyer, and the community partners, pinned while the
+ * page scrolls. The logos and the partners used to be printed on the flyer
+ * itself; the organiser now supplies them as their own files, so they are set
+ * around it here.
+ *
+ * Once the card named by `revealId` has risen past the lower fifth of the
+ * screen, the whole layer blurs and fades back so the eye moves to the card,
+ * and it sharpens again when the visitor scrolls back up. Blurring the stripes
+ * with the artwork keeps the flyer's edge from standing out against a sharp
+ * background.
  *
  * The blur is switched, not scrubbed: a filter recomputed on every scroll
  * frame stutters on a cheap phone, a single transition does not. Without
@@ -20,6 +25,8 @@ import { BRAND } from "@/lib/brand";
 type CoverBackdropProps = {
   revealId: string;
 };
+
+const CAPTION = "font-sans text-sm font-normal tracking-[0.12em] text-ink";
 
 export function CoverBackdrop({ revealId }: CoverBackdropProps) {
   const [blurred, setBlurred] = useState(false);
@@ -38,7 +45,7 @@ export function CoverBackdrop({ revealId }: CoverBackdropProps) {
     return () => observer.disconnect();
   }, [revealId]);
 
-  const { flyer } = BRAND;
+  const { presenters, flyer, communities } = BRAND;
 
   return (
     // lvh, the screen with the address bar hidden, so the layer always covers
@@ -49,23 +56,60 @@ export function CoverBackdrop({ revealId }: CoverBackdropProps) {
       className="group sticky top-0 -mb-[100lvh] h-lvh overflow-hidden bg-canvas"
     >
       <div className="keep-fade paper-stripes absolute inset-0 transition-[filter] duration-500 ease-out group-data-blurred:blur-md">
-        {/* The flyer is placed within svh, not dvh: dvh follows the address
-            bar in and out, and the flyer would jump in size. */}
-        <div className="flex h-svh items-center justify-center pt-4 pb-24 sm:px-6 sm:pt-8 sm:pb-28">
-          {/* The width is bounded by the screen's width and, through the
-              flyer's 3:4, by its height, so the whole flyer is always in view.
-              It is set here rather than left to the image: the file's own
-              width changes with the candidate the browser picks. */}
-          <div className="w-[min(100%,calc((100svh-7rem)*3/4))] overflow-hidden transition-[scale] duration-500 ease-out motion-safe:group-data-blurred:scale-105 sm:w-[min(100%,calc((100svh-9rem)*3/4))] sm:rounded-card sm:shadow-card">
-            <Image
-              src={flyer.src}
+        {/* Placed within svh, not dvh: dvh follows the address bar in and out,
+            and the artwork would jump in size. */}
+        <div className="flex h-svh flex-col items-center justify-center gap-5 px-4 pt-4 pb-24 sm:gap-7 sm:px-6 sm:pt-8 sm:pb-28">
+          <Image
+            src={presenters.src}
+            alt={presenters.alt}
+            width={presenters.width}
+            height={presenters.height}
+            priority
+            sizes="(max-width: 639px) 84vw, 420px"
+            quality={60}
+            className="hidden h-auto w-[84%] max-w-[26.25rem] [@media(min-height:600px)]:block"
+          />
+
+          {/* One file is fetched, not two: a second <Image> hidden with CSS
+              would still be downloaded. The height caps keep the stack on the
+              screen: on a short screen — a phone held sideways — the logos and
+              the partners step aside and the flyer takes the room. */}
+          <picture className="transition-[scale] duration-500 ease-out motion-safe:group-data-blurred:scale-105">
+            <source media="(min-width: 640px)" srcSet={flyer.wide.src} />
+            <img
+              src={flyer.square.src}
               alt={flyer.alt}
-              width={flyer.width}
-              height={flyer.height}
-              priority
-              sizes="(max-width: 639px) 100vw, 600px"
-              className="block h-auto w-full"
+              width={flyer.square.width}
+              height={flyer.square.height}
+              fetchPriority="high"
+              decoding="async"
+              className="block h-auto max-h-[calc(100svh-8rem)] w-auto max-w-full rounded-card shadow-card sm:max-w-[34rem] lg:max-w-[42rem] [@media(min-height:600px)]:max-h-[calc(100svh-18rem)] sm:[@media(min-height:600px)]:max-h-[calc(100svh-20rem)]"
             />
+          </picture>
+
+          <div className="hidden flex-col items-center gap-3 [@media(min-height:600px)]:flex">
+            <p className={CAPTION}>Community Partners</p>
+            <div className="flex items-center gap-4">
+              <Image
+                src={communities.womenpreneur.src}
+                alt={communities.womenpreneur.alt}
+                width={communities.womenpreneur.width}
+                height={communities.womenpreneur.height}
+                sizes="120px"
+                quality={60}
+                className="h-11 w-auto md:h-12"
+              />
+              <span aria-hidden="true" className="h-9 w-px bg-line" />
+              <Image
+                src={communities.club79.src}
+                alt={communities.club79.alt}
+                width={communities.club79.width}
+                height={communities.club79.height}
+                sizes="120px"
+                quality={60}
+                className="h-4 w-auto md:h-5"
+              />
+            </div>
           </div>
         </div>
       </div>

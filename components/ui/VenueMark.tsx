@@ -27,6 +27,7 @@ export function VenueMark({ venueName, mapUrl, className = "" }: VenueMarkProps)
       width={logo.width}
       height={logo.height}
       sizes="192px"
+      quality={60}
       className="h-10 w-auto md:h-12"
     />
   ) : (

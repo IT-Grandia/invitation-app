@@ -55,7 +55,16 @@ describe('BRAND', () => {
   // next/image reserves space from these numbers. When the organiser sends a
   // new file, a size left stale would stretch the artwork.
   it('records the real size of every brand image', () => {
-    for (const image of [BRAND.flyer, BRAND.sponsors]) {
+    const images = [
+      BRAND.flyer.square,
+      BRAND.flyer.wide,
+      BRAND.presenters,
+      BRAND.communities.womenpreneur,
+      BRAND.communities.club79,
+      BRAND.sponsors,
+    ]
+
+    for (const image of images) {
       expect(webpSize(image.src), image.src).toEqual({ width: image.width, height: image.height })
     }
   })
