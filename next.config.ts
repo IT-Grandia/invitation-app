@@ -49,6 +49,14 @@ const securityHeaders = [
 const privatePages = ["/t/:path*", "/scan", "/admin", "/admin/:path*"];
 
 const nextConfig: NextConfig = {
+  images: {
+    // 75 is the default and stays for anything read closely. 60 is for the
+    // decorative logos on the cover and the ticket — the sponsor board, the
+    // community marks, the venue mark — where it saves about a fifth of the
+    // page's weight with no visible difference at the size they are shown.
+    // The QR is never resized here: it is served raw from /api/qr.
+    qualities: [60, 75],
+  },
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },

@@ -107,6 +107,7 @@ export function Cover({
             width={sponsors.width}
             height={sponsors.height}
             sizes="(max-width: 480px) calc(100vw - 4.5rem), 416px"
+            quality={60}
             className="h-auto w-full"
           />
         </div>
