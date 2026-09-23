@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 import { RegistrationForm } from '@/components/registration/RegistrationForm'
 import { ScrollReveal } from '@/components/registration/ScrollReveal'
+import { BrandHeader } from '@/components/ui/BrandHeader'
 import { getPublishedEvent } from '@/lib/db/queries/event'
 
 export const dynamic = 'force-dynamic'
@@ -11,62 +12,6 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'RSVP • FA Live Padel Society',
   description: 'Please fill in the form to confirm your attendance and receive your QR Code.',
-}
-
-function EmbossedEnvelopeFlap() {
-  return (
-    <div className="absolute left-1/2 -translate-x-1/2 -bottom-9 sm:-bottom-12 z-20 w-[125px] sm:w-[155px] md:w-[170px] drop-shadow-[0_10px_20px_rgba(38,35,30,0.18)] pointer-events-none select-none">
-      <svg
-        viewBox="0 0 170 95"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-auto overflow-visible"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="envelopeGrad" x1="85" y1="0" x2="85" y2="95" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#fbf8f0" />
-            <stop offset="0.6" stopColor="#f4eee0" />
-            <stop offset="1" stopColor="#e9e2d0" />
-          </linearGradient>
-        </defs>
-
-        {/* Outer Flap with Scalloped Edge */}
-        <path
-          d="M 0 0 L 170 0 C 170 20, 160 38, 140 54 C 120 70, 100 85, 85 92 C 70 85, 50 70, 30 54 C 10 38, 0 20, 0 0 Z"
-          fill="url(#envelopeGrad)"
-          stroke="#dbd2bd"
-          strokeWidth="1.2"
-        />
-
-        {/* Inner Embossed Border */}
-        <path
-          d="M 12 0 C 12 18, 22 34, 38 48 C 56 62, 74 76, 85 81 C 96 76, 114 62, 132 48 C 148 34, 158 18, 158 0"
-          stroke="#857d69"
-          strokeWidth="1"
-          strokeDasharray="3 2"
-          fill="none"
-          opacity="0.8"
-        />
-
-        {/* Filigree Ornament / Baroque Relief */}
-        <g stroke="#857d69" strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.85">
-          {/* Left scroll */}
-          <path d="M 52 32 C 60 26, 72 32, 75 42 C 77 48, 70 55, 62 50 C 58 47, 58 40, 64 36" />
-          {/* Right scroll */}
-          <path d="M 118 32 C 110 26, 98 32, 95 42 C 93 48, 100 55, 108 50 C 112 47, 112 40, 106 36" />
-          {/* Central crest */}
-          <path d="M 85 24 C 82 28, 80 34, 85 40 C 90 34, 88 28, 85 24 Z" fill="#dbd2bd" />
-          <path d="M 85 40 L 85 64" strokeWidth="1.2" />
-          <circle cx="85" cy="46" r="6" fill="#e9e2d0" stroke="#857d69" />
-          <circle cx="85" cy="46" r="2.5" fill="#2f4027" />
-          {/* Bottom flap flourish */}
-          <path d="M 76 74 C 81 78, 89 78, 94 74" />
-          <circle cx="85" cy="80" r="1.5" fill="#857d69" />
-        </g>
-      </svg>
-    </div>
-  )
 }
 
 export default async function RegistPage() {
@@ -83,28 +28,15 @@ export default async function RegistPage() {
 
   return (
     <main className="paper-stripes relative min-h-screen bg-canvas text-ink antialiased">
-      {/* Top Header Banner: Deep olive green primary matching flyer & brand */}
-      <header className="relative w-full h-24 sm:h-32 md:h-36 bg-primary border-b border-primary/40 overflow-visible flex items-center justify-center">
-        {/* Subtle horizontal borders */}
-        <div className="absolute top-2 inset-x-0 h-px bg-on-primary/10" />
-        <div className="absolute bottom-2 inset-x-0 h-px bg-on-primary/10" />
-
-        {/* Watermark text */}
-        <div className="w-full px-6 flex items-center justify-between pointer-events-none select-none overflow-hidden opacity-25">
-          <span className="font-display italic text-2xl sm:text-4xl md:text-5xl text-on-primary tracking-wide whitespace-nowrap">
-            The Grandia Group presents
-          </span>
-          <span className="hidden md:inline font-display italic text-3xl sm:text-5xl text-on-primary tracking-wide whitespace-nowrap">
-            FA Live Padel Society
-          </span>
+      {/* Top Header: Clean BrandHeader matching QR ticket page style */}
+      <header className="w-full border-b border-line bg-surface px-4 py-4 sm:py-5 flex items-center justify-center text-center">
+        <div className="max-w-5xl mx-auto flex items-center justify-center">
+          <BrandHeader hideBorder />
         </div>
-
-        {/* Overlapping Embossed Cream Envelope Flap */}
-        <EmbossedEnvelopeFlap />
       </header>
 
       {/* Main Content Area */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-12 sm:pt-16 md:pt-20 pb-16">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 md:pt-10 pb-16">
         {/* Back link with clean pill treatment for superior mobile tap target */}
         <ScrollReveal delay={50} direction="down">
           <div className="mb-6 sm:mb-8 flex justify-center md:justify-start">
