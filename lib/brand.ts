@@ -15,12 +15,6 @@ export type ImageFile = {
   height: number;
 };
 
-/** An image that stands on its own, so it carries its own alt text. */
-export type BrandImage = ImageFile & {
-  /** The artwork is mostly text, so the alt text reads it out in full. */
-  alt: string;
-};
-
 /**
  * The venue's own mark, supplied by the organiser. Shown in place of the
  * venue name wherever the event in the database is held at this venue — the
@@ -56,53 +50,22 @@ export function venueLogoFor(venueName: string): typeof VENUE_LOGO | null {
 export const BRAND = {
   /** Rendered uppercase by CSS, as on the flyer. Also the site name in titles. */
   presenter: "The Grandia Group",
-  /** The logos printed above the flyer until the organiser sent it without them. */
-  presenters: {
-    src: "/brand/presenters.webp",
-    width: 1855,
-    height: 228,
-    alt: "The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng.",
-  },
   /**
-   * The organiser's flyer, in two crops of the same file. A phone gets the
-   * square middle — the title and the two rackets — because the wide version
-   * shrinks to a strip there; anything from 640px up gets the whole picture,
-   * balls and all.
+   * The organiser's flyer, which carries every logo: the presenters, the
+   * supporters, and the community partners. It comes in two crops of the same
+   * file. A phone gets the middle column, all the content without the balls at
+   * the sides, because the whole picture shrinks to a strip there; anything
+   * from 640px up gets the whole picture.
+   *
+   * The flyer is the only place the supporters appear, so the alt text names
+   * every one of them.
    */
   flyer: {
-    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic.",
-    square: { src: "/brand/flyer-square.webp", width: 780, height: 780 },
-    wide: { src: "/brand/flyer-wide.webp", width: 1536, height: 1024 },
-  },
-  /** Printed at the foot of the flyer until the organiser sent it without them. */
-  communities: {
-    womenpreneur: {
-      src: "/brand/community-womenpreneur.webp",
-      width: 1497,
-      height: 696,
-      alt: "Womenpreneur BPD HIPMI Jawa Tengah",
-    },
-    club79: {
-      src: "/brand/community-club79.webp",
-      width: 593,
-      height: 121,
-      alt: "Club 79",
-    },
-  },
-  /**
-   * The supporters' logos, prepared for the cream card and used whole. The
-   * community partners are left out: they have their own place on the cover.
-   */
-  sponsors: {
-    src: "/brand/sponsors-supported.webp",
-    width: 1927,
-    height: 545,
-    alt: "Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel.",
+    alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic, with Bank Jateng. Supported by Hypelux, Hype Sneaker, Friday, Margaria Indonesia's Batik, Bohopanna, Liekuang & Co., Padel Port, Bobo Sprinkle Kids, SMC RS Telogorejo, Syailendra Elektronik, and Nasmoco Gombel. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",
+    portrait: { src: "/brand/flyer-portrait.webp", width: 640, height: 896 },
+    wide: { src: "/brand/flyer-wide.webp", width: 1345, height: 896 },
   },
 } as const satisfies {
   presenter: string;
-  presenters: BrandImage;
-  flyer: { alt: string; square: ImageFile; wide: ImageFile };
-  communities: Record<"womenpreneur" | "club79", BrandImage>;
-  sponsors: BrandImage;
+  flyer: { alt: string; portrait: ImageFile; wide: ImageFile };
 };
