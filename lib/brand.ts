@@ -58,7 +58,7 @@ export const BRAND = {
    * file for every screen.
    */
   flyer: {
-    src: "/brand/flyer.webp",
+    src: "/brand/flyer_fix.png",
     width: 1086,
     height: 1448,
     alt: "FA Live Padel Society. The Grandia Group presents, powered by BINUS School Semarang and Immoderma Skin Clinic. With the logos of The Grandia Group, BINUS School Semarang, Immoderma, and Bank Jateng. Community partners: Womenpreneur BPD HIPMI Jawa Tengah and Club 79.",

@@ -178,19 +178,27 @@ export default async function RegistPage() {
 
               {/* Keepsake headline */}
               <h3 className="font-display text-2xl sm:text-3xl text-primary leading-tight mb-2.5 font-bold">
-                We look forward to seeing you on the court!
+                Where Sport Meets Connection
               </h3>
 
               {/* Body Content */}
               <p className="font-sans text-xs sm:text-sm text-ink-muted max-w-md mx-auto leading-relaxed mb-5 sm:mb-6">
-                Get ready for a day of friendly rallies, fun matches, and great company. Whether you&apos;re holding a padel racket for the first time or playing regularly, this gathering is all about celebrating the sport and community together.
+                More than just matches on the court, this gathering bridges the excitement of padel with genuine connections. Step in for friendly rallies, exchange ideas between sets, and build lasting bonds with fellow leaders and enthusiasts.
               </p>
 
               {/* Highlights 3-column badge row */}
               <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-3.5 border-t border-line text-xs font-sans text-ink">
                 <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
                   <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
-                    Community Meet
+                    The Sport
+                  </span>
+                  <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
+                    Padel &amp; Fun Matches
+                  </span>
+                </div>
+                <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
+                  <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
+                    The Connection
                   </span>
                   <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
                     Club 79 × HIPMI
@@ -198,15 +206,7 @@ export default async function RegistPage() {
                 </div>
                 <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
                   <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
-                    Gear Provided
-                  </span>
-                  <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
-                    Rackets &amp; Balls
-                  </span>
-                </div>
-                <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
-                  <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
-                    Padel Ground
+                    The Gathering
                   </span>
                   <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
                     Semarang · 26 Sep
