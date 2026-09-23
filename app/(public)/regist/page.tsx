@@ -14,6 +14,18 @@ export const metadata: Metadata = {
   description: 'Please fill in the form to confirm your attendance and receive your QR Code.',
 }
 
+const backdropStripesStyle: React.CSSProperties = {
+  backgroundColor: '#F5EFE1',
+  backgroundImage: `repeating-linear-gradient(
+    90deg,
+    #F5EFE1 0px,
+    #F5EFE1 var(--regist-stripe-w, 32px),
+    #E8E3D1 var(--regist-stripe-w, 32px),
+    #E8E3D1 calc(var(--regist-stripe-w, 32px) * 2)
+  )`,
+  backgroundPosition: 'center top',
+}
+
 export default async function RegistPage() {
   let contactWhatsapp: string | null = null
 
@@ -27,13 +39,27 @@ export default async function RegistPage() {
   }
 
   return (
-    <main className="paper-stripes relative min-h-screen bg-canvas text-ink antialiased">
-      {/* Top Header: Clean BrandHeader matching QR ticket page style */}
-      <header className="w-full border-b border-line bg-surface px-4 py-4 sm:py-5 flex items-center justify-center text-center">
-        <div className="max-w-5xl mx-auto flex items-center justify-center">
-          <BrandHeader hideBorder />
-        </div>
-      </header>
+    <>
+      <style>{`
+        .regist-backdrop {
+          --regist-stripe-w: 28px;
+        }
+        @media (min-width: 640px) {
+          .regist-backdrop {
+            --regist-stripe-w: 32px;
+          }
+        }
+      `}</style>
+      <main
+        className="regist-backdrop relative min-h-screen text-ink antialiased"
+        style={backdropStripesStyle}
+      >
+        {/* Top Header: Clean BrandHeader matching QR ticket page style */}
+        <header className="w-full border-b border-line bg-surface px-4 py-4 sm:py-5 flex items-center justify-center text-center">
+          <div className="max-w-5xl mx-auto flex items-center justify-center">
+            <BrandHeader hideBorder />
+          </div>
+        </header>
 
       {/* Main Content Area */}
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 md:px-8 pt-6 sm:pt-8 md:pt-10 pb-16">
@@ -217,5 +243,6 @@ export default async function RegistPage() {
         </div>
       </section>
     </main>
+    </>
   )
 }
