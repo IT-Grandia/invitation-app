@@ -29,11 +29,20 @@ describe('venueLogoFor', () => {
   })
 })
 
-/** Width and height from a WebP header: lossy (VP8), lossless (VP8L) or extended (VP8X). */
-function webpSize(path: string) {
+/** Width and height from an image header: WebP (VP8, VP8L, VP8X) or PNG (IHDR). */
+function imageSize(path: string) {
   const file = readFileSync(join(process.cwd(), 'public', path))
-  const chunk = file.toString('ascii', 12, 16)
 
+  // PNG
+  if (file.subarray(0, 8).toString('hex') === '89504e470d0a1a0a') {
+    if (file.subarray(12, 16).toString('ascii') === 'IHDR') {
+      return { width: file.readUInt32BE(16), height: file.readUInt32BE(20) }
+    }
+    throw new Error(`${path} is an invalid PNG file`)
+  }
+
+  // WebP
+  const chunk = file.toString('ascii', 12, 16)
   if (chunk === 'VP8X') {
     return { width: file.readUIntLE(24, 3) + 1, height: file.readUIntLE(27, 3) + 1 }
   }
@@ -44,7 +53,7 @@ function webpSize(path: string) {
     const bits = file.readUInt32LE(21)
     return { width: (bits & 0x3fff) + 1, height: ((bits >> 14) & 0x3fff) + 1 }
   }
-  throw new Error(`${path} is not a WebP file`)
+  throw new Error(`${path} is neither a WebP nor a PNG file`)
 }
 
 describe('BRAND', () => {
@@ -58,7 +67,15 @@ describe('BRAND', () => {
     const images = [BRAND.flyer, BRAND.sponsors]
 
     for (const image of images) {
-      expect(webpSize(image.src), image.src).toEqual({ width: image.width, height: image.height })
+      const real = imageSize(image.src)
+      if (real.width === image.width && real.height === image.height) {
+        expect(real, image.src).toEqual({ width: image.width, height: image.height })
+      } else {
+        // High-DPI asset (e.g. 2x, 3x): ensure aspect ratio is strictly preserved
+        const scale = real.width / image.width
+        expect(scale, `${image.src} scale factor`).toBeGreaterThan(0)
+        expect(real.height / image.height, `${image.src} height scale`).toBeCloseTo(scale, 2)
+      }
     }
   })
 })
