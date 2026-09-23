@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { EventNotes } from "@/components/invitation/EventNotes";
 import { CheckedIn } from "@/components/ticket/CheckedIn";
 import { LiveStatus } from "@/components/ticket/LiveStatus";
 import { QrCard } from "@/components/ticket/QrCard";
@@ -80,6 +81,8 @@ export default async function TicketPage({ params }: { params: Promise<{ token: 
             <QrCard token={registration.token} ticketNumber={number} presentation="live" />
 
             <TicketDetails event={event} />
+
+            <EventNotes details={event.details} />
 
             <p className="text-sm text-ink-muted text-pretty">
               Please save your QR code and show it at the registration desk on the event day.

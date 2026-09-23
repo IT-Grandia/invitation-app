@@ -64,6 +64,7 @@ export default async function InvitationPage() {
       timeLabel={`${formatWibTime(event.startsAt)}–${formatWibTime(event.endsAt)} WIB`}
       venueName={event.venueName}
       venueMapUrl={event.venueMapUrl}
+      notes={event.details}
       action={{
         state: resolveRegistrationState(event, stats.registered),
         serverTicketToken,
