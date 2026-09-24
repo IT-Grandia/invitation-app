@@ -123,7 +123,9 @@ export default async function RegistPage() {
 
               {/* Instructions text */}
               <p className="font-sans text-sm sm:text-base text-ink-muted leading-relaxed max-w-sm md:max-w-md mx-auto md:mx-0 text-pretty">
-                Please fill in the form to confirm your attendance and receive your QR Code.
+                Please fill in the form to confirm your attendance
+                <br />
+                and receive your QR Code.
               </p>
             </ScrollReveal>
           </div>
@@ -186,8 +188,8 @@ export default async function RegistPage() {
                 More than just matches on the court, this gathering bridges the excitement of padel with genuine connections. Step in for friendly rallies, exchange ideas between sets, and build lasting bonds with fellow leaders and enthusiasts.
               </p>
 
-              {/* Highlights 3-column badge row */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3 pt-3.5 border-t border-line text-xs font-sans text-ink">
+              {/* Highlights 2-column badge row */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-3.5 border-t border-line text-xs font-sans text-ink">
                 <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
                   <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
                     The Sport
@@ -202,14 +204,6 @@ export default async function RegistPage() {
                   </span>
                   <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
                     Club 79 × HIPMI
-                  </span>
-                </div>
-                <div className="rounded-md bg-surface-2 border border-line p-2 sm:p-2.5 text-center">
-                  <span className="block font-display text-xs sm:text-sm font-bold text-primary truncate">
-                    The Gathering
-                  </span>
-                  <span className="block font-sans text-[10px] sm:text-xs text-ink-muted mt-0.5 truncate">
-                    Semarang · 26 Sep
                   </span>
                 </div>
               </div>

@@ -22,16 +22,37 @@ export function EventNotes({ details, className = "" }: EventNotesProps) {
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      {details.map((note) => (
-        // surface-2 on a surface card: a shade darker, so it stands out
-        // without the shouting of an accent block.
-        <p
-          key={note.label}
-          className="rounded-md bg-surface-2 px-4 py-3 text-sm text-ink text-pretty"
-        >
-          <span className="font-semibold">{note.label}:</span> {note.value}
-        </p>
-      ))}
+      {details.map((note) => {
+        const targetPhrase = "for hairdo by Liekuang & Co.";
+        const hasTarget = note.value.includes(targetPhrase);
+
+        return (
+          // surface-2 on a surface card: a shade darker, so it stands out
+          // without the shouting of an accent block.
+          <p
+            key={note.label}
+            className="rounded-md bg-surface-2 px-4 py-3 text-sm text-ink text-pretty"
+          >
+            <span className="font-semibold">{note.label}:</span>{" "}
+            {hasTarget ? (
+              <>
+                {note.value.replace(targetPhrase, "").trim()}
+                <br />
+                {targetPhrase}
+              </>
+            ) : note.value.includes("\n") ? (
+              note.value.split("\n").map((line, idx, arr) => (
+                <span key={idx}>
+                  {line}
+                  {idx < arr.length - 1 && <br />}
+                </span>
+              ))
+            ) : (
+              note.value
+            )}
+          </p>
+        );
+      })}
     </div>
   );
 }
